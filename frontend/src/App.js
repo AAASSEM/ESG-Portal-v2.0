@@ -98,14 +98,6 @@ function App() {
                 <Dashboard />
               </ProtectedRoute>
             } />
-            // <Route path="/dashboard-test" element={
-            //   <ProtectedRoute>
-            //     <TopNavbar />
-            //     <div className="container mx-auto p-8">
-            //       <DashboardTest />
-            //     </div>
-            //   </ProtectedRoute>
-            // } />
             <Route path="/dashboard-old" element={
               <ProtectedRoute>
                 <TopNavbar />
@@ -114,12 +106,6 @@ function App() {
                 </div>
               </ProtectedRoute>
             } />
-            // <Route path="/unified-dashboard" element={
-            //   <ProtectedRoute>
-            //     <TopNavbar />
-            //     <UnifiedDashboard />
-            //   </ProtectedRoute>
-            // } />
             <Route path="/team" element={
               <ProtectedRoute>
                 <TopNavbar />
@@ -159,6 +145,4 @@ function App() {
   );
 }
 
-
 export default App;
-

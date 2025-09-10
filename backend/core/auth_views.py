@@ -151,7 +151,7 @@ class LoginView(APIView):
         
         email = request.data.get('email', '').strip()
         username = request.data.get('username', '').strip()  # Backwards compatibility
-         password = request.data.get('password', '').strip()  # Remove leading/trailing spaces
+        password = request.data.get('password', '').strip()  # Remove leading/trailing spaces
         
         print(f"🔍 Login attempt - Email: '{email}', Username: '{username}', Password: '{password[:3]}...'")
         print(f"🔍 Request data: {request.data}")

@@ -11,6 +11,15 @@ from .simplelogin_service import simplelogin
 import logging
 from smtplib import SMTPException
 
+# SendGrid Web API imports
+try:
+    import sendgrid
+    from sendgrid.helpers.mail import Mail
+    SENDGRID_API_AVAILABLE = True
+except ImportError:
+    SENDGRID_API_AVAILABLE = False
+    print("⚠️ SendGrid API library not installed. Install with: pip install sendgrid")
+
 logger = logging.getLogger(__name__)
 
 
@@ -40,6 +49,55 @@ def get_user_email_address(user):
         logger.error(f"SimpleLogin error: {str(e)}, using direct email")
 
     return user.email  # Fallback to direct email
+
+
+def send_email_via_sendgrid_api(to_email, subject, html_content, plain_content):
+    """
+    Send email using SendGrid Web API (HTTPS) instead of SMTP
+    This bypasses port 587 blocking on free hosting services like Render
+    """
+    if not SENDGRID_API_AVAILABLE:
+        print("❌ SendGrid API library not available", file=sys.stderr)
+        return False
+
+    if not getattr(settings, 'SENDGRID_API_KEY', None):
+        print("❌ SENDGRID_API_KEY not configured", file=sys.stderr)
+        return False
+
+    try:
+        import sys
+        import time
+        start_time = time.time()
+        print(f"📧 Attempting SendGrid Web API call...", file=sys.stderr)
+
+        sg = sendgrid.SendGridAPIClient(api_key=settings.SENDGRID_API_KEY)
+        message = Mail(
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to_emails=to_email,
+            subject=subject,
+            html_content=html_content,
+            plain_text_content=plain_content
+        )
+
+        response = sg.send(message)
+        elapsed = time.time() - start_time
+
+        print(f"✅ SendGrid API response: {response.status_code} in {elapsed:.2f} seconds", file=sys.stderr)
+
+        # SendGrid API returns 202 for successful acceptance
+        if response.status_code == 202:
+            print(f"✅ Email sent successfully via SendGrid API to {to_email}")
+            return True
+        else:
+            print(f"❌ SendGrid API unexpected status: {response.status_code}")
+            return False
+
+    except Exception as e:
+        import traceback
+        import sys
+        print(f"❌ SendGrid API error: {type(e).__name__}: {str(e)}", file=sys.stderr)
+        print(f"Full traceback:\n{traceback.format_exc()}", file=sys.stderr)
+        return False
 
 
 def send_email_verification(user, request=None):
@@ -113,39 +171,60 @@ def send_email_verification(user, request=None):
         email_sent = False
         email_error = None
         
-        try:
-            send_result = send_mail(
+        # Try SendGrid Web API first if available and configured for production
+        use_web_api = (
+            SENDGRID_API_AVAILABLE and
+            getattr(settings, 'SENDGRID_API_KEY', None) and
+            settings.EMAIL_SERVICE == 'sendgrid' and
+            not settings.DEBUG  # Only use API in production
+        )
+
+        if use_web_api:
+            print(f"🌐 Using SendGrid Web API (bypassing SMTP)", file=sys.stderr)
+            email_sent = send_email_via_sendgrid_api(
+                to_email=recipient_email,
                 subject=subject,
-                message=plain_message,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[recipient_email],
-                html_message=html_message,
-                fail_silently=False,
+                html_content=html_message,
+                plain_content=plain_message
             )
-            
-            # Check if email was actually sent
-            if send_result == 1:
-                email_sent = True
-                print(f"✅ Email sent successfully to {recipient_email}")
-            else:
+            if not email_sent:
+                email_error = "SendGrid Web API failed"
+        else:
+            # Fallback to Django's SMTP email sending
+            try:
+                import time
+                import sys
+                start_time = time.time()
+                print(f"📧 Attempting SMTP connection to SendGrid...", file=sys.stderr)
+
+                send_result = send_mail(
+                    subject=subject,
+                    message=plain_message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[recipient_email],
+                    html_message=html_message,
+                    fail_silently=False,
+                )
+
+                elapsed = time.time() - start_time
+                print(f"✅ Email sent in {elapsed:.2f} seconds", file=sys.stderr)
+
+                # Check if email was actually sent
+                if send_result == 1:
+                    email_sent = True
+                    print(f"✅ Email sent successfully to {recipient_email}")
+                else:
+                    email_sent = False
+                    email_error = f"SendGrid returned {send_result} - email may not have been sent"
+                    print(f"❌ Email send failed (result={send_result})")
+
+            except Exception as e:
+                import traceback
+                import sys
                 email_sent = False
-                email_error = f"SendGrid returned {send_result} - email may not have been sent"
-                print(f"❌ Email send failed (result={send_result})")
-                
-        except SMTPException as smtp_error:
-            email_sent = False
-            email_error = f"SMTP error: {str(smtp_error)}"
-            print(f"❌ 📬 SMTP ERROR sending to {recipient_email}: {smtp_error}")
-            print(f"📟 SMTP Error type: {type(smtp_error).__name__}")
-            import traceback
-            traceback.print_exc()
-        except Exception as send_error:
-            email_sent = False
-            email_error = f"Email send error: {str(send_error)}"
-            print(f"❌ 📧 GENERAL ERROR sending email to {recipient_email}: {send_error}")
-            print(f"📟 Error type: {type(send_error).__name__}")
-            import traceback
-            traceback.print_exc()
+                email_error = f"{type(e).__name__}: {str(e)}"
+                print(f"❌ Email failed: {type(e).__name__}: {str(e)}", file=sys.stderr)
+                print(f"Full traceback:\n{traceback.format_exc()}", file=sys.stderr)
         
         # Return magic link token instead of verification code for testing
         return {

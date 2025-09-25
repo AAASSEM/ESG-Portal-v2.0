@@ -33,18 +33,37 @@ cd backend && pip install -r requirements.txt && python manage.py migrate && pyt
 ## Fixes Applied
 
 1. **Gunicorn Timeout**: Increased from 30s to 120s to prevent worker timeouts
-2. **Email Backend**: Temporarily disabled real email sending to prevent SMTP timeouts
-3. **Error Handling**: Added comprehensive exception handling to prevent 502 errors
-4. **CORS Configuration**: Added production domain to allowed origins
+2. **SendGrid Web API**: Implemented HTTP-based email sending to bypass SMTP port 587 blocking
+3. **Email Diagnostics**: Added comprehensive logging for email configuration and sending
+4. **Error Handling**: Added comprehensive exception handling to prevent 502 errors
+5. **CORS Configuration**: Added production domain to allowed origins
 
-## Re-enabling Real Email
+## Email Sending Solution
 
-Once the signup process is stable, you can re-enable real email by:
+### The Problem
+Render's free tier blocks outbound SMTP on port 587, preventing email sending via SMTP.
 
-1. Set `USE_REAL_EMAIL=true` in Render environment variables
-2. Set `EMAIL_SERVICE=sendgrid`
-3. Add your `SENDGRID_API_KEY`
-4. Remove the temporary email override in settings.py lines 192-194
+### The Solution
+- **SendGrid Web API**: Uses HTTPS (port 443) instead of SMTP (port 587)
+- **Automatic Fallback**: Falls back to SMTP in development or if API unavailable
+- **Better Diagnostics**: Detailed logging shows exactly what's happening
+
+### Environment Variables for Real Email
+
+Set these in Render dashboard:
+
+```bash
+USE_REAL_EMAIL=true
+EMAIL_SERVICE=sendgrid
+SENDGRID_API_KEY=SG.your_sendgrid_api_key_here
+DEFAULT_FROM_EMAIL=noreply@yourdomain.com
+DEBUG=False
+```
+
+### Email Flow
+1. **Production**: Uses SendGrid Web API (HTTPS)
+2. **Development**: Uses console backend (prints to terminal)
+3. **Fallback**: SMTP if Web API fails or unavailable
 
 ## Monitoring
 

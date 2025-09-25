@@ -208,6 +208,16 @@ else:
     # Development: Print emails to console
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
+# Debug email configuration
+import sys
+print(f"🔍 EMAIL CONFIGURATION DEBUG:", file=sys.stderr)
+print(f"   Raw USE_REAL_EMAIL: '{os.environ.get('USE_REAL_EMAIL', 'not set')}'", file=sys.stderr)
+print(f"   Parsed USE_REAL_EMAIL: {USE_REAL_EMAIL}", file=sys.stderr)
+print(f"   EMAIL_SERVICE: '{EMAIL_SERVICE}'", file=sys.stderr)
+print(f"   EMAIL_BACKEND: {EMAIL_BACKEND}", file=sys.stderr)
+print(f"   SendGrid Key exists: {bool(os.environ.get('SENDGRID_API_KEY'))}", file=sys.stderr)
+print(f"   SendGrid Key first 10 chars: {os.environ.get('SENDGRID_API_KEY', '')[:10]}...", file=sys.stderr)
+
 # Email settings
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@esgportal.com')
 EMAIL_SUBJECT_PREFIX = '[ESG Portal] '

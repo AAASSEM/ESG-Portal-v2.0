@@ -25,37 +25,21 @@ def get_base_url():
 
 def get_user_email_address(user):
     """
-    Get the email address to use for sending emails to user
-    Uses SimpleLogin alias if enabled and available, otherwise uses direct email
-    
-    Args:
-        user: Django User instance
-    
-    Returns:
-        str: Email address to use (alias or direct email)
+    Get email address for sending - uses SimpleLogin alias if available
     """
-    # Check if SimpleLogin is enabled
-    if not getattr(settings, 'SIMPLELOGIN_ENABLED', False):
-        logger.debug(f"SimpleLogin disabled, using direct email for {user.email}")
-        return user.email
-    
-    # Check if SimpleLogin service is configured
-    if not simplelogin.is_configured():
-        logger.warning(f"SimpleLogin not configured, using direct email for {user.email}")
-        return user.email
-    
-    # Try to get or create alias for user
+    if not getattr(settings, 'SIMPLELOGIN_API_KEY', None):
+        return user.email  # Direct email if no SimpleLogin
+
     try:
-        success, alias_email = simplelogin.get_or_create_alias(user)
-        if success and alias_email:
-            logger.info(f"Using SimpleLogin alias {alias_email} for user {user.email}")
-            return alias_email
-        else:
-            logger.warning(f"Failed to get SimpleLogin alias for {user.email}, using direct email")
-            return user.email
+        # Try to get SimpleLogin alias
+        alias_info = simplelogin.get_user_alias(user.email)
+        if alias_info and alias_info.get('alias'):
+            logger.info(f"Using SimpleLogin alias for {user.email}")
+            return alias_info['alias']
     except Exception as e:
-        logger.error(f"SimpleLogin error for {user.email}: {str(e)}, using direct email")
-        return user.email
+        logger.error(f"SimpleLogin error: {str(e)}, using direct email")
+
+    return user.email  # Fallback to direct email
 
 
 def send_email_verification(user, request=None):
@@ -142,11 +126,11 @@ def send_email_verification(user, request=None):
             # Check if email was actually sent
             if send_result == 1:
                 email_sent = True
-                print(f"✅ Email verification sent successfully to {recipient_email}")
+                print(f"✅ Email sent successfully to {recipient_email}")
             else:
                 email_sent = False
                 email_error = f"SendGrid returned {send_result} - email may not have been sent"
-                print(f"⚠️ SendGrid returned unexpected result: {send_result}")
+                print(f"❌ Email send failed (result={send_result})")
                 
         except SMTPException as smtp_error:
             email_sent = False

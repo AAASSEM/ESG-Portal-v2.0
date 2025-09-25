@@ -214,6 +214,32 @@ class SimpleLoginService:
         
         return False, None
     
+    def get_user_alias(self, user_email: str) -> Optional[Dict]:
+        """
+        Get SimpleLogin alias info for a user email (for prompt.txt compatibility)
+
+        Args:
+            user_email: The user's email address
+
+        Returns:
+            Dict with alias info or None if not found
+        """
+        try:
+            from django.contrib.auth.models import User
+            user = User.objects.get(email=user_email)
+
+            if hasattr(user, 'userprofile') and user.userprofile.simplelogin_alias:
+                return {
+                    'alias': user.userprofile.simplelogin_alias,
+                    'alias_id': user.userprofile.simplelogin_alias_id
+                }
+        except User.DoesNotExist:
+            pass
+        except Exception as e:
+            logger.error(f"Error getting user alias: {str(e)}")
+
+        return None
+
     def is_configured(self) -> bool:
         """Check if SimpleLogin is properly configured"""
         return bool(self.api_key)

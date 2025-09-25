@@ -1,349 +1,289 @@
-The Problem
+ How Email Sending Works Locally vs Production       
 
-Worker Timeout: Your Gunicorn worker is timing out (default 30 seconds) during signup
-Email Processing: The signup process is trying to send verification emails, which is taking too long
-Transaction Issues: The database transaction completes, but the response never makes it back to the client
+  1. Email Backend Configuration (settings.py:168-207)
 
-Solutions
-1. Increase Gunicorn Worker Timeout
-Update your Render start command or create a gunicorn.conf.py:
-python# gunicorn.conf.py (create this in your backend folder)
-bind = "0.0.0.0:10000"
-workers = 2
-timeout = 120  # Increase timeout to 120 seconds
-worker_class = "sync"
-max_requests = 1000
-max_requests_jitter = 50
-Then update your Render start command to:
-bashcd backend && gunicorn esg_backend.wsgi:application --config gunicorn.conf.py
-2. Fix Email Configuration Issues
-The email sending is likely causing the timeout. Update your settings.py:
-python# Quick fix - disable email temporarily to test if that's the issue
-USE_REAL_EMAIL = False  # Force console email backend
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-3. Add Async Email Sending
-For production, implement async email sending to prevent timeouts:
-# core/views.py or wherever your signup view is
+  Environment-Based Email Backend Selection:
 
-import json
-import logging
-from django.http import JsonResponse
-from django.contrib.auth import get_user_model
-from django.db import transaction
-from django.core.exceptions import ValidationError
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
+  # Email Configuration
+  USE_REAL_EMAIL = os.environ.get('USE_REAL_EMAIL', 'False').lower() == 'true'
+  EMAIL_SERVICE = os.environ.get('EMAIL_SERVICE', 'console')  # console, smtp, sendgrid
 
-logger = logging.getLogger(__name__)
-User = get_user_model()
+  if USE_REAL_EMAIL:
+      if EMAIL_SERVICE == 'sendgrid':
+          # Production: SendGrid API email sending (recommended)
+          EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+          EMAIL_HOST = 'smtp.sendgrid.net'
+          EMAIL_PORT = 587
+          EMAIL_USE_TLS = True
+          EMAIL_HOST_USER = 'apikey'  # Literally 'apikey' for SendGrid
+          EMAIL_HOST_PASSWORD = os.environ.get('SENDGRID_API_KEY')
+      else:
+          # Alternative: SMTP email sending (Gmail, etc.)
+          EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+          EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+          EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
+          EMAIL_USE_TLS = True
+          EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+          EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+  else:
+      # Development: Print emails to console
+      EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-@csrf_exempt  # Temporarily disable CSRF for debugging
-def signup(request):
-    """Handle user signup with proper error handling and timeout prevention"""
-    
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Method not allowed'}, status=405)
-    
-    try:
-        # Parse request data
-        try:
-            data = json.loads(request.body)
-        except json.JSONDecodeError:
-            logger.error("Invalid JSON in signup request")
-            return JsonResponse({'error': 'Invalid JSON format'}, status=400)
-        
-        # Validate required fields
-        required_fields = ['email', 'password', 'first_name', 'last_name']
-        missing_fields = [field for field in required_fields if not data.get(field)]
-        
-        if missing_fields:
-            return JsonResponse({
-                'error': f'Missing required fields: {", ".join(missing_fields)}'
-            }, status=400)
-        
-        # Check if user already exists
-        if User.objects.filter(email=data['email']).exists():
-            return JsonResponse({'error': 'User with this email already exists'}, status=400)
-        
-        # Create user with transaction
-        with transaction.atomic():
-            user = User.objects.create_user(
-                email=data['email'],
-                username=data['email'],  # Use email as username
-                password=data['password'],
-                first_name=data.get('first_name', ''),
-                last_name=data.get('last_name', ''),
-                is_active=False  # Require email verification
-            )
-            
-            # Create company profile if data provided
-            if data.get('company_name'):
-                from core.models import CompanyProfile
-                CompanyProfile.objects.create(
-                    user=user,
-                    company_name=data['company_name'],
-                    industry=data.get('industry', 'other'),
-                    emirate=data.get('emirate', 'dubai'),
-                    website=data.get('website', ''),
-                    description=data.get('description', '')
-                )
-            
-            # Don't send email synchronously - use a signal or background task
-            # The email sending is already handled by signals based on your logs
-            
-            logger.info(f"User created successfully: {user.email}")
-        
-        # Return success immediately
-        return JsonResponse({
-            'success': True,
-            'message': 'Account created successfully. Please check your email for verification.',
-            'email': user.email
-        }, status=201)
-        
-    except ValidationError as e:
-        logger.error(f"Validation error in signup: {str(e)}")
-        return JsonResponse({'error': str(e)}, status=400)
-        
-    except Exception as e:
-        logger.error(f"Unexpected error in signup: {str(e)}", exc_info=True)
-        return JsonResponse({
-            'error': 'An error occurred during signup. Please try again.'
-        }, status=500)
+  Email Settings:
 
-# Alternative: Class-based view with better error handling
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
+  DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@esgportal.com')
+  EMAIL_SUBJECT_PREFIX = '[ESG Portal] '
+  EMAIL_VERIFICATION_TOKEN_EXPIRE_HOURS = 24
 
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def signup_api(request):
-    """REST API endpoint for signup"""
-    
-    try:
-        data = request.data
-        
-        # Validate data
-        required_fields = ['email', 'password', 'first_name', 'last_name']
-        for field in required_fields:
-            if not data.get(field):
-                return Response(
-                    {'error': f'{field} is required'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-        
-        # Check existing user
-        if User.objects.filter(email=data['email']).exists():
-            return Response(
-                {'error': 'User with this email already exists'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # Create user
-        with transaction.atomic():
-            user = User.objects.create_user(
-                email=data['email'],
-                username=data['email'],
-                password=data['password'],
-                first_name=data['first_name'],
-                last_name=data['last_name'],
-                is_active=False
-            )
-            
-            # Handle company profile
-            if data.get('company_name'):
-                from core.models import CompanyProfile
-                CompanyProfile.objects.create(
-                    user=user,
-                    company_name=data['company_name'],
-                    industry=data.get('industry', 'other'),
-                    emirate=data.get('emirate', 'dubai')
-                )
-        
-        return Response({
-            'success': True,
-            'message': 'Registration successful. Please check your email.',
-            'email': user.email
-        }, status=status.HTTP_201_CREATED)
-        
-    except Exception as e:
-        logger.error(f"Signup error: {str(e)}", exc_info=True)
-        return Response(
-            {'error': 'Registration failed. Please try again.'},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+  # Frontend URL for email links
+  FRONTEND_URL = os.environ.get('FRONTEND_URL',
+      'https://esg-portal.onrender.com' if not DEBUG else 'http://localhost:3001')
 
-4. Update Frontend to Handle the Response:
+  # Backend URL for magic links (API endpoint, not frontend)
+  BACKEND_URL = os.environ.get('BACKEND_URL',
+      'https://esg-portal.onrender.com' if not DEBUG else 'http://localhost:8080')
 
-// AuthContext.js - Improved signup function
+  2. Email Sending Implementation
 
-const signup = async (formData) => {
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/auth/signup/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            credentials: 'include', // Important for CORS
-            body: JSON.stringify(formData),
-        });
+  Core Email Service (email_service.py:133-140):
 
-        // Get response text first to handle non-JSON responses
-        const responseText = await response.text();
-        
-        // Try to parse as JSON
-        let data;
-        try {
-            data = JSON.parse(responseText);
-        } catch (e) {
-            console.error('Response is not JSON:', responseText);
-            
-            // Handle different HTTP status codes
-            if (response.status === 502) {
-                throw new Error('Server error. Please try again later.');
-            } else if (response.status === 500) {
-                throw new Error('Internal server error. Please contact support.');
-            } else {
-                throw new Error(`Unexpected response: ${responseText}`);
-            }
-        }
+  send_result = send_mail(
+      subject=subject,
+      message=plain_message,
+      from_email=settings.DEFAULT_FROM_EMAIL,
+      recipient_list=[recipient_email],
+      html_message=html_message,
+      fail_silently=False,
+  )
 
-        // Check if response is successful
-        if (!response.ok) {
-            // Handle specific error messages from backend
-            const errorMessage = data.error || data.message || 'Signup failed';
-            throw new Error(errorMessage);
-        }
+  # Check if email was actually sent
+  if send_result == 1:
+      email_sent = True
+      print(f"✅ Email sent successfully to {recipient_email}")
+  else:
+      print(f"❌ Email send failed (result={send_result})")
 
-        // Success - handle the response
-        console.log('Signup successful:', data);
-        
-        // Show success message
-        if (data.message) {
-            // You might want to show this in a toast or notification
-            alert(data.message);
-        }
-        
-        // Don't try to parse user/token if email verification is required
-        if (data.success && !data.user) {
-            // Redirect to email verification page or show message
-            return {
-                success: true,
-                requiresVerification: true,
-                email: data.email
-            };
-        }
-        
-        // If user data is returned (auto-login after signup)
-        if (data.user) {
-            setUser(data.user);
-            localStorage.setItem('user', JSON.stringify(data.user));
-            
-            if (data.token) {
-                localStorage.setItem('token', data.token);
-            }
-        }
-        
-        return data;
-        
-    } catch (error) {
-        console.error('Signup error:', error);
-        
-        // Provide user-friendly error messages
-        let userMessage = 'Registration failed. ';
-        
-        if (error.message.includes('email already exists')) {
-            userMessage = 'This email is already registered. Please login or use a different email.';
-        } else if (error.message.includes('timeout')) {
-            userMessage = 'Request timed out. Please check your connection and try again.';
-        } else if (error.message.includes('Network')) {
-            userMessage = 'Network error. Please check your internet connection.';
-        } else {
-            userMessage += error.message;
-        }
-        
-        throw new Error(userMessage);
-    }
-};
+  Signal-Based Email Triggers (signals.py:27-68, 73-221):
 
-// Improved user check function
-const checkAuthUser = async () => {
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/auth/user/`, {
-            method: 'GET',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
+  # User creation signal - triggers invitation emails
+  @receiver(post_save, sender=User)
+  def send_user_creation_email(sender, instance, created, **kwargs):
+      if created and instance.email:
+          def send_user_email():
+              has_password = instance.has_usable_password()
 
-        // 401 is expected for non-authenticated users
-        if (response.status === 401) {
-            console.log('User not authenticated (expected for new visitors)');
-            setUser(null);
-            setLoading(false);
-            return;
-        }
+              if has_password:
+                  # Self-signup: Send email verification
+                  token_obj = EmailVerificationToken.objects.create(
+                      user=instance,
+                      token_type='email_verification'
+                  )
+              else:
+                  # Admin-created: Send invitation email
+                  token_obj = EmailVerificationToken.objects.create(
+                      user=instance,
+                      token_type='invitation'
+                  )
 
-        if (response.ok) {
-            const userData = await response.json();
-            setUser(userData);
-            localStorage.setItem('user', JSON.stringify(userData));
-        } else {
-            // Unexpected status code
-            console.error('Unexpected response status:', response.status);
-            setUser(null);
-        }
-    } catch (error) {
-        // Network errors or other issues
-        console.error('Auth check error:', error);
-        setUser(null);
-    } finally {
-        setLoading(false);
-    }
-};
+          # Send after database transaction commits
+          transaction.on_commit(send_user_email)
 
-// Add timeout handling
-const fetchWithTimeout = (url, options = {}, timeout = 30000) => {
-    return Promise.race([
-        fetch(url, options),
-        new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Request timeout')), timeout)
-        )
-    ]);
-};
+  # Token creation signal - sends the actual emails
+  @receiver(post_save, sender=EmailVerificationToken)
+  def send_email_after_token_creation(sender, instance, created, **kwargs):
+      if created and instance.user.email:
+          def send_token_email():
+              if instance.token_type == 'password_reset':
+                  # Send password reset with 6-digit code
+                  send_mail(...)
+              elif instance.token_type == 'email_verification':
+                  # Send email verification with magic link
+                  send_mail(...)
+              elif instance.token_type == 'invitation':
+                  # Send invitation with magic link
+                  send_mail(...)
 
-5. Quick Deployment Fix for Render
-Add these environment variables in your Render dashboard:
-bash# In Render Environment Variables
-DEBUG=False
-USE_REAL_EMAIL=False  # Disable email temporarily
-DATABASE_URL=your-postgres-url-here
-SECRET_KEY=your-secret-key-here
-6. Update your Build Command
-In Render settings, update your build command:
-bashcd backend && pip install -r requirements.txt && python manage.py migrate && python manage.py collectstatic --noinput
-7. Update Start Command
-bashcd backend && gunicorn esg_backend.wsgi:application --timeout 120 --workers 2
-Testing Steps
+          transaction.on_commit(send_token_email)
 
-First, test locally to ensure signup works:
+  3. Local Development Email Handling
 
-bashpython manage.py runserver
-# Try signup via Postman or curl
+  Console Backend (when USE_REAL_EMAIL=False):
 
-Check the actual error by adding more logging:
+  EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-python# In your signup view
-import traceback
-try:
-    # your code
-except Exception as e:
-    print(f"SIGNUP ERROR: {str(e)}")
-    print(traceback.format_exc())
-    raise
+  How it works:
+  - No actual emails sent - emails are printed to console/terminal
+  - Development debugging - see exact email content and formatting
+  - No external dependencies - no SMTP server or API keys needed
+  - Instant feedback - emails appear immediately in Django console
 
-Monitor Render logs during signup to see the actual error.
+  Example Console Output:
+  Content-Type: text/plain; charset="utf-8"
+  MIME-Version: 1.0
+  Content-Transfer-Encoding: 8bit
+  Subject: [ESG Portal] You've been invited to ESG Portal
+  From: noreply@esgportal.com
+  To: user@example.com
+  Date: Thu, 26 Sep 2025 10:30:00 -0000
+  Message-ID: <...>
 
-The main issue is the worker timeout during email sending. Start by disabling email (set USE_REAL_EMAIL=False) and increasing the timeout. Once signup works, you can re-enable email with proper async handling.RetryClaude can make mistakes. Please double-check responses.
+  Welcome to ESG Portal, John!
+
+  You've been invited to join ESG Portal as a Site Manager.
+
+  Click the magic link below to access your account:
+  http://localhost:8080/api/auth/magic-link/abc123def456ghi789jkl/
+
+  This invitation link will expire in 7 days.
+
+  Local Email Testing Options:
+
+  1. Console Backend (default): Print to terminal
+  2. File Backend: Save emails as files
+  3. Dummy Backend: Discard emails silently
+  4. SMTP Backend: Use local SMTP server (mailcatcher, etc.)
+
+  4. Production Email Handling
+
+  SendGrid Configuration (Production Recommended):
+
+  # Environment variables needed in production:
+  USE_REAL_EMAIL=true
+  EMAIL_SERVICE=sendgrid
+  SENDGRID_API_KEY=SG.your_sendgrid_api_key_here
+  DEFAULT_FROM_EMAIL=noreply@yourdomain.com
+
+  SendGrid Setup:
+  EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+  EMAIL_HOST = 'smtp.sendgrid.net'
+  EMAIL_PORT = 587
+  EMAIL_USE_TLS = True
+  EMAIL_HOST_USER = 'apikey'  # Literally 'apikey'
+  EMAIL_HOST_PASSWORD = os.environ.get('SENDGRID_API_KEY')
+
+  Alternative SMTP Configuration:
+
+  # Environment variables for Gmail/custom SMTP:
+  USE_REAL_EMAIL=true
+  EMAIL_SERVICE=smtp
+  EMAIL_HOST=smtp.gmail.com
+  EMAIL_PORT=587
+  EMAIL_HOST_USER=your-email@gmail.com
+  EMAIL_HOST_PASSWORD=your-app-password
+
+  5. Email Types and Templates
+
+  Email Templates Structure (/backend/templates/emails/):
+
+  templates/emails/
+  ├── email_verification.html        # Legacy email verification
+  ├── email_verification_magic.html  # Magic link email verification  
+  ├── password_reset.html            # Password reset with 6-digit code
+  ├── invitation.html                # User invitation magic link
+  └── corresponding .txt files       # Plain text versions
+
+  Email Types and Content:
+
+  1. Invitation Email (invitation.html):
+
+  - Trigger: Admin creates user without password
+  - Content: Magic link for account setup
+  - URL: {BACKEND_URL}/api/auth/magic-link/{token}/
+  - Expiry: 7 days
+  - Template Variables: user_name, invitation_url, site_name, role
+
+  2. Email Verification (email_verification_magic.html):
+
+  - Trigger: Self-signup with email
+  - Content: Magic link for email verification
+  - URL: Same magic link endpoint
+  - Expiry: 24 hours
+  - Template Variables: user_name, verification_url, site_name
+
+  3. Password Reset (password_reset.html):
+
+  - Trigger: User requests password reset
+  - Content: 6-digit verification code
+  - Method: Code entry in frontend form
+  - Expiry: 1 hour
+  - Template Variables: user_name, verification_code, site_name
+
+  Magic Link URLs:
+
+  # Development
+  magic_link_url = f"http://localhost:8080/api/auth/magic-link/{token}/"
+
+  # Production  
+  magic_link_url = f"https://esg-portal.onrender.com/api/auth/magic-link/{token}/"
+
+  6. Privacy Protection with SimpleLogin
+
+  Email Address Resolution (email_service.py:26-58):
+
+  def get_user_email_address(user):
+      """
+      Get email address for sending - uses SimpleLogin alias if available
+      """
+      if not getattr(settings, 'SIMPLELOGIN_API_KEY', None):
+          return user.email  # Direct email if no SimpleLogin
+
+      try:
+          # Try to get SimpleLogin alias
+          alias_info = simplelogin.get_user_alias(user.email)
+          if alias_info and alias_info.get('alias'):
+              logger.info(f"Using SimpleLogin alias for {user.email}")
+              return alias_info['alias']
+      except Exception as e:
+          logger.error(f"SimpleLogin error: {str(e)}, using direct email")
+
+      return user.email  # Fallback to direct email
+
+  SimpleLogin Integration:
+
+  - Purpose: Privacy protection for user email addresses
+  - Functionality: Creates alias emails that forward to user's real email
+  - Configuration: SIMPLELOGIN_API_KEY environment variable
+  - Fallback: Uses direct email if SimpleLogin unavailable
+
+  7. Email Delivery Flow
+
+  Complete Email Sending Process:
+
+  1. Trigger Event: User creation, password reset request, etc.
+  2. Signal Handler: Django signal creates EmailVerificationToken
+  3. Token Creation: Generates unique token with expiry
+  4. Email Assembly:
+    - Template rendering with context variables
+    - HTML and plain text versions
+    - Subject line with prefix
+  5. Address Resolution: SimpleLogin alias or direct email
+  6. Backend Selection: Console (dev) or SMTP/SendGrid (prod)
+  7. Email Dispatch: send_mail() function call
+  8. Delivery Confirmation: Check return value (1 = success)
+  9. Error Handling: Log failures, continue gracefully
+
+  Development vs Production Comparison:
+
+  | Aspect                | Local Development            | Production                   |
+  |-----------------------|------------------------------|------------------------------|
+  | Backend               | Console (prints to terminal) | SendGrid/SMTP (real sending) |
+  | API Keys              | Not required                 | SENDGRID_API_KEY required    |
+  | Email Delivery        | Immediate console output     | Actual email delivery        |
+  | Testing               | View email content instantly | Need real email account      |
+  | External Dependencies | None                         | SendGrid account/SMTP server |
+  | URLs in emails        | localhost:8080               | esg-portal.onrender.com      |
+  | From Address          | noreply@esgportal.com        | Configured domain email      |
+  | Privacy Protection    | Optional SimpleLogin         | Same SimpleLogin integration |
+
+  Production Environment Variables Required:
+
+  USE_REAL_EMAIL=true
+  EMAIL_SERVICE=sendgrid
+  SENDGRID_API_KEY=SG.your_api_key_here
+  DEFAULT_FROM_EMAIL=noreply@yourdomain.com
+  FRONTEND_URL=https://your-frontend.onrender.com
+  BACKEND_URL=https://your-backend.onrender.com
+  SIMPLELOGIN_API_KEY=optional_privacy_key
+
+  The system provides a robust email infrastructure that seamlessly transitions from development (console output) to production (real email        
+  delivery) through environment variable configuration, with comprehensive template support and privacy protection features.

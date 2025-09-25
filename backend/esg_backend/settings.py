@@ -187,26 +187,31 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 USE_REAL_EMAIL = os.environ.get('USE_REAL_EMAIL', 'False').lower() == 'true'
 EMAIL_SERVICE = os.environ.get('EMAIL_SERVICE', 'console')  # console, smtp, sendgrid
 
-if USE_REAL_EMAIL:
-    if EMAIL_SERVICE == 'sendgrid':
-        # SendGrid API email sending (recommended)
-        EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-        EMAIL_HOST = 'smtp.sendgrid.net'
-        EMAIL_PORT = 587
-        EMAIL_USE_TLS = True
-        EMAIL_HOST_USER = 'apikey'  # This is literally 'apikey' for SendGrid
-        EMAIL_HOST_PASSWORD = os.environ.get('SENDGRID_API_KEY')
-    else:
-        # SMTP email sending (Gmail, etc.)
-        EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-        EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
-        EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
-        EMAIL_USE_TLS = True
-        EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
-        EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
-else:
-    # Development: Print emails to console
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# Temporarily force console backend to prevent worker timeouts
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+print(f"📧 Email backend forced to console for timeout prevention")
+
+# Original email configuration (commented out for timeout fix)
+# if USE_REAL_EMAIL:
+#     if EMAIL_SERVICE == 'sendgrid':
+#         # SendGrid API email sending (recommended)
+#         EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+#         EMAIL_HOST = 'smtp.sendgrid.net'
+#         EMAIL_PORT = 587
+#         EMAIL_USE_TLS = True
+#         EMAIL_HOST_USER = 'apikey'  # This is literally 'apikey' for SendGrid
+#         EMAIL_HOST_PASSWORD = os.environ.get('SENDGRID_API_KEY')
+#     else:
+#         # SMTP email sending (Gmail, etc.)
+#         EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+#         EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+#         EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
+#         EMAIL_USE_TLS = True
+#         EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+#         EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+# else:
+#     # Development: Print emails to console
+#     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Email settings
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@esgportal.com')

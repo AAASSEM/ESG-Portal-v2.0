@@ -18,10 +18,18 @@ class SignupView(APIView):
     permission_classes = [AllowAny]  # Allow unauthenticated access
     
     def post(self, request):
+        print(f"🔄 SIGNUP REQUEST START - Method: {request.method}")
+        print(f"📝 Request data keys: {list(request.data.keys()) if hasattr(request, 'data') else 'No data'}")
+        print(f"🌍 Remote addr: {request.META.get('REMOTE_ADDR', 'Unknown')}")
+
         username = request.data.get('username', '').strip()
         email = request.data.get('email', '').strip()
         company_name = request.data.get('companyName', '').strip()
         password = request.data.get('password', '')
+
+        print(f"📧 Email: {email}")
+        print(f"👤 Username: {username}")
+        print(f"🏢 Company: {company_name}")
         
         # Validation
         if not username or not password:
@@ -123,11 +131,23 @@ class SignupView(APIView):
                 print("✅ User creation transaction completed - all data committed")
 
         except Exception as e:
-            print(f"❌ Error creating user account: {str(e)}")
+            print(f"❌ SIGNUP ERROR: {str(e)}")
             import traceback
+            print("❌ SIGNUP TRACEBACK:")
             traceback.print_exc()
+
+            # More specific error handling
+            error_message = 'Failed to create account. Please try again.'
+            if 'UNIQUE constraint failed' in str(e):
+                error_message = 'Username or email already exists'
+            elif 'timeout' in str(e).lower():
+                error_message = 'Request timed out. Please try again.'
+            elif 'database' in str(e).lower():
+                error_message = 'Database error. Please try again later.'
+
             return Response({
-                'error': 'Failed to create account. Please try again.'
+                'error': error_message,
+                'details': str(e) if DEBUG else None
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         print(f"✅ User account created successfully: {user.email}")
@@ -136,13 +156,19 @@ class SignupView(APIView):
         
         response_message = 'Account created successfully! Please check your email to verify your account.'
         next_step = 'Click the verification link in your email to activate your account.'
-        
-        return Response({
+
+        response_data = {
+            'success': True,
             'message': response_message,
             'user_email': user.email,
             'email_sent': True,  # Signal will handle email sending
             'next_step': next_step
-        }, status=status.HTTP_201_CREATED)
+        }
+
+        print(f"✅ SIGNUP SUCCESS - Returning response for: {user.email}")
+        print(f"📤 Response data: {response_data}")
+
+        return Response(response_data, status=status.HTTP_201_CREATED)
 
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginView(APIView):

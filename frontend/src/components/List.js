@@ -20,7 +20,8 @@ const List = () => {
     message: ''
   });
   const [checklistExists, setChecklistExists] = useState(false);
-  
+  const [accessDenied, setAccessDenied] = useState(false);
+
   // Assignment states
   const [showUserModal, setShowUserModal] = useState(false);
   const [selectedElement, setSelectedElement] = useState(null);
@@ -86,6 +87,9 @@ const List = () => {
           } else {
             console.error('Questions array is empty or not an array:', questions);
           }
+        } else if (response.status === 403) {
+          console.log('Access denied - user does not have permission to access profiling');
+          setAccessDenied(true);
         } else {
           const errorText = await response.text();
           console.error('Failed to fetch profiling questions. Status:', response.status, 'Error:', errorText);
@@ -274,19 +278,27 @@ const List = () => {
     if (!companyId) return false;
     
     try {
-      console.log('🔍 Checking if checklist exists for company:', companyId);
+      console.log('ðŸ” Checking if checklist exists for company:', companyId);
       // Add timestamp to force cache bypass
       const timestamp = new Date().getTime();
       const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/checklist/?company_id=${companyId}&t=${timestamp}`);
       if (response.ok) {
         const checklistData = await response.json();
-        const exists = checklistData.results && checklistData.results.length > 0;
-        console.log('✅ Checklist exists check result:', exists);
+        // Handle both paginated {results: []} and direct array responses
+        const checklistItems = checklistData.results || checklistData;
+        const exists = Array.isArray(checklistItems) && checklistItems.length > 0;
+        console.log('ðŸ” Checklist data:', {
+          dataType: typeof checklistData,
+          isArray: Array.isArray(checklistData),
+          itemsCount: checklistItems ? checklistItems.length : 0,
+          exists: exists
+        });
+        console.log('âœ… Checklist exists check result:', exists);
         setChecklistExists(exists);
-        
+
         // Store the backend checklist with proper IDs
         if (exists) {
-          const transformedChecklist = checklistData.results.map(item => ({
+          const transformedChecklist = checklistItems.map(item => ({
             id: item.id,  // This is the actual database ID we need for assignments
             name: item.element_name,
             description: item.element_description,
@@ -297,16 +309,16 @@ const List = () => {
             isMetered: item.is_metered
           }));
           setBackendChecklist(transformedChecklist);
-          console.log('✅ Loaded backend checklist with', transformedChecklist.length, 'items:', transformedChecklist);
+          console.log('âœ… Loaded backend checklist with', transformedChecklist.length, 'items:', transformedChecklist);
         }
         
         return exists;
       } else {
-        console.log('❌ Failed to check checklist:', response.status);
+        console.log('âŒ Failed to check checklist:', response.status);
         setChecklistExists(false);
       }
     } catch (error) {
-      console.error('❌ Error checking checklist existence:', error);
+      console.error('âŒ Error checking checklist existence:', error);
       setChecklistExists(false);
     }
     return false;
@@ -344,7 +356,7 @@ const List = () => {
   // Must-have data elements (always required)
   const mustHaveElements = [
     { id: 'electricity', name: 'Electricity Consumption', description: 'Total electricity from local providers', unit: 'kWh', cadence: 'Monthly', frameworks: ['DST', 'ESG', 'Green Key'], category: 'Environmental', is_metered: true, meter_type: 'Electricity' },
-    { id: 'water', name: 'Water Consumption', description: 'Total water usage', unit: 'm³', cadence: 'Monthly', frameworks: ['DST', 'ESG', 'Green Key'], category: 'Environmental', is_metered: true, meter_type: 'Water' },
+    { id: 'water', name: 'Water Consumption', description: 'Total water usage', unit: 'mÂ³', cadence: 'Monthly', frameworks: ['DST', 'ESG', 'Green Key'], category: 'Environmental', is_metered: true, meter_type: 'Water' },
     { id: 'waste_landfill', name: 'Waste to Landfill', description: 'Non-recycled waste disposal', unit: 'kg', cadence: 'Monthly', frameworks: ['DST', 'ESG', 'Green Key'], category: 'Environmental', is_metered: true, meter_type: 'Waste' },
     { id: 'sustainability_policy', name: 'Sustainability Policy', description: 'Written sustainability policy', unit: 'Document', cadence: 'Annually', frameworks: ['DST', 'Green Key', 'ESG'], category: 'Social', is_metered: false },
     { id: 'sustainability_personnel', name: 'Sustainability Personnel', description: 'Certified sustainability staff', unit: 'Count', cadence: 'Annually', frameworks: ['DST', 'Green Key'], category: 'Social', is_metered: false },
@@ -366,7 +378,7 @@ const List = () => {
     'lpg_consumption': { id: 'lpg_consumption', name: 'LPG Usage', description: 'Liquid petroleum gas consumption', unit: 'kg', cadence: 'Monthly', frameworks: ['DST', 'ESG'], category: 'Environmental', is_metered: true, meter_type: 'LPG' },
     'green_events': { id: 'green_events', name: 'Green Events', description: 'Sustainable event services', unit: 'Count', cadence: 'Quarterly', frameworks: ['DST', 'Green Key'], category: 'Social', is_metered: false },
     'food_sourcing': { id: 'food_sourcing', name: 'Food Sourcing', description: 'Local/organic food purchases', unit: '%', cadence: 'Quarterly', frameworks: ['Green Key', 'ESG'], category: 'Environmental', is_metered: false },
-    'green_spaces': { id: 'green_spaces', name: 'Green Spaces', description: 'Sustainable landscaping', unit: 'm²', cadence: 'Annually', frameworks: ['Green Key'], category: 'Environmental', is_metered: false },
+    'green_spaces': { id: 'green_spaces', name: 'Green Spaces', description: 'Sustainable landscaping', unit: 'mÂ²', cadence: 'Annually', frameworks: ['Green Key'], category: 'Environmental', is_metered: false },
     'renewable_energy_usage': { id: 'renewable_energy_usage', name: 'Renewable Energy', description: 'Energy from renewable sources', unit: '%', cadence: 'Quarterly', frameworks: ['Green Key', 'ESG'], category: 'Environmental', is_metered: true, meter_type: 'Renewable Energy' },
     'environmental_management_system': { id: 'environmental_management_system', name: 'Environmental Management System', description: 'EMS certification', unit: 'Status', cadence: 'Annually', frameworks: ['Green Key', 'ESG'], category: 'Governance', is_metered: false },
     'board_composition': { id: 'board_composition', name: 'Board Composition', description: 'Board diversity metrics', unit: '%', cadence: 'Annually', frameworks: ['ESG'], category: 'Governance', is_metered: false }
@@ -462,7 +474,7 @@ const List = () => {
   );
   
   // Debug logging
-  console.log('🔍 Component render state:', {
+  console.log('ðŸ” Component render state:', {
     companyId,
     answersCount: Object.keys(answers).length,
     questionsCount: profilingQuestions.length,
@@ -503,9 +515,21 @@ const List = () => {
         const checklistResponse = await makeAuthenticatedRequest(`${API_BASE_URL}/api/checklist/?company_id=${companyId}`);
         if (checklistResponse.ok) {
           const checklistData = await checklistResponse.json();
-          
+          console.log('ðŸ” API Response type:', typeof checklistData, 'Is Array:', Array.isArray(checklistData));
+          console.log('ðŸ” API Response keys:', checklistData.results ? 'Has results property' : 'Direct array/object');
+          console.log('ðŸ” API Response length/count:', Array.isArray(checklistData) ? checklistData.length : Object.keys(checklistData).length);
+
           // Transform backend checklist to frontend format for display
-          const transformedChecklist = checklistData.results.map(item => ({
+          // Handle both paginated {results: []} and direct array responses
+          const checklistItems = checklistData.results || checklistData;
+          console.log('ðŸ” ChecklistItems type:', typeof checklistItems, 'Is Array:', Array.isArray(checklistItems));
+
+          if (!Array.isArray(checklistItems)) {
+            console.error('âŒ ChecklistItems is not an array:', checklistItems);
+            throw new Error('Invalid checklist data format');
+          }
+
+          const transformedChecklist = checklistItems.map(item => ({
             id: item.id,  // This is the actual database ID we need for assignments
             name: item.element_name,
             description: item.element_description,
@@ -558,7 +582,7 @@ const List = () => {
   const canAssign = backendChecklist.length > 0; // Only allow assignment when backend data is loaded
   
   // Debug logging
-  console.log('📊 Checklist Status:', {
+  console.log('ðŸ“Š Checklist Status:', {
     backendChecklistCount: backendChecklist.length,
     localChecklistCount: localChecklist.length,
     finalChecklistCount: finalChecklist.length,
@@ -849,6 +873,32 @@ const List = () => {
     );
   }
 
+  // Show access denied message if backend returns 403
+  if (accessDenied) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="max-w-md mx-auto text-center">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+            <div className="w-16 h-16 mx-auto bg-red-100 rounded-full flex items-center justify-center mb-4">
+              <i className="fas fa-lock text-red-600 text-2xl"></i>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Access Denied</h3>
+            <p className="text-gray-600 mb-4">
+              You don't have permission to access profiling.
+            </p>
+            <p className="text-sm text-gray-500">
+              Contact your administrator if you need access to this feature.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Access control check for framework selection functionality
+  const canAccessFrameworkSelection = hasPermission('frameworkSelection', 'read');
+  console.log('List.js - Framework selection access:', canAccessFrameworkSelection, 'User role:', user?.role);
+
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto px-4">
@@ -1060,7 +1110,7 @@ const List = () => {
         <div className="bg-green-50 border border-green-200 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-              <h3 className="text-base sm:text-lg font-semibold text-green-900">✅ Checklist Ready!</h3>
+              <h3 className="text-base sm:text-lg font-semibold text-green-900">âœ… Checklist Ready!</h3>
               <p className="text-sm sm:text-base text-green-700">Your personalized data checklist has been created and is ready to view.</p>
             </div>
             <button
@@ -1075,12 +1125,22 @@ const List = () => {
 
       {/* Action Footer */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 gap-3">
-        <button 
-          className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium text-sm sm:text-base"
-          onClick={() => navigate('/frame')}
-        >
-          <i className="fas fa-arrow-left mr-2"></i>Back
-        </button>
+        {canAccessFrameworkSelection && (
+          <button
+            className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium text-sm sm:text-base"
+            onClick={() => navigate('/rame')}
+          >
+            <i className="fas fa-arrow-left mr-2"></i>Back
+          </button>
+        )}
+        {!canAccessFrameworkSelection && (
+          <button
+            className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium text-sm sm:text-base"
+            onClick={() => navigate('/dashboard')}
+          >
+            <i className="fas fa-arrow-left mr-2"></i>Back to Dashboard
+          </button>
+        )}
         <div className="text-center">
           <p className="text-xs sm:text-sm text-gray-600">
             {!allQuestionsAnswered 

@@ -1,14 +1,15 @@
-AuthContext.js:71 
- 
- POST http://localhost:8080/api/element-assignments/assign_element/ 500 (Internal Server Error)
-AuthContext.js:76 ✅ Request completed: http://localhost:8080/api/element-assignments/assign_element/ Status: 500
-List.js:189 
- Error assigning element: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-List.js:36 List component - selectedCompany: 
-{id: 19, name: 'aaa', emirate: 'dubai', sector: 'hospitality', created_at: '2025-09-04T00:28:55.115001+04:00'}
-List.js:37 List component - companyId: 19
-List.js:38 List component - user: 
-{id: 41, username: 'assem', email: 'aaassem.10@gmail.com', name: 'assem', role: 'super_user', …}
-List.js:501 🔍 Component render state: 
-{companyId: 19, answersCount: 4, questionsCount: 4, allQuestionsAnswered: true, showChecklist: true, …}
-﻿
+Uncaught runtime errors:
+×
+ERROR
+Cannot access 'fetchProfilingQuestions' before initialization
+ReferenceError: Cannot access 'fetchProfilingQuestions' before initialization
+    at fetchData (http://localhost:3001/main.c9862ddc8d581f89be4d.hot-update.js:83:7)
+    at http://localhost:3001/main.c9862ddc8d581f89be4d.hot-update.js:90:7
+    at commitHookEffectListMount (http://localhost:3001/static/js/bundle.js:34143:30)
+    at commitPassiveMountOnFiber (http://localhost:3001/static/js/bundle.js:35636:17)
+    at commitPassiveMountEffects_complete (http://localhost:3001/static/js/bundle.js:35608:13)
+    at commitPassiveMountEffects_begin (http://localhost:3001/static/js/bundle.js:35598:11)
+    at commitPassiveMountEffects (http://localhost:3001/static/js/bundle.js:35588:7)
+    at flushPassiveEffectsImpl (http://localhost:3001/static/js/bundle.js:37471:7)
+    at flushPassiveEffects (http://localhost:3001/static/js/bundle.js:37424:18)
+    at commitRootImpl (http://localhost:3001/static/js/bundle.js:37383:9)

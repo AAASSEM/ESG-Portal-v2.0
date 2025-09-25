@@ -513,7 +513,14 @@ class FrameworkViewSet(viewsets.ReadOnlyModelViewSet):
                 framework=framework,
                 is_auto_assigned=False  # Only remove voluntary frameworks
             ).delete()
-            
+
+            # Bridge to new framework system: update Company model
+            if framework_id == 'GREEN_KEY':
+                company.has_green_key = False
+                company.save()
+                # Update active frameworks to remove 'G'
+                company.update_active_frameworks()
+
             return Response({'message': 'Framework removed successfully'})
         except Company.DoesNotExist:
             return Response(
@@ -538,23 +545,33 @@ class ProfilingQuestionViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=False, methods=['get'])
     def for_company(self, request):
         """Get profiling questions for a specific company"""
+        # Check if user has permission to access profiling questions
+        user_role = getattr(request.user.userprofile, 'role', 'viewer')
+        allowed_roles = ['super_user', 'admin', 'site_manager', 'viewer']
+
+        if user_role not in allowed_roles:
+            return Response(
+                {'error': f'Role "{user_role}" does not have permission to access profiling questions'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
         company_id = request.query_params.get('company_id')
         if not company_id:
             return Response(
-                {'error': 'company_id parameter required'}, 
+                {'error': 'company_id parameter required'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         try:
             # CRITICAL: Ensure user can only access their own company
             company = get_user_company(request.user, company_id)
-                    
+
             questions = ProfilingService.get_profiling_questions(company)
             serializer = self.get_serializer(questions, many=True)
             return Response(serializer.data)
         except Exception as e:
             return Response(
-                {'error': f'Error retrieving questions: {str(e)}'}, 
+                {'error': f'Error retrieving questions: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
     
@@ -600,7 +617,8 @@ class CompanyChecklistViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = CompanyChecklistSerializer
     authentication_classes = [CsrfExemptSessionAuthentication]
     permission_classes = [IsAuthenticated]
-    
+    pagination_class = None  # Disable pagination to ensure all 80 elements are returned
+
     def get_queryset(self):
         company_id = self.request.query_params.get('company_id')
         if company_id:
@@ -847,12 +865,21 @@ class DataCollectionViewSet(viewsets.ModelViewSet):
                         'account_number': task['meter'].account_number,
                         'status': task['meter'].status
                     }
-                
+
+                # Get the checklist item ID for element assignments
+                checklist_item = CompanyChecklist.objects.filter(
+                    company=company,
+                    element=task['element']
+                ).first()
+
                 task_data.append({
                     'type': task['type'],
+                    'element_id': task['element'].element_id,
                     'element_name': task['element'].name,
                     'element_unit': task['element'].unit,
                     'element_description': task['element'].description,
+                    'element_category': task['element'].category,
+                    'checklist_item_id': checklist_item.id if checklist_item else None,
                     'meter': meter_info,
                     'cadence': task['cadence'],
                     'submission': submission_data

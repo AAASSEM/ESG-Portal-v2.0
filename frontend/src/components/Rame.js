@@ -60,7 +60,7 @@ const Rame = () => {
     const fetchMandatoryFrameworks = async () => {
       try {
         console.log('🔍 Fetching mandatory frameworks for company:', companyId);
-        
+
         // Get company frameworks from backend
         const response = await fetch(`${API_BASE_URL}/api/companies/${companyId}/frameworks/`, {
           credentials: 'include'
@@ -68,7 +68,7 @@ const Rame = () => {
         if (response.ok) {
           const frameworks = await response.json();
           console.log('📋 Backend frameworks:', frameworks);
-          
+
           // Only DST and ESG are mandatory frameworks
           const defaultMandatoryFrameworks = [
             {
@@ -90,9 +90,9 @@ const Rame = () => {
               reason: 'Mandatory for all Dubai hospitality entities'
             }
           ];
-          
+
           let mappedFrameworks = [];
-          
+
           // If backend has frameworks, filter for only mandatory ones (DST and ESG)
           if (frameworks && Array.isArray(frameworks) && frameworks.length > 0) {
             const mandatoryFrameworks = frameworks.filter(f => f.type === 'mandatory');
@@ -113,26 +113,21 @@ const Rame = () => {
                 reason: 'Required for your business profile'
               };
             });
-            
+
             console.log('✅ Mapped backend frameworks:', mappedFrameworks);
           } else {
-            console.log('⚠️ Backend returned empty frameworks, using all mandatory frameworks');
-            mappedFrameworks = defaultMandatoryFrameworks;
+            console.log('⚠️ Backend returned empty frameworks, using ESG fallback');
+            mappedFrameworks = [defaultMandatoryFrameworks[0]]; // Only ESG
           }
-          
-          // Ensure we always have at least the 2 mandatory frameworks
-          const frameworkIds = mappedFrameworks.map(f => f.id);
-          defaultMandatoryFrameworks.forEach(defaultFw => {
-            if (!frameworkIds.includes(defaultFw.id)) {
-              mappedFrameworks.push(defaultFw);
-            }
-          });
-          
+
+          // Don't force frameworks - let backend data determine what to show
+
           console.log('✅ Final mandatory frameworks:', mappedFrameworks);
           setMandatoryFrameworks(mappedFrameworks);
+          setLoadingFrameworks(false);
         } else {
           console.error('Failed to fetch frameworks, using fallback');
-          // Fallback to only 2 mandatory frameworks
+          // Fallback to minimum ESG framework only
           setMandatoryFrameworks([
             {
               id: 'esg',
@@ -142,21 +137,13 @@ const Rame = () => {
               color: 'blue',
               coverage: 'Environmental, Social, Governance',
               reason: 'Core framework for all businesses'
-            },
-            {
-              id: 'dst',
-              name: 'Dubai Sustainable Tourism (DST)',
-              description: 'Dubai Department of Economy and Tourism sustainability requirements for all hotels in Dubai',
-              icon: 'fas fa-building',
-              color: 'green',
-              coverage: 'Energy, Water, Waste, Community',
-              reason: 'Mandatory for all Dubai hospitality entities'
             }
           ]);
+          setLoadingFrameworks(false);
         }
       } catch (error) {
         console.error('Error fetching mandatory frameworks:', error);
-        // Fallback to only 2 mandatory frameworks
+        // Fallback to minimum ESG framework only
         setMandatoryFrameworks([
           {
             id: 'esg',
@@ -166,17 +153,10 @@ const Rame = () => {
             color: 'blue',
             coverage: 'Environmental, Social, Governance',
             reason: 'Core framework for all businesses'
-          },
-          {
-            id: 'dst',
-            name: 'Dubai Sustainable Tourism (DST)',
-            description: 'Dubai Department of Economy and Tourism sustainability requirements for all hotels in Dubai',
-            icon: 'fas fa-building',
-            color: 'green',
-            coverage: 'Energy, Water, Waste, Community',
-            reason: 'Mandatory for all Dubai hospitality entities'
           }
         ]);
+      } finally {
+        setLoadingFrameworks(false);
       }
     };
 

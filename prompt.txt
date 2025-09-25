@@ -1,82 +1,165 @@
-prompt
-AI Coding Agent Prompt: Functional Specification for an ESG Onboarding and Data Collection Application Overall Goal Your task is to build the complete backend and frontend functionality for a comprehensive ESG (Environmental, Social, and Governance) onboarding and data collection application. The application is designed for Small and Medium Enterprises (SMEs) in the hospitality sector. This prompt outlines the required functionality, the complete user journey, and the full database schema. You must implement all the logic described herein. Do not focus on visual design, styling, or specific technology stack choices; the priority is to deliver the core functionality. The User Journey: A Step-by-Step Functional Flow The user's journey is divided into six sequential modules. The completion of one module unlocks the next, but the user can navigate back to previously completed modules at any time using a side menu. Module 1: Company Onboarding Initial Data Entry: The user starts by providing their company's basic details: Emirate: A dropdown list of UAE Emirates. Sector: A dropdown list where "Hospitality" is the focus. Business Activities Selection: The system displays a list of predefined business activities relevant to the hospitality sector (e.g., Spa, Restaurants, Pools, Gym). The user can select multiple activities via checkboxes. A "Select All / Deselect All" button must be present to toggle all activity checkboxes at once. Custom Activities: An input field allows the user to add a new activity that is not on the list. Upon submission, this new activity is added to the database and becomes available for future companies. The newly added activity is automatically selected for the current company. Module 2: Framework Selection Automatic Framework Assignment: Based on the data from Module 1, the system automatically assigns mandatory frameworks. Core Framework: "ESG" is mandatory for all users. Conditional Frameworks: Geographic or sector-specific frameworks are automatically added if their conditions are met (e.g., "DST" is assigned if the user selected "Dubai" as their Emirate). Voluntary Framework Selection: The user is presented with a list of optional, voluntary frameworks (e.g., "Green Key"). They can opt-in by selecting them. Module 3: Personalized Data Checklist & Profiling Wizard Profiling Wizard Presentation: The system first presents the user with a series of plain-English, yes/no profiling questions. The list of questions is dynamically generated based on the mandatory and voluntary frameworks selected in Module 2. A "Answer All Yes / Answer All No" button must be provided to answer all questions at once. Checklist Generation: The final, streamlined checklist of data elements is hidden until the user has answered all of the profiling questions. Once all questions are answered, the system generates and displays the "Comprehensive Personalized Checklist of Data Elements." Checklist Streamlining Logic (Crucial): The checklist must combine all "Must-have data elements" with the relevant "Conditional data elements" (activated by a "Yes" answer in the wizard). De-duplication: If a data element is required by multiple frameworks (e.g., "Electricity Consumption" for ESG, DST, and Green Key), it must appear only once in the final list. Framework Mapping: For each data element, the list must clearly indicate all the frameworks it applies to. Frequency Consolidation: If a single data element has different collection frequencies across different frameworks (e.g., monthly for one, annually for another), the final checklist must adopt the most frequent cadence (monthly in this example). Module 4: Meter Management Automatic Meter Creation: Immediately after the personalizedChecklist is finalized in Module 3, the system must automatically create default meters for every metered data element required. Each of these auto-created meters will have its name attribute set to "Main" by default. Meter Management Interface: The user navigates to this screen and sees the pre-populated list of "Main" meters. The user must have full CRUD (Create, Read, Update, Delete) functionality for meters. The user cannot delete a meter that has data associated with it. In such a case, they can deactivate it but not delelet it. The user can edit the default "Main" meters to add specific details. The user can add additional meters if they have more than one for a specific category (e.g., a second electricity meter). The user can activate/deactivate meters. Inactive meters will not appear in the Data Collection module. Meter Attributes: Every meter must have the following attributes: Type, Name, Account/Meter Number, Location Description, and Status (Active/Inactive). Module 5: Data Collection & Tracking Reporting Cycle: The user can select the reporting year. Month-Centric Navigation: The UI is organized by month. The user sees a selector for each month of the year. Current Year Logic: If the selected reporting year is the current year, the month selector must only show months from January up to the current month. Past Year Logic: If a past reporting year is selected, all 12 months must be shown. Navigation Buttons: "Previous Month" and "Next Month" buttons must be implemented. These buttons are disabled when the user is at the first or last available month in the selector. Unified Data Entry View: For the selected month, the system displays a single, unified list of all data collection tasks. This includes non-metered items and an individual entry for each active meter. Data Entry and Evidence: Each item in the list has an input field for its value and an interface to upload a supporting evidence file. Status Tracking: Each individual data entry row must have a visual status: Missing: No value entered and no evidence uploaded. Partial: Either a value is entered or evidence is uploaded, but not both. Complete: Both value and evidence are present. Progress Trackers: Overall Annual Progress: Two progress bars showing the completion percentage for the entire reporting year until today (one for data entry, one for evidence upload). Monthly Progress: Two dynamic progress bars showing the completion percentage for the currently selected month (one for data entry, one for evidence upload). Module 6: Dashboard Data-Driven Statistics: The dashboard must display key metrics derived from the user's setup and collected data, including: Total number of active frameworks. Total number of data elements on the personalized checklist. Total count of registered meters. Data Visualization: The dashboard must include charts that visualize the data entered in the Data Collection module (e.g., a bar chart showing monthly electricity consumption for the selected year). Required Database Schema Implement the following relational database schema to support all the functionality described above. -- Stores core company information CREATE TABLE Companies ( company_id SERIAL PRIMARY KEY, name VARCHAR(255) NOT NULL, emirate VARCHAR(100) NOT NULL, sector VARCHAR(100) NOT NULL, created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP );
+Excellent catch! Looking at column F (Frameworks), the elements are tagged with different framework requirements that should control their activation. Here's how to prompt this:
 
--- Stores all possible business activities CREATE TABLE Activities ( activity_id SERIAL PRIMARY KEY, name VARCHAR(255) UNIQUE NOT NULL );
+---
 
--- Links companies to their selected activities (Many-to-Many) CREATE TABLE CompanyActivities ( company_id INT REFERENCES Companies(company_id), activity_id INT REFERENCES Activities(activity_id), PRIMARY KEY (company_id, activity_id) );
+## Framework-Based Activation Logic for Claude Code:
 
--- Stores all available ESG frameworks CREATE TABLE Frameworks ( framework_id VARCHAR(50) PRIMARY KEY, name VARCHAR(100) NOT NULL, type VARCHAR(50) NOT NULL -- 'mandatory', 'voluntary', 'mandatory_conditional' );
+The system should NOT activate all 80 elements for every company. Elements should be activated based on **framework requirements (column F)** AND **conditional logic (column L)**.
 
--- Stores the frameworks a company has adopted CREATE TABLE CompanyFrameworks ( company_id INT REFERENCES Companies(company_id), framework_id VARCHAR(50) REFERENCES Frameworks(framework_id), PRIMARY KEY (company_id, framework_id) );
+### Framework Codes in Column F:
+- **E** = ESG Framework (Mandatory for all)
+- **D** = Dubai Sustainable Tourism/DST (Only for Dubai-based companies)  
+- **G** = Green Key Certification (Voluntary/Optional)
 
--- Master list of all possible data elements CREATE TABLE DataElements ( element_id VARCHAR(50) PRIMARY KEY, name VARCHAR(200) NOT NULL, is_metered BOOLEAN NOT NULL DEFAULT FALSE, type VARCHAR(50) NOT NULL -- 'must-have', 'conditional' );
+### Framework Distribution from Excel:
+- **"E, D, G"**: 3 elements (required for all frameworks)
+- **"E, D"**: 7 elements (ESG + Dubai only)
+- **"E, G"**: 1 element (ESG + Green Key only)
+- **"D, G"**: 3 elements (Dubai + Green Key only)
+- **"E"**: 27 elements (ESG only)
+- **"D"**: 17 elements (Dubai only)
+- **"G"**: 22 elements (Green Key only)
 
--- Maps data elements to the frameworks that require them CREATE TABLE DataElementFrameworkMapping ( element_id VARCHAR(50) REFERENCES DataElements(element_id), framework_id VARCHAR(50) REFERENCES Frameworks(framework_id), cadence VARCHAR(50) NOT NULL, -- 'monthly', 'quarterly', 'annually' PRIMARY KEY (element_id, framework_id) );
+### Activation Rules:
 
--- Stores all profiling wizard questions CREATE TABLE ProfilingQuestions ( question_id VARCHAR(50) PRIMARY KEY, text TEXT NOT NULL, -- Links a question to the conditional data element it activates activates_element_id VARCHAR(50) REFERENCES DataElements(element_id) );
+```python
+def should_activate_element(element, company):
+    # Parse frameworks from column F
+    frameworks = element.frameworks.split(',')  # e.g., "E, D, G" -> ["E", "D", "G"]
+    frameworks = [f.strip() for f in frameworks]
+    
+    # Check framework requirements
+    has_required_framework = False
+    
+    # E - Mandatory ESG (all companies have this)
+    if 'E' in frameworks:
+        has_required_framework = True
+    
+    # D - Dubai Sustainable Tourism (location-based)
+    if 'D' in frameworks:
+        if company.location == 'Dubai' or company.country == 'UAE':
+            has_required_framework = True
+        else:
+            # If D is required but company not in Dubai, skip this element
+            if 'E' not in frameworks:  # Unless E is also present
+                return False
+    
+    # G - Green Key (optional certification)
+    if 'G' in frameworks:
+        if company.has_green_key_certification:
+            has_required_framework = True
+        elif 'E' not in frameworks and 'D' not in frameworks:
+            # If ONLY G and company doesn't have Green Key, skip
+            return False
+    
+    # If element has required framework, check must-have vs conditional
+    if has_required_framework:
+        if element.requirement_type == 'must-have':
+            return True
+        elif element.requirement_type == 'conditional':
+            # Check condition_logic (column L)
+            return check_condition_met(element.condition_logic, company.profile_answers)
+    
+    return False
+```
 
--- Stores a company's answers to the profiling questions CREATE TABLE CompanyProfileAnswers ( company_id INT REFERENCES Companies(company_id), question_id VARCHAR(50) REFERENCES ProfilingQuestions(question_id), answer BOOLEAN NOT NULL, PRIMARY KEY (company_id, question_id) );
+### Company Onboarding Flow:
 
--- Stores company-specific meters CREATE TABLE Meters ( meter_id SERIAL PRIMARY KEY, company_id INT REFERENCES Companies(company_id) NOT NULL, type VARCHAR(100) NOT NULL, -- e.g., 'Electricity', 'Water' name VARCHAR(255) NOT NULL, -- e.g., 'Main', 'Kitchen Meter' account_number VARCHAR(255), location_description TEXT, status VARCHAR(50) NOT NULL DEFAULT 'Active' -- 'Active', 'Inactive' );
+```python
+# Step 1: Determine company frameworks
+company_frameworks = ['E']  # All companies get ESG
 
--- Stores the actual data values and evidence submitted by the company CREATE TABLE CompanyDataSubmissions ( submission_id SERIAL PRIMARY KEY, company_id INT REFERENCES Companies(company_id) NOT NULL, element_id VARCHAR(50) REFERENCES DataElements(element_id) NOT NULL, meter_id INT REFERENCES Meters(meter_id), -- Nullable for non-metered elements reporting_year INT NOT NULL, reporting_period VARCHAR(50) NOT NULL, -- e.g., 'Jan', 'Q1', '2025' value TEXT, evidence_file_path VARCHAR(500), created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP, UNIQUE(company_id, element_id, meter_id, reporting_year, reporting_period) );
+if company.location in ['Dubai', 'UAE']:
+    company_frameworks.append('D')
 
-Comprehensive ESG Framework Analysis for UAE Hospitality Sector
+# Step 2: Ask about optional certification
+green_key_question = "Is your company pursuing or certified with Green Key?"
+if answer == 'Yes':
+    company_frameworks.append('G')
 
-Mandatory vs Voluntary Frameworks Overlapping with ESG in UAE A. Mandatory Frameworks
-Dubai Sustainable Tourism (DST) Framework Type: Mandatory for all hotels in Dubai Authority: Dubai Department of Economy and Tourism (DET) Coverage: All hotel establishments in Dubai (hotels, resorts, hotel apartments, guest houses, youth hostels) Requirements: 19 Sustainability Requirements
-UAE ESG Reporting Requirements Type: Mandatory for listed companies Authority: Securities and Commodities Authority (SCA) Coverage: Listed Public Joint Stock Companies (PJSCs) Requirements: Annual sustainability report submission within 90 days of financial year-end
-Dubai Supreme Council of Energy Regulations Type: Mandatory compliance Authority: Dubai Supreme Council of Energy Coverage: All establishments in Dubai Requirements: Energy regulations, guidelines, and directives
-Climate Reporting Mandate (for high emitters) Type: Mandatory for high emitters Authority: UAE Ministry of Climate Change Coverage: High-emitting entities Requirements: Scope 1 and Scope 2 emissions reporting (Scope 3 may apply based on sector) B. Voluntary Frameworks
-Green Key Certification Type: Voluntary eco-label Authority: Emirates Green Building Council (EGBC) Coverage: Hotels, hostels, restaurants, attractions Requirements: 13 criteria areas with imperative and guideline criteria
-Global Reporting Initiative (GRI) Type: Voluntary international standard Authority: Global Sustainability Standards Board (GSSB) Coverage: All organizations Requirements: Comprehensive sustainability reporting standards
-ADX ESG Disclosure Guidance Type: Voluntary guidance (becoming mandatory) Authority: Abu Dhabi Securities Exchange Coverage: ADX listed companies Requirements: 31 ESG indicators
-Comprehensive Data Elements by Framework A. Dubai Sustainable Tourism (DST) - 19 Requirements Environmental (E) Data Elements
-Energy Management Data Element: Electricity consumption Description: Total electricity consumption from local providers (DEWA, etc.) Unit: kWh Cadence: Monthly Supporting Documents: Monthly electricity bills, DEWA statements Category: Must-have for all hospitality entities Frameworks: DST, ESG, Green Key
-Cooling Energy Consumption Data Element: Cooling energy consumption Description: Energy used for cooling systems Unit: kWh or tons of refrigeration Cadence: Monthly Supporting Documents: Utility bills, building management system reports Category: Must-have for all hospitality entities Frameworks: DST, ESG
-Water Consumption Data Element: Total water consumption Description: Water usage from all sources Unit: cubic meters (m³) Cadence: Monthly Supporting Documents: Water utility bills, meter readings Category: Must-have for all hospitality entities Frameworks: DST, ESG, Green Key
-Fuel Consumption (Generators) Data Element: Petrol/diesel consumption in generators Description: Fuel used for backup generators Unit: liters Cadence: Monthly Supporting Documents: Fuel purchase records, generator logs Category: Conditional (entities with backup generators) Condition: Does the establishment have backup generators? Profiling Question: Do you have backup generators on-site? Frameworks: DST, ESG
-Vehicle Fuel Consumption Data Element: Petrol/diesel consumption in vehicles Description: Fuel used for company vehicles Unit: liters Cadence: Monthly Supporting Documents: Fuel purchase records, vehicle logs Category: Conditional (entities with company vehicles) Condition: Does the establishment own or operate vehicles? Profiling Question: Do you have company vehicles for operations? Frameworks: DST, ESG
-Refrigerant Usage Data Element: Refrigerant consumption and leakage Description: Amount and type of refrigerants used in HVAC systems Unit: kg Cadence: Annually Supporting Documents: HVAC maintenance records, refrigerant purchase records Category: Must-have for all hospitality entities Frameworks: DST, ESG
-Fire Extinguisher CO2 Data Element: CO2 gas in fire extinguishers Description: Amount of CO2 in fire safety equipment Unit: kg Cadence: Annually Supporting Documents: Fire safety equipment inventory, maintenance records Category: Must-have for all hospitality entities Frameworks: DST
-LPG Consumption Data Element: LPG consumption Description: Liquid petroleum gas usage for kitchens, heating, etc. Unit: kg or liters Cadence: Monthly Supporting Documents: LPG purchase records, supplier invoices Category: Conditional (entities using LPG) Condition: Does the establishment use LPG for any operations? Profiling Question: Do you use LPG (liquid petroleum gas) in your operations? Frameworks: DST, ESG
-Waste to Landfill Data Element: Waste sent to landfill Description: Total non-recycled waste disposed Unit: kg or tons Cadence: Monthly Supporting Documents: Waste disposal contracts, weighbridge tickets Category: Must-have for all hospitality entities Frameworks: DST, ESG, Green Key Social (S) Data Elements
-Sustainability Policy Data Element: Written sustainability policy Description: Document outlining environmental, health, safety, and community commitments Unit: Document (yes/no) Cadence: Annually (reviewed every 3 years) Supporting Documents: Signed policy document, board approval records Category: Must-have for all hospitality entities Frameworks: DST, Green Key, ESG
-Sustainability Personnel Data Element: Sustainability champion and trained staff Description: Number of certified sustainability personnel Unit: Count (people) Cadence: Annually Supporting Documents: Training certificates, job descriptions Category: Must-have for all hospitality entities Frameworks: DST, Green Key
-Sustainability Committee Data Element: Sustainability committee existence and meetings Description: Committee with GM and management, meeting frequency Unit: Committee (yes/no), meeting frequency Cadence: Quarterly/Annually Supporting Documents: Committee roster, meeting minutes Category: Must-have for all hospitality entities Frameworks: DST, Green Key
-Employee Training Hours Data Element: Sustainability training hours per employee Description: Annual training on sustainability plan and responsibilities Unit: Hours Cadence: Annually Supporting Documents: Training records, attendance sheets Category: Must-have for all hospitality entities Frameworks: DST, Green Key, ESG
-Guest Education Initiatives Data Element: Guest sustainability engagement programs Description: Number and type of guest-facing sustainability initiatives Unit: Count (initiatives), satisfaction score Cadence: Quarterly Supporting Documents: Campaign materials, guest feedback surveys Category: Must-have for all hospitality entities Frameworks: DST, Green Key
-Green Events Offered Data Element: Green meeting services availability Description: Number of green events hosted Unit: Count (events) Cadence: Quarterly Supporting Documents: Event records, client feedback Category: Conditional (entities with event facilities) Condition: Does the establishment offer event/conference facilities? Profiling Question: Do you have meeting rooms or event spaces available for hire? Frameworks: DST, Green Key
-Local Community Initiatives Data Element: Community engagement programs Description: Number and type of local community initiatives Unit: Count (initiatives), investment amount (AED) Cadence: Annually Supporting Documents: Initiative documentation, financial records Category: Must-have for all hospitality entities Frameworks: DST, Green Key, ESG Governance (G) Data Elements
-Government Compliance Data Element: Compliance with Dubai Supreme Council of Energy regulations Description: Status of compliance with energy regulations Unit: Compliance status (yes/no), violations count Cadence: Annually Supporting Documents: Compliance certificates, audit reports Category: Must-have for all hospitality entities Frameworks: DST, ESG
-Sustainability Action Plan Data Element: Annual sustainability action plan Description: Document with specific objectives and actions Unit: Document (yes/no), action items count Cadence: Annually Supporting Documents: Action plan document, progress reports Category: Must-have for all hospitality entities Frameworks: DST, Green Key, ESG
-Management System Data Element: Sustainability management system implementation Description: Existence of formal sustainability management system Unit: System status (yes/no), certification level Cadence: Annually Supporting Documents: System documentation, certification records Category: Must-have for all hospitality entities Frameworks: DST, Green Key, ESG B. Green Key Certification - 13 Criteria Areas Environmental (E) Data Elements
-Water Efficiency Data Element: Water-saving devices installation Description: Percentage of taps/showers with water-saving devices Unit: Percentage (%) Cadence: Annually Supporting Documents: Plumbing inventory, installation records Category: Must-have for all hospitality entities Frameworks: Green Key, DST, ESG
-Chemical Usage Data Element: Eco-friendly cleaning products usage Description: Percentage of eco-friendly cleaning products Unit: Percentage (%) Cadence: Quarterly Supporting Documents: Purchase records, product certifications Category: Must-have for all hospitality entities Frameworks: Green Key, ESG
-Waste Recycling Rate Data Element: Waste recycling percentage Description: Percentage of waste recycled vs. total waste Unit: Percentage (%) Cadence: Monthly Supporting Documents: Waste management contracts, recycling reports Category: Must-have for all hospitality entities Frameworks: Green Key, DST, ESG
-Energy Efficiency Data Element: Energy-efficient appliances and lighting Description: Percentage of energy-efficient equipment Unit: Percentage (%) Cadence: Annually Supporting Documents: Equipment inventory, energy audits Category: Must-have for all hospitality entities Frameworks: Green Key, DST, ESG
-Renewable Energy Data Element: Renewable energy usage Description: Percentage of energy from renewable sources Unit: Percentage (%) Cadence: Quarterly Supporting Documents: Energy purchase agreements, generation records Category: Conditional (entities with renewable energy) Condition: Does the establishment use renewable energy sources? Profiling Question: Do you use solar panels or other renewable energy sources? Frameworks: Green Key, ESG
-Food Waste Data Element: Food waste measurement and reduction Description: Amount of food waste generated and reduction initiatives Unit: kg, percentage reduction Cadence: Monthly Supporting Documents: Waste measurement logs, reduction initiatives Category: Must-have for all hospitality entities Frameworks: Green Key, DST, ESG
-Sustainable Food Sourcing Data Element: Local and organic food purchasing Description: Percentage of food sourced locally/organically Unit: Percentage (%) Cadence: Quarterly Supporting Documents: Supplier records, purchase invoices Category: Conditional (entities with food service) Condition: Does the establishment serve food? Profiling Question: Do you have a restaurant, kitchen, or food service? Frameworks: Green Key, ESG Social (S) Data Elements
-Staff Sustainability Training Data Element: Staff training participation rate Description: Percentage of staff trained in sustainability Unit: Percentage (%) Cadence: Quarterly Supporting Documents: Training records, attendance sheets Category: Must-have for all hospitality entities Frameworks: Green Key, DST, ESG
-Guest Communication Data Element: Guest sustainability information provision Description: Methods and frequency of guest sustainability communication Unit: Count (methods), frequency Cadence: Quarterly Supporting Documents: Communication materials, guest feedback Category: Must-have for all hospitality entities Frameworks: Green Key, DST
-Indoor Air Quality Data Element: Indoor air quality measurements Description: Air quality indicators (CO2, VOCs, etc.) Unit: ppm, µg/m³ Cadence: Quarterly Supporting Documents: Air quality test reports, monitoring records Category: Must-have for all hospitality entities Frameworks: Green Key, ESG
-Green Space Management Data Element: Sustainable landscaping practices Description: Area managed with sustainable practices Unit: m², percentage (%) Cadence: Annually Supporting Documents: Landscaping plans, maintenance records Category: Conditional (entities with outdoor spaces) Condition: Does the establishment have gardens, lawns, or outdoor areas? Profiling Question: Do you have outdoor spaces like gardens or lawns? Frameworks: Green Key
-Community Engagement Data Element: Local community support initiatives Description: Number and type of community support activities Unit: Count (initiatives), hours volunteered, amount donated (AED) Cadence: Annually Supporting Documents: Initiative records, financial records Category: Must-have for all hospitality entities Frameworks: Green Key, DST, ESG Governance (G) Data Elements
-Environmental Management System Data Element: Formal environmental management system Description: Implementation of EMS (ISO 14001 or equivalent) Unit: Certification status (yes/no), standard Cadence: Annually Supporting Documents: Certification documents, audit reports Category: Conditional (larger establishments) Condition: Does the establishment have a formal environmental management system? Profiling Question: Do you have ISO 14001 or similar environmental certification? Frameworks: Green Key, ESG
-Sustainable Procurement Data Element: Sustainable procurement policy implementation Description: Percentage of sustainable purchases Unit: Percentage (%) Cadence: Quarterly Supporting Documents: Procurement policy, supplier assessments Category: Must-have for all hospitality entities Frameworks: Green Key, ESG C. UAE ESG Reporting Requirements Environmental (E) Data Elements
-Carbon Footprint Data Element: Total greenhouse gas emissions Description: Scope 1, 2, and 3 emissions Unit: tonnes CO2e Cadence: Annually Supporting Documents: Carbon footprint calculation, third-party verification Category: Must-have for all hospitality entities Frameworks: ESG, DST
-Energy Consumption Data Element: Total energy consumption by source Description: Breakdown of electricity, diesel, gas, etc. Unit: kWh, liters, m³ Cadence: Monthly/Annually Supporting Documents: Utility bills, consumption records Category: Must-have for all hospitality entities Frameworks: ESG, DST, Green Key
-Water Usage Data Element: Total water withdrawal and consumption Description: Water sources and usage patterns Unit: m³ Cadence: Monthly/Annually Supporting Documents: Water bills, meter readings Category: Must-have for all hospitality entities Frameworks: ESG, DST, Green Key
-Waste Generation Data Element: Total waste generated by type Description: Hazardous and non-hazardous waste Unit: kg, tonnes Cadence: Monthly/Annually Supporting Documents: Waste manifests, disposal records Category: Must-have for all hospitality entities Frameworks: ESG, DST, Green Key Social (S) Data Elements
-Employee Diversity Data Element: Workforce diversity metrics Description: Gender, nationality, age distribution Unit: Headcount, percentage (%) Cadence: Annually Supporting Documents: HR records, diversity reports Category: Must-have for all hospitality entities Frameworks: ESG
-Employee Training Data Element: Training hours per employee Description: Total training hours by type Unit: Hours Cadence: Quarterly/Annually Supporting Documents: Training records, HR reports Category: Must-have for all hospitality entities Frameworks: ESG, DST, Green Key
-Health and Safety Data Element: Health and safety incidents Description: Number and type of incidents Unit: Count (incidents), lost time injury rate Cadence: Monthly/Annually Supporting Documents: Incident reports, safety audits Category: Must-have for all hospitality entities Frameworks: ESG
-Community Investment Data Element: Community contribution amount Description: Financial and in-kind contributions Unit: AED Cadence: Annually Supporting Documents: Financial records, contribution reports Category: Must-have for all hospitality entities Frameworks: ESG, DST, Green Key Governance (G) Data Elements
-Board Composition Data Element: Board diversity and independence Description: Board member demographics and independence status Unit: Headcount, percentage (%) Cadence: Annually Supporting Documents: Board records, corporate governance reports Category: Conditional (listed companies) Condition: Is the entity a listed company? Profiling Question: Is your company listed on any stock exchange? Frameworks: ESG
-Anti-corruption Policies Data Element: Anti-corruption policy implementation Description: Existence and effectiveness of anti-corruption measures Unit: Policy status (yes/no), training hours Cadence: Annually Supporting Documents: Policy documents, training records Category: Must-have for all hospitality entities Frameworks: ESG
-Risk Management Data Element: ESG risk management framework Description: Implementation of ESG risk assessment and management Unit: Framework status (yes/no), risk count Cadence: Annually Supporting Documents: Risk register, management reports Category: Must-have for all hospitality entities Frameworks: ESG
-Streamlined Comprehensive Data Elements List Must-Have Data Elements (Common to All Hospitality Entities) Data Element Description Unit Cadence Supporting Documents Applicable Frameworks ESG Category Electricity Consumption Total electricity from local providers kWh Monthly Electricity bills DST, ESG, Green Key E Water Consumption Total water usage m³ Monthly Water bills DST, ESG, Green Key E Waste to Landfill Non-recycled waste disposal kg Monthly Waste disposal records DST, ESG, Green Key E Sustainability Policy Written sustainability policy Document Annually Policy document DST, Green Key, ESG S Sustainability Personnel Certified sustainability staff Count Annually Training certificates DST, Green Key S Employee Training Hours Sustainability training per employee Hours Annually Training records DST, Green Key, ESG S Guest Education Guest sustainability initiatives Count Quarterly Campaign materials DST, Green Key S Community Initiatives Local community programs Count, AED Annually Initiative records DST, Green Key, ESG S Government Compliance Energy regulation compliance Status Annually Compliance certificates DST, ESG G Action Plan Annual sustainability objectives Document Annually Action plan document DST, Green Key, ESG G Carbon Footprint Total GHG emissions tonnes CO2e Annually Carbon calculations ESG, DST E Health & Safety Incidents Workplace incidents Count Monthly Incident reports ESG S Anti-corruption Policies Anti-corruption measures Status Annually Policy documents ESG G Risk Management ESG risk framework Status Annually Risk register ESG G
-Conditional Data Elements (Case-by-Case Basis) Data Element Description Unit Cadence Supporting Documents Condition Profiling Question Applicable Frameworks ESG Category Generator Fuel Fuel for backup generators liters Monthly Fuel records Has backup generators Do you have backup generators? DST, ESG E Vehicle Fuel Company vehicle fuel liters Monthly Vehicle logs Has company vehicles Do you have company vehicles? DST, ESG E LPG Usage Liquid petroleum gas consumption kg Monthly Purchase records Uses LPG Do you use LPG in operations? DST, ESG E Green Events Sustainable event services Count Quarterly Event records Has event facilities Do you have meeting/event spaces? DST, Green Key S Renewable Energy Energy from renewable sources % Quarterly Energy agreements Has renewable energy Do you use renewable energy? Green Key, ESG E Food Sourcing Local/organic food purchases % Quarterly Supplier records Serves food Do you serve food? Green Key, ESG S Green Spaces Sustainable landscaping m² Annually Landscaping plans Has outdoor areas Do you have gardens/lawns? Green Key E Environmental Management System EMS certification Status Annually Certification docs Has formal EMS Do you have environmental certification? Green Key, ESG G Board Composition Board diversity metrics % Annually Board records Listed company Are you listed on stock exchange? ESG G
+# Step 3: Filter profiling questions
+# Only show questions for conditional elements in active frameworks
+relevant_conditions = []
+for element in all_elements:
+    if element_matches_company_frameworks(element, company_frameworks):
+        if element.requirement_type == 'conditional' and element.condition_logic:
+            relevant_conditions.append(element.condition_logic)
 
-Implementation Recommendations A. Data Collection Strategy Automated Collection: Implement automated meter reading for utilities (electricity, water) Centralized Repository: Create a single data repository to avoid duplication Standardized Templates: Use standardized templates for consistent data collection Integration: Integrate with existing property management systems B. Profiling Wizard Questions The onboarding profiling wizard should include these plain English questions: Basic Operations: "Do you have backup generators on-site?" "Do you own or operate company vehicles?" "Do you use LPG (liquid petroleum gas) in your operations?" "Do you have meeting rooms or event spaces available for hire?" "Do you have a restaurant, kitchen, or food service?" "Do you have outdoor spaces like gardens or lawns?" Sustainability Practices: "Do you use solar panels or other renewable energy sources?" "Do you have ISO 14001 or similar environmental certification?" "Is your company listed on any stock exchange?" C. Framework Mapping Each data element should be mapped to applicable frameworks to ensure comprehensive reporting: DST Requirements: Focus on operational metrics (energy, water, waste) Green Key: Emphasize environmental management and guest engagement ESG Reporting: Cover broader environmental, social, and governance aspects D. Data Validation Automated Validation: Set up automated checks for data completeness and accuracy Document Verification: Require supporting documents for all reported data Third-Party Verification: Consider third-party verification for critical metrics Audit Trail: Maintain complete audit trails for all data changes This comprehensive framework provides a solid foundation for your ESG app, ensuring that all mandatory and voluntary requirements are addressed while eliminating data duplication and streamlining the collection process for UAE hospitality sector SMEs.
+# Show only unique conditions as questions
+unique_questions = generate_questions_from_conditions(set(relevant_conditions))
+```
+
+### Expected Behavior by Location:
+
+**For a company NOT in Dubai, WITHOUT Green Key:**
+- Gets only "E" framework elements
+- Approximately 30-35 elements (27 E-only + some from "E, D, G" and "E, D" where E is included)
+- Shows fewer profiling questions (only conditions for E elements)
+
+**For a company in Dubai, WITHOUT Green Key:**
+- Gets "E" and "D" framework elements  
+- Approximately 55-60 elements
+- Shows profiling questions for E and D conditional elements
+
+**For a company in Dubai WITH Green Key:**
+- Gets all "E", "D", and "G" framework elements
+- All 80 elements available (but still conditional on profiling answers)
+- Shows all 22 conditional element questions
+
+### Implementation Update:
+
+```python
+# DataElement model should include:
+frameworks = models.CharField(max_length=20)  # Store as "E, D, G"
+
+# Company model should track:
+location = models.CharField(max_length=100)
+has_green_key = models.BooleanField(default=False)
+active_frameworks = models.JSONField(default=list)  # ["E", "D", "G"]
+
+# Element filtering:
+def get_available_elements(company):
+    all_elements = DataElement.objects.all()
+    available = []
+    
+    for element in all_elements:
+        element_frameworks = [f.strip() for f in element.frameworks.split(',')]
+        
+        # Check if element's frameworks intersect with company's frameworks
+        if any(f in company.active_frameworks for f in element_frameworks):
+            available.append(element)
+    
+    return available
+```
+
+### Profiling Question Generation:
+
+```python
+def get_profiling_questions(company):
+    # Get only elements matching company's frameworks
+    available_elements = get_available_elements(company)
+    
+    # Extract conditions only from available conditional elements
+    conditions = []
+    for element in available_elements:
+        if element.requirement_type == 'conditional' and element.condition_logic:
+            conditions.append({
+                'condition': element.condition_logic,
+                'element_id': element.master_id
+            })
+    
+    # Generate questions from unique conditions
+    # This should generate ~5-10 questions for E-only companies
+    # Up to ~15 for Dubai companies  
+    # Up to ~22 for Dubai + Green Key companies
+    return create_questions_from_conditions(conditions)
+```
+
+This ensures:
+1. Companies only see relevant elements for their location/certification
+2. Profiling questions are filtered to relevant conditional elements
+3. The system scales based on company context rather than showing all 80 elements to everyone
+
+---
+
+This framework-based approach means the system should be much more targeted and efficient, only tracking what's relevant for each company's regulatory and voluntary requirements.

@@ -220,7 +220,7 @@ REST_FRAMEWORK = {
         'core.authentication.CsrfExemptSessionAuthentication',
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 20,
+    'PAGE_SIZE': 100,  # Increased to handle comprehensive ESG framework (80 elements)
     'DEFAULT_FILTER_BACKENDS': [
         'rest_framework.filters.SearchFilter',
         'rest_framework.filters.OrderingFilter',

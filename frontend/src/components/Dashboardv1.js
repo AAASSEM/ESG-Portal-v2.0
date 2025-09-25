@@ -36,8 +36,7 @@ const EnergyChart = ({ chartData, meterType }) => {
     <div className="h-full flex flex-col bg-white">
       <div className="flex-1 flex items-end space-x-1 pb-4 min-h-[180px]">
         {chartData.data.map((value, index) => {
-          const height = value > 0 ? Math.max((value / maxValue) * 80, 10) : 0; // No height for zero values
-          const isCurrentMonth = index === chartData.data.length - 1;
+          const height = value > 0 ? Math.max((value / maxValue) * 80, 10) : 0;
           const isRealData = value > 0;
           return (
             <div key={index} className="flex-1 flex flex-col items-center">
@@ -85,10 +84,8 @@ const EmissionsChart = ({ emissionsData, selectedScope }) => {
 
   return (
     <div className="h-full flex">
-      {/* Pie Chart Area */}
       <div className="flex-1 flex items-center justify-center">
         <div className="relative w-40 h-40">
-          {/* Simple pie chart using CSS */}
           <div className="w-full h-full rounded-full relative overflow-hidden">
             {scopes.map(([scopeName, scope], index) => {
               const percentage = totalEmissions > 0 ? (scope.value / totalEmissions) * 100 : 0;
@@ -120,7 +117,6 @@ const EmissionsChart = ({ emissionsData, selectedScope }) => {
         </div>
       </div>
       
-      {/* Selected Scope Details */}
       <div className="w-40 pl-3 flex flex-col justify-center">
         {scopes.map(([scopeName, scope]) => {
           const percentage = totalEmissions > 0 ? (scope.value / totalEmissions) * 100 : 0;
@@ -155,7 +151,7 @@ const EmissionsChart = ({ emissionsData, selectedScope }) => {
                       <div 
                         key={index} 
                         className="text-xs text-gray-600 bg-white px-2 py-1 rounded"
-                        title={item} // Show full text on hover
+                        title={item}
                       >
                         {item}
                       </div>
@@ -180,11 +176,10 @@ const EmissionsChart = ({ emissionsData, selectedScope }) => {
 // Modal Component
 const ExportModal = ({ isOpen, onClose, onConfirm, data }) => {
   if (!isOpen) return null;
-  
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex items-center justify-center p-4">
       <div className="bg-white rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-        {/* Modal Header */}
         <div className={`p-6 border-b ${data.type === 'warning' ? 'bg-yellow-50' : 'bg-green-50'}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -205,13 +200,11 @@ const ExportModal = ({ isOpen, onClose, onConfirm, data }) => {
           </div>
         </div>
         
-        {/* Modal Body */}
         <div className="p-6">
           {data.type === 'warning' ? (
             <>
               <p className="text-gray-700 mb-4">{data.message}</p>
               
-              {/* Missing Data Section */}
               <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
                 <h3 className="font-semibold text-red-900 mb-2">Missing Data:</h3>
                 <ul className="space-y-1">
@@ -221,7 +214,6 @@ const ExportModal = ({ isOpen, onClose, onConfirm, data }) => {
                 </ul>
               </div>
               
-              {/* Missing Meters Section */}
               {data.missingMeters && data.missingMeters.length > 0 && (
                 <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
                   <h3 className="font-semibold text-orange-900 mb-2">Meters Without Data:</h3>
@@ -282,7 +274,6 @@ const ExportModal = ({ isOpen, onClose, onConfirm, data }) => {
           )}
         </div>
         
-        {/* Modal Footer */}
         <div className="p-6 border-t bg-gray-50 flex justify-end space-x-3">
           {data.type === 'warning' ? (
             <>
@@ -313,10 +304,117 @@ const ExportModal = ({ isOpen, onClose, onConfirm, data }) => {
   );
 };
 
+// Deadline Modal Component
+const DeadlineModal = ({ isOpen, onClose, onSelectType }) => {
+  if (!isOpen) return null;
+  
+  const deadlineTypes = [
+    {
+      id: 'data',
+      icon: 'fas fa-database',
+      title: 'Data Collection Deadline',
+      description: 'Add monthly submission deadline for meter readings and ESG data',
+      color: 'blue'
+    },
+    {
+      id: 'framework',
+      icon: 'fas fa-file-alt',
+      title: 'Framework Compliance Deadline',
+      description: 'Add reporting deadline for ESG frameworks (DST, Green Key, etc.)',
+      color: 'green'
+    },
+    {
+      id: 'checklist',
+      icon: 'fas fa-tasks',
+      title: 'ESG Action Item Deadline',
+      description: 'Add deadline for checklist items and sustainability initiatives',
+      color: 'purple'
+    }
+  ];
+  
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div className="p-6 border-b bg-blue-50">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <i className="fas fa-calendar-plus text-blue-600"></i>
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">Add New Deadline</h2>
+                <p className="text-gray-600">Choose the type of deadline you want to add</p>
+              </div>
+            </div>
+            <button 
+              onClick={onClose}
+              className="p-2 hover:bg-white rounded-lg transition-colors"
+            >
+              <i className="fas fa-times text-gray-500"></i>
+            </button>
+          </div>
+        </div>
+
+        <div className="p-6">
+          <div className="space-y-4">
+            {deadlineTypes.map((type) => (
+              <button
+                key={type.id}
+                onClick={() => onSelectType(type.id)}
+                className={`w-full p-6 rounded-xl border-2 border-gray-200 hover:border-${type.color}-300 hover:shadow-md transition-all duration-200 text-left group`}
+              >
+                <div className="flex items-start space-x-4">
+                  <div className={`w-12 h-12 bg-${type.color}-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-${type.color}-200 transition-colors`}>
+                    <i className={`${type.icon} text-${type.color}-600 text-lg`}></i>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                      {type.title}
+                    </h3>
+                    <p className="text-gray-600 leading-relaxed">
+                      {type.description}
+                    </p>
+                  </div>
+                  <div className="flex-shrink-0">
+                    <i className="fas fa-arrow-right text-gray-400 group-hover:text-blue-500 transition-colors"></i>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="p-6 border-t bg-gray-50 flex justify-between">
+          <div className="text-sm text-gray-500">
+            <i className="fas fa-info-circle mr-2"></i>
+            You'll be taken to the relevant page to set up your deadline
+          </div>
+          <button 
+            onClick={onClose}
+            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, selectedCompany } = useAuth();
-  const [selectedTimeRange, setSelectedTimeRange] = useState('This Month');
+  
+  // Dynamic month name
+  const getCurrentMonthName = () => {
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const currentDate = new Date();
+    return monthNames[currentDate.getMonth()];
+  };
+  
+  const [selectedTimeRange, setSelectedTimeRange] = useState(`${getCurrentMonthName()} 2025`);
+
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [chartData, setChartData] = useState(null);
@@ -325,10 +423,8 @@ const Dashboard = () => {
   const [modalData, setModalData] = useState({ isOpen: false, type: '', data: {} });
   const [showDeadlineModal, setShowDeadlineModal] = useState(false);
   
-  // Get company ID from auth context
   const companyId = selectedCompany?.id;
 
-  // API function to fetch dashboard data
   const fetchDashboardData = async () => {
     if (!companyId) {
       console.log('No company selected, skipping dashboard data fetch');
@@ -336,10 +432,14 @@ const Dashboard = () => {
     }
     
     try {
+      const dashboardUrl = `${API_BASE_URL}/api/dashboard/?company_id=${companyId}`;
+      const frameworksUrl = `${API_BASE_URL}/api/companies/${companyId}/frameworks/`;
+      const progressUrl = `${API_BASE_URL}/api/companies/${companyId}/progress/`;
+
       const [dashboardResponse, progressResponse, frameworksResponse] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/dashboard/?company_id=${companyId}`, { credentials: 'include' }),
-        fetch(`${API_BASE_URL}/api/companies/${companyId}/progress/`, { credentials: 'include' }),
-        fetch(`${API_BASE_URL}/api/companies/${companyId}/frameworks/`, { credentials: 'include' })
+        fetch(dashboardUrl, { credentials: 'include' }),
+        fetch(progressUrl, { credentials: 'include' }),
+        fetch(frameworksUrl, { credentials: 'include' })
       ]);
       
       const dashboard = await dashboardResponse.json();
@@ -357,7 +457,6 @@ const Dashboard = () => {
     }
   };
 
-  // Fetch chart data
   const fetchChartData = async () => {
     if (!companyId) {
       console.log('No company selected, skipping chart data fetch');
@@ -365,13 +464,87 @@ const Dashboard = () => {
     }
     
     try {
-      const [metersResponse, dataResponse] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/meters/?company_id=${companyId}`, { credentials: 'include' }),
-        fetch(`${API_BASE_URL}/api/data-collection/tasks/?company_id=${companyId}&year=2025&month=8`, { credentials: 'include' })
+      // Determine months to fetch based on selected time range
+      const now = new Date();
+      let targetMonths = [];
+
+      if (selectedTimeRange === 'Last Quarter') {
+        // Get the last 3 months including current month (to match chart labels)
+        const currentMonth = now.getMonth() + 1; // 1-based
+        for (let i = 2; i >= 0; i--) {
+          let month = currentMonth - i;
+          let year = now.getFullYear();
+          if (month <= 0) {
+            month += 12;
+            year -= 1;
+          }
+          targetMonths.push({ year, month });
+        }
+      } else if (selectedTimeRange === 'Last Year') {
+        // Get all 12 months from the current year (2025)
+        const currentYear = now.getFullYear();
+        for (let month = 1; month <= 12; month++) {
+          targetMonths.push({ year: currentYear, month });
+        }
+      } else if (selectedTimeRange.includes('2025') && !selectedTimeRange.includes('Quarter') && !selectedTimeRange.includes('Last')) {
+        // Handle month-specific selections like "Sep 2025", etc.
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const selectedMonth = selectedTimeRange.split(' ')[0]; // Extract month name
+        const monthIndex = monthNames.indexOf(selectedMonth);
+        if (monthIndex !== -1) {
+          targetMonths.push({ year: 2025, month: monthIndex + 1 });
+        }
+      } else {
+        // Default to current month for 'Last 7 Days' or other ranges
+        targetMonths.push({ year: now.getFullYear(), month: now.getMonth() + 1 });
+      }
+
+      console.log(`📅 Fetching data for time range: ${selectedTimeRange}`);
+      console.log(`🗓️ Target months:`, targetMonths.map(tm => `${tm.year}-${tm.month.toString().padStart(2, '0')}`));
+      // Fetch meters once
+      const metersUrl = `${API_BASE_URL}/api/meters/?company_id=${companyId}`;
+
+      // Fetch data for all target months
+      const dataPromises = targetMonths.map(({ year, month }) => {
+        const dataUrl = `${API_BASE_URL}/api/data-collection/tasks/?company_id=${companyId}&year=${year}&month=${month}`;
+        console.log(`🔗 Fetching: ${dataUrl}`);
+        return fetch(dataUrl, { credentials: 'include' });
+      });
+
+      const [metersResponse, ...dataResponses] = await Promise.all([
+        fetch(metersUrl, { credentials: 'include' }),
+        ...dataPromises
       ]);
-      
+
       const meters = await metersResponse.json();
-      const dataEntries = await dataResponse.json();
+
+      // Combine all data from different months
+      const allDataEntries = [];
+
+      for (let i = 0; i < dataResponses.length; i++) {
+        const dataResponse = dataResponses[i];
+        const monthDataEntries = await dataResponse.json();
+
+        if (Array.isArray(monthDataEntries)) {
+          // Data is flat array of tasks
+          allDataEntries.push(...monthDataEntries);
+        }
+      }
+
+      const dataEntries = allDataEntries;
+
+      console.log(`📊 Combined data from ${targetMonths.length} months`);
+      console.log(`📊 Data entries after combination:`, dataEntries?.length || 0);
+      
+      console.log(`📊 RAW API RESPONSE - Meters:`, meters);
+      console.log(`📊 RAW API RESPONSE - Data Entries:`, dataEntries);
+      console.log(`📊 Data entries count:`, dataEntries?.length || 0);
+      if (dataEntries && dataEntries.length > 0) {
+        console.log(`📊 FULL STRUCTURE - First data entry:`, JSON.stringify(dataEntries[0], null, 2));
+        console.log(`📊 Available keys in first entry:`, Object.keys(dataEntries[0] || {}));
+        console.log(`📊 Value field check:`, dataEntries[0]?.value, typeof dataEntries[0]?.value);
+        console.log(`📊 Meter field check:`, dataEntries[0]?.meter, typeof dataEntries[0]?.meter);
+      }
       
       return {
         meters: meters.results || meters,
@@ -383,7 +556,6 @@ const Dashboard = () => {
     }
   };
 
-  // Load dashboard data and refresh when time range changes
   useEffect(() => {
     const loadDashboardData = async () => {
       setLoading(true);
@@ -396,7 +568,6 @@ const Dashboard = () => {
         setChartData(charts);
       } catch (error) {
         console.error('Error loading dashboard:', error);
-        // Set default data even if API fails
         setDashboardData(null);
         setChartData(null);
       } finally {
@@ -405,24 +576,52 @@ const Dashboard = () => {
     };
 
     loadDashboardData();
-  }, [companyId, selectedTimeRange]); // Reload when time range changes
+  }, [companyId, selectedTimeRange]);
 
-  // Handle meter navigation
-  const handleMeterNavigation = useCallback((direction) => {
-    if (!chartData || !chartData.meters) return;
-    
-    if (direction === 'next') {
-      setSelectedMeter((prev) => (prev + 1) % chartData.meters.length);
-    } else {
-      setSelectedMeter((prev) => (prev - 1 + chartData.meters.length) % chartData.meters.length);
-    }
+  // Helper function to get available meters
+  const getAvailableMeters = useCallback(() => {
+    if (!chartData?.dataEntries) return [];
+
+    const availableMeters = [];
+
+    // Data is a flat array of tasks
+    const meterTypes = new Set();
+    chartData.dataEntries.forEach(task => {
+      if (task.meter && task.submission && task.submission.value && parseFloat(task.submission.value) > 0) {
+        meterTypes.add(task.meter.type);
+      }
+    });
+
+    Array.from(meterTypes).forEach(type => {
+      availableMeters.push({
+        key: type,
+        type: type,
+        displayName: type
+      });
+    });
+
+    return availableMeters;
   }, [chartData]);
 
-  // Keyboard navigation for charts
+  const handleMeterNavigation = useCallback((direction) => {
+    const availableMeters = getAvailableMeters();
+    if (availableMeters.length <= 1) return;
+
+    if (direction === 'next') {
+      setSelectedMeter((prev) => (prev + 1) % availableMeters.length);
+    } else {
+      setSelectedMeter((prev) => (prev - 1 + availableMeters.length) % availableMeters.length);
+    }
+  }, [getAvailableMeters]);
+
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (!chartData || !chartData.meters || chartData.meters.length <= 1) return;
-      
+      if (!chartData || !chartData.dataEntries) return;
+
+      // Check if there are multiple meters available
+      const availableMeters = getAvailableMeters();
+      if (availableMeters.length <= 1) return;
+
       if (event.key === 'ArrowLeft') {
         event.preventDefault();
         handleMeterNavigation('prev');
@@ -436,36 +635,37 @@ const Dashboard = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [chartData, handleMeterNavigation]);
 
-  const kpiCards = dashboardData ? (() => {
-    // Calculate time-range specific metrics
+  const kpiCards = (() => {
     let periodLabel = '';
-    let dataPointsCount = dashboardData.total_data_elements || 0;
+    let dataPointsCount = dashboardData?.total_data_elements || 0;
     let changePercent = 0;
-    
+
     switch(selectedTimeRange) {
       case 'Last 7 Days':
         periodLabel = '7d';
-        // Only count recent submissions (simulated - in real app would filter by date)
         dataPointsCount = chartData?.dataEntries?.filter(e => e.submission?.value).length || 0;
-        changePercent = 15.2; // Positive trend for recent activity
+        changePercent = 15.2;
         break;
-      case 'This Month':
-        periodLabel = '30d';
-        dataPointsCount = dashboardData.total_data_elements || 0;
-        changePercent = 8.5;
+      default:
+        if (selectedTimeRange.includes('2025') && !selectedTimeRange.includes('Quarter')) {
+          // Current month case (e.g., "Sep 2025")
+          periodLabel = '30d';
+          dataPointsCount = dashboardData?.total_data_elements || 0;
+          changePercent = 8.5;
+        }
         break;
       case 'Last Quarter':
         periodLabel = 'Q3';
-        dataPointsCount = dashboardData.total_data_elements || 0;
-        changePercent = -2.1; // Slight decrease
+        dataPointsCount = dashboardData?.total_data_elements || 0;
+        changePercent = -2.1;
         break;
       case 'Last Year':
         periodLabel = '12m';
-        dataPointsCount = dashboardData.total_data_elements || 0;
-        changePercent = 24.7; // Year over year growth
+        dataPointsCount = dashboardData?.total_data_elements || 0;
+        changePercent = 24.7;
         break;
     }
-    
+
     return [
       {
         title: `Data Points (${periodLabel})`,
@@ -478,7 +678,7 @@ const Dashboard = () => {
       },
       {
         title: 'Active Meters',
-        value: dashboardData.active_meters || '0',
+        value: dashboardData?.active_meters || '0',
         unit: 'units',
         change: 0,
         trend: 'up',
@@ -487,7 +687,7 @@ const Dashboard = () => {
       },
       {
         title: 'Frameworks',
-        value: dashboardData.total_frameworks || '0',
+        value: dashboardData?.total_frameworks || '0',
         unit: 'active',
         change: 0,
         trend: 'up',
@@ -496,67 +696,25 @@ const Dashboard = () => {
       },
       {
         title: `Completeness (${periodLabel})`,
-        value: Math.round(dashboardData.data_completeness_percentage || 0),
+        value: Math.round(dashboardData?.data_completeness_percentage || 0),
         unit: '%',
-        change: selectedTimeRange === 'Last 7 Days' ? 5.2 : 
-                selectedTimeRange === 'This Month' ? 3.1 : 
+        change: selectedTimeRange === 'Last 7 Days' ? 5.2 :
+                (selectedTimeRange.includes('2025') && !selectedTimeRange.includes('Quarter')) ? 3.1 :
                 selectedTimeRange === 'Last Quarter' ? -1.5 : 11.0,
         trend: selectedTimeRange === 'Last Quarter' ? 'down' : 'up',
         color: 'yellow',
         icon: 'fas fa-chart-pie'
       }
     ];
-  })() : [
-    {
-      title: 'Energy Consumption',
-      value: '2,450',
-      unit: 'kWh',
-      change: -12.5,
-      trend: 'down',
-      color: 'yellow',
-      icon: 'fas fa-bolt'
-    },
-    {
-      title: 'Water Usage',
-      value: '1,250',
-      unit: 'L/day',
-      change: 8.2,
-      trend: 'up',
-      color: 'blue',
-      icon: 'fas fa-tint'
-    },
-    {
-      title: 'GHG Emissions',
-      value: '245',
-      unit: 'tCO2e',
-      change: -15.7,
-      trend: 'down',
-      color: 'gray',
-      icon: 'fas fa-smog'
-    },
-    {
-      title: 'Waste Generated',
-      value: '89',
-      unit: 'kg/day',
-      change: -22.1,
-      trend: 'down',
-      color: 'green',
-      icon: 'fas fa-trash-alt'
-    }
-  ];
+  })();
 
   const frameworkStatus = (() => {
-    // Use real framework data from API
-    const frameworks = [];
-    
     const dataCompleteness = Math.round(dashboardData?.data_completeness_percentage || 0);
-    const overallProgress = Math.round(dashboardData?.progress?.overall_percentage || 0);
     
-    // Use actual frameworks from API response
     if (dashboardData?.frameworks && Array.isArray(dashboardData.frameworks)) {
       return dashboardData.frameworks.map(framework => ({
         name: framework.name || framework.framework_id || 'Unknown Framework',
-        progress: dataCompleteness, // Use actual data completeness for each framework
+        progress: dataCompleteness,
         color: dataCompleteness < 30 ? 'red' : dataCompleteness < 70 ? 'orange' : 'green',
         status: dataCompleteness < 30 ? 'Just Started' : dataCompleteness < 70 ? 'In Progress' : 'On Track',
         type: framework.type || (framework.framework_id === 'DST' ? 'mandatory_conditional' : 'mandatory'),
@@ -564,29 +722,29 @@ const Dashboard = () => {
       }));
     }
     
-    // Fallback if no frameworks in API response
     return [];
   })();
 
   const recentActivities = dashboardData?.recent_activities || (() => {
     const activities = [];
     let activityId = 1;
-    
-    // Add real data submission activities from chartData
+
     if (chartData?.dataEntries) {
-      chartData.dataEntries.forEach(entry => {
-        if (entry.submission && entry.submission.value && parseFloat(entry.submission.value) > 0) {
-          const submissionDate = new Date(entry.submission.updated_at || entry.submission.created_at);
+      // Data is a flat array of tasks
+      chartData.dataEntries.forEach(task => {
+        if (task.submission && task.submission.value && parseFloat(task.submission.value) > 0) {
+          const submissionDate = new Date(task.submission.updated_at || task.submission.created_at);
           const hoursAgo = Math.floor((new Date() - submissionDate) / (1000 * 60 * 60));
-          const timeAgo = hoursAgo < 1 ? 'Just now' : 
+          const timeAgo = hoursAgo < 1 ? 'Just now' :
                          hoursAgo < 24 ? `${hoursAgo} hours ago` :
                          `${Math.floor(hoursAgo / 24)} days ago`;
-          
+
           activities.push({
             id: activityId++,
-            action: `${entry.meter?.type || entry.element_name} data submitted`,
-            description: `Value: ${parseFloat(entry.submission.value).toLocaleString()} ${entry.element_unit}`,
+            action: `${task.meter?.type || task.element_name} data submitted`,
+            description: `Value: ${parseFloat(task.submission.value).toLocaleString()} ${task.element_unit}`,
             time: timeAgo,
+            submissionDate: submissionDate,
             type: 'data',
             icon: 'fas fa-chart-line',
             color: 'green'
@@ -595,7 +753,6 @@ const Dashboard = () => {
       });
     }
     
-    // Add module completion activities from real progress data
     if (dashboardData?.progress) {
       const progress = dashboardData.progress;
       
@@ -648,10 +805,13 @@ const Dashboard = () => {
       }
     }
     
-    // Sort by most recent first and limit to 4
     return activities
       .sort((a, b) => {
-        // Prioritize data submissions, then by recency
+        // Sort by submission date descending (newest first)
+        if (a.submissionDate && b.submissionDate) {
+          return b.submissionDate - a.submissionDate;
+        }
+        // Fallback to original logic for non-data activities
         if (a.type === 'data' && b.type !== 'data') return -1;
         if (b.type === 'data' && a.type !== 'data') return 1;
         return a.time.includes('hour') ? -1 : 1;
@@ -659,98 +819,7 @@ const Dashboard = () => {
       .slice(0, 4);
   })();
 
-  const upcomingDeadlines = dashboardData?.upcoming_deadlines || (() => {
-    const deadlines = [];
-    const today = new Date();
-    
-    // Generate deadlines based on framework progress and data completeness
-    if (dashboardData?.frameworks) {
-      dashboardData.frameworks.forEach(framework => {
-        const frameworkData = frameworkStatus.find(f => f.name === framework.name);
-        if (frameworkData) {
-          // Calculate deadline based on framework type and progress
-          let daysFromNow, priority;
-          
-          if (framework.type === 'mandatory') {
-            daysFromNow = 30; // Mandatory frameworks have strict deadlines
-            priority = frameworkData.progress < 80 ? 'High' : 'Medium';
-          } else if (framework.type === 'mandatory_conditional') {
-            daysFromNow = 45;
-            priority = frameworkData.progress < 70 ? 'High' : 'Medium';
-          } else {
-            daysFromNow = 90; // Voluntary frameworks have longer deadlines
-            priority = frameworkData.progress < 50 ? 'Medium' : 'Low';
-          }
-          
-          const deadlineDate = new Date(today);
-          deadlineDate.setDate(today.getDate() + daysFromNow);
-          
-          deadlines.push({
-            name: `${framework.name} Compliance Report`,
-            date: deadlineDate.toISOString().split('T')[0],
-            daysLeft: daysFromNow,
-            priority: priority,
-            type: 'framework'
-          });
-        }
-      });
-    }
-    
-    // Add data collection deadlines based on monthly progress
-    const currentMonth = today.getMonth() + 1;
-    const currentYear = today.getFullYear();
-    
-    // End of month data collection deadline
-    const endOfMonth = new Date(currentYear, currentMonth, 0);
-    const daysToEndOfMonth = Math.ceil((endOfMonth - today) / (1000 * 60 * 60 * 24));
-    
-    if (daysToEndOfMonth > 0 && daysToEndOfMonth <= 31) {
-      const dataProgress = dashboardData?.data_completeness_percentage || 0;
-      deadlines.push({
-        name: `${endOfMonth.toLocaleDateString('en-US', { month: 'long' })} Data Collection`,
-        date: endOfMonth.toISOString().split('T')[0],
-        daysLeft: daysToEndOfMonth,
-        priority: dataProgress < 50 ? 'High' : dataProgress < 80 ? 'Medium' : 'Low',
-        type: 'data'
-      });
-    }
-    
-    // Quarterly reporting deadline
-    const quarterEndMonths = [3, 6, 9, 12];
-    const nextQuarterEnd = quarterEndMonths.find(month => month > currentMonth) || 12;
-    const quarterEndDate = new Date(currentYear, nextQuarterEnd - 1, 
-      new Date(currentYear, nextQuarterEnd, 0).getDate());
-    const daysToQuarterEnd = Math.ceil((quarterEndDate - today) / (1000 * 60 * 60 * 24));
-    
-    if (daysToQuarterEnd > 0 && daysToQuarterEnd <= 120) {
-      deadlines.push({
-        name: `Q${Math.ceil(nextQuarterEnd / 3)} ESG Quarterly Report`,
-        date: quarterEndDate.toISOString().split('T')[0],
-        daysLeft: daysToQuarterEnd,
-        priority: daysToQuarterEnd <= 30 ? 'High' : daysToQuarterEnd <= 60 ? 'Medium' : 'Low',
-        type: 'quarterly'
-      });
-    }
-    
-    // Annual compliance audit
-    const yearEndDate = new Date(currentYear, 11, 31);
-    const daysToYearEnd = Math.ceil((yearEndDate - today) / (1000 * 60 * 60 * 24));
-    
-    if (daysToYearEnd > 0 && daysToYearEnd <= 365) {
-      deadlines.push({
-        name: 'Annual ESG Compliance Audit',
-        date: yearEndDate.toISOString().split('T')[0],
-        daysLeft: daysToYearEnd,
-        priority: daysToYearEnd <= 90 ? 'High' : daysToYearEnd <= 180 ? 'Medium' : 'Low',
-        type: 'annual'
-      });
-    }
-    
-    // Sort by days left and return top 4
-    return deadlines
-      .sort((a, b) => a.daysLeft - b.daysLeft)
-      .slice(0, 4);
-  })();
+  const upcomingDeadlines = dashboardData?.upcoming_deadlines || [];
 
   const getPriorityColor = (priority) => {
     switch (priority) {
@@ -774,7 +843,6 @@ const Dashboard = () => {
       const dataCompleteness = Math.round(dashboardData?.data_completeness_percentage || 0);
       const evidenceCompleteness = Math.round(dashboardData?.evidence_completeness_percentage || 0);
       
-      // Create time-range specific report
       const timestamp = new Date().toISOString().split('T')[0];
       const timeRangeLabel = selectedTimeRange;
       
@@ -807,24 +875,33 @@ const Dashboard = () => {
         });
       }
 
-      // Add meter data filtered by time range
       if (chartData?.meters) {
         let periodDescription = '';
         switch(selectedTimeRange) {
           case 'Last 7 Days':
             periodDescription = 'PAST 7 DAYS';
             break;
-          case 'This Month':
-            periodDescription = 'PAST 30 DAYS';
-            break;
           case 'Last Quarter':
-            periodDescription = 'Q3 2025 (JUN-AUG)';
+            {
+              const currentMonth = new Date().getMonth(); // 0-based (Sep = 8)
+              const monthNames = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+              const month1 = monthNames[(currentMonth - 2 + 12) % 12];
+              const month2 = monthNames[(currentMonth - 1 + 12) % 12];
+              const month3 = monthNames[currentMonth];
+              const quarter = Math.ceil((currentMonth + 1) / 3);
+              periodDescription = `Q${quarter} 2025 (${month1}-${month3})`;
+            }
             break;
           case 'Last Year':
             periodDescription = 'YEAR 2025';
             break;
           default:
-            periodDescription = 'AUGUST 2025';
+            if (selectedTimeRange.includes('2025') && !selectedTimeRange.includes('Quarter')) {
+              periodDescription = `${selectedTimeRange.toUpperCase()}`;
+            } else {
+              periodDescription = 'AUGUST 2025';
+            }
+            break;
         }
         
         csvData.push([''], [`=== METER DATA (${periodDescription}) ===`], ['Meter', 'Type', 'Value', 'Status', 'Completeness']);
@@ -839,19 +916,25 @@ const Dashboard = () => {
           csvData.push([meter.name, meter.type, value, status, completeness]);
         });
         
-        // Add summary of missing data
         const totalMeters = chartData.meters.length;
         const completedMeters = chartData.meters.filter(meter => {
-          const meterData = chartData.dataEntries.find(entry => 
-            entry.meter && entry.meter.id === meter.id
-          );
-          return meterData?.submission?.value && meterData.submission.value !== '0';
+          let hasData = false;
+          chartData.dataEntries.forEach(entry => {
+            if (entry.tasks && Array.isArray(entry.tasks)) {
+              entry.tasks.forEach(task => {
+                if (task.meter && task.meter.id === meter.id && 
+                    task.submission && task.submission.value && task.submission.value !== '0') {
+                  hasData = true;
+                }
+              });
+            }
+          });
+          return hasData;
         }).length;
         
         csvData.push([''], ['METER SUMMARY', `${completedMeters} of ${totalMeters} meters have data`, '', `${Math.round((completedMeters/totalMeters)*100)}% complete`]);
       }
 
-      // Add upcoming deadlines
       csvData.push([''], ['=== UPCOMING DEADLINES ==='], ['Deadline', 'Date', 'Days Left', 'Priority']);
       upcomingDeadlines.forEach(deadline => {
         csvData.push([deadline.name, deadline.date, deadline.daysLeft, deadline.priority]);
@@ -861,7 +944,6 @@ const Dashboard = () => {
         row.map(cell => `"${cell}"`).join(',')
       ).join('\n');
       
-      // Create filename with time range
       const timeRangeSuffix = selectedTimeRange.toLowerCase().replace(/ /g, '-');
       const filename = `esg-report-${timeRangeSuffix}-${timestamp}.csv`;
       
@@ -875,7 +957,6 @@ const Dashboard = () => {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
 
-      // Show success modal
       setModalData({
         isOpen: true,
         type: 'success',
@@ -908,7 +989,6 @@ const Dashboard = () => {
   };
 
   const handleExportData = async () => {
-    // Check data completeness and warn user if incomplete
     const dataCompleteness = Math.round(dashboardData?.data_completeness_percentage || 0);
     const evidenceCompleteness = Math.round(dashboardData?.evidence_completeness_percentage || 0);
     
@@ -921,7 +1001,6 @@ const Dashboard = () => {
         missingItems.push(`Evidence completeness: ${evidenceCompleteness}% (${100 - evidenceCompleteness}% missing)`);
       }
       
-      // Count missing meter data
       const missingMeters = chartData?.meters?.filter(meter => {
         const meterData = chartData.dataEntries.find(entry => 
           entry.meter && entry.meter.id === meter.id
@@ -933,7 +1012,6 @@ const Dashboard = () => {
         missingItems.push(`${missingMeters.length} meters have no data submitted`);
       }
       
-      // Show warning modal
       setModalData({
         isOpen: true,
         type: 'warning',
@@ -946,14 +1024,12 @@ const Dashboard = () => {
         }
       });
       
-      return; // Stop here, user will decide via modal
+      return;
     }
     
-    // Data is complete, proceed with export
     performExport();
   };
 
-  // Modal handlers
   const closeModal = () => {
     setModalData({ isOpen: false, type: '', data: {} });
   };
@@ -984,107 +1060,183 @@ const Dashboard = () => {
         navigate('/list');
         break;
       default:
-        // No action needed for default case
         break;
     }
   };
 
   const handleDeadlineClick = (deadline) => {
-    // Navigate to relevant page based on deadline type
     switch (deadline.type) {
       case 'framework':
-        navigate('/rame'); // Profiling/Framework page
+        navigate('/rame');
         break;
       case 'data':
-        navigate('/data'); // Data collection page
+        navigate('/data');
         break;
       case 'quarterly':
       case 'annual':
-        navigate('/dashboard'); // Stay on dashboard for reports
+        navigate('/dashboard');
         break;
       default:
-        navigate('/list'); // Checklist as fallback
+        navigate('/list');
     }
   };
 
-  // Generate chart data for selected meter using real data only
   const generateChartData = () => {
-    // Determine which months to show based on selected time range
     let months = [];
-    const currentMonth = 7; // August (0-indexed)
-    const currentYear = 2025;
-    
+
     switch(selectedTimeRange) {
       case 'Last 7 Days':
-        // Show daily data for last 7 days
-        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-        months = days;
-        break;
-      case 'This Month':
-        // Show last 30 days grouped by week
-        months = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Current'];
+        months = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
         break;
       case 'Last Quarter':
-        // Show last 3 months
-        months = ['Jun', 'Jul', 'Aug'];
+        // Dynamic last quarter based on current month
+        {
+          const currentMonth = new Date().getMonth(); // 0-based (Sep = 8)
+          const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          const month1 = monthNames[(currentMonth - 2 + 12) % 12];
+          const month2 = monthNames[(currentMonth - 1 + 12) % 12];
+          const month3 = monthNames[currentMonth];
+          months = [month1, month2, month3];
+        }
         break;
       case 'Last Year':
-        // Show all 12 months
         months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         break;
       default:
-        months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
-    }
-    
-    if (!chartData || !chartData.meters || chartData.meters.length === 0) {
-      const noData = months.map(() => 0);
-      return { labels: months, data: noData };
-    }
-
-    const selectedMeterData = chartData.meters[selectedMeter];
-    if (!selectedMeterData) {
-      const noData = months.map(() => 0);
-      return { labels: months, data: noData };
-    }
-
-    // Find real data for this meter from dataEntries
-    const realData = chartData.dataEntries.find(entry => 
-      entry.meter && entry.meter.id === selectedMeterData.id
-    );
-    
-    // Initialize data based on time range
-    const data = months.map(() => 0);
-    
-    // Set real value in the appropriate position based on time range
-    if (realData && realData.submission && realData.submission.value) {
-      const currentValue = parseFloat(realData.submission.value);
-      if (currentValue > 0) {
-        // Place value in the last position for most time ranges
-        if (selectedTimeRange === 'Last 7 Days') {
-          data[data.length - 1] = currentValue; // Today/Sunday
-        } else if (selectedTimeRange === 'This Month') {
-          data[data.length - 1] = currentValue; // Current week
-        } else if (selectedTimeRange === 'Last Quarter') {
-          data[2] = currentValue; // August
-        } else if (selectedTimeRange === 'Last Year') {
-          data[7] = currentValue; // August (index 7)
+        if (selectedTimeRange.includes('2025') && !selectedTimeRange.includes('Quarter')) {
+          // Show monthly data instead of weeks
+          months = ['This Month'];
         } else {
-          data[7] = currentValue; // Default August position
+          months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
         }
+        break;
+    }
+
+    if (!chartData || !chartData.dataEntries) {
+      return { labels: months, data: months.map(() => 0) };
+    }
+
+    // Get available meter combinations using helper function
+    const availableMeters = getAvailableMeters();
+    if (availableMeters.length === 0) {
+      return { labels: months, data: months.map(() => 0) };
+    }
+
+    // Use selectedMeter index to pick from available meter combinations
+    const selectedMeterInfo = availableMeters[selectedMeter % availableMeters.length];
+    console.log(`📊 Selected meter: ${selectedMeterInfo.displayName} (index ${selectedMeter}, available: ${availableMeters.length})`);
+
+    let currentValue = 0;
+
+    // Aggregate data for the selected meter type
+    console.log(`📊 Processing data entries: ${chartData.dataEntries.length}`);
+
+    // For historical ranges, we should show data distributed across time periods
+    if (selectedTimeRange === 'Last Quarter' || selectedTimeRange === 'Last Year') {
+      // For historical ranges, show the latest available data instead of aggregating everything
+      let latestValue = 0;
+      let latestDate = null;
+
+      chartData.dataEntries.forEach(task => {
+        if (task.meter && task.meter.type === selectedMeterInfo.type &&
+            task.submission && task.submission.value) {
+          const entryValue = parseFloat(task.submission.value);
+          const submissionDate = new Date(task.submission.updated_at || task.submission.created_at);
+
+          console.log(`  Found ${task.meter.type}: value="${task.submission.value}", parsed=${entryValue}, date=${submissionDate.toISOString()}`);
+
+          if (entryValue > 0 && (!latestDate || submissionDate > latestDate)) {
+            latestValue = entryValue;
+            latestDate = submissionDate;
+          }
+        }
+      });
+
+      currentValue = latestValue;
+      console.log(`  📅 Using latest value: ${currentValue} from ${latestDate?.toISOString()}`);
+    } else {
+      // For current month or specific month, aggregate all data
+      chartData.dataEntries.forEach(task => {
+        if (task.meter && task.meter.type === selectedMeterInfo.type &&
+            task.submission && task.submission.value) {
+          const entryValue = parseFloat(task.submission.value);
+          console.log(`  Found ${task.meter.type}: value="${task.submission.value}", parsed=${entryValue}`);
+          if (entryValue > 0) {
+            currentValue += entryValue;
+          }
+        }
+      });
+    }
+
+    console.log(`📊 Total aggregated value for ${selectedMeterInfo.displayName}: ${currentValue}`);
+
+    // Initialize data array with zeros for each month
+    const data = months.map(() => 0);
+
+    // Distribute data across correct month columns instead of aggregating
+    if (selectedTimeRange === 'Last Quarter' || selectedTimeRange === 'Last Year') {
+      console.log(`📊 Distributing data across month columns for ${selectedTimeRange}`);
+
+      // For historical ranges, distribute data by actual submission month
+      const monthMap = {};
+
+      // Distribute by month from flat data
+      chartData.dataEntries.forEach(task => {
+        if (task.meter && task.meter.type === selectedMeterInfo.type &&
+            task.submission && task.submission.value) {
+          const entryValue = parseFloat(task.submission.value);
+          const reportingPeriod = task.submission.reporting_period; // 'Aug', 'Sep', etc.
+
+          if (entryValue > 0 && reportingPeriod) {
+            if (!monthMap[reportingPeriod]) monthMap[reportingPeriod] = 0;
+            monthMap[reportingPeriod] += entryValue;
+            console.log(`  📅 ${reportingPeriod}: +${entryValue} = ${monthMap[reportingPeriod]}`);
+          }
+        }
+      });
+
+      // Map month names to data array indices
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+      if (selectedTimeRange === 'Last Quarter') {
+        // Last Quarter shows last 3 months: match the chart labels exactly
+        const currentMonth = new Date().getMonth(); // 0-based (Sep = 8)
+        const monthNamesAll = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const quarterMonths = [
+          monthNamesAll[(currentMonth - 2 + 12) % 12], // Jul
+          monthNamesAll[(currentMonth - 1 + 12) % 12], // Aug
+          monthNamesAll[currentMonth]                   // Sep
+        ];
+
+        console.log(`  📊 Quarter months mapping: ${quarterMonths}`);
+
+        quarterMonths.forEach((monthName, index) => {
+          if (monthMap[monthName]) {
+            data[index] = monthMap[monthName];
+            console.log(`  📊 ${monthName} → data[${index}] = ${monthMap[monthName]}`);
+          }
+        });
+      } else if (selectedTimeRange === 'Last Year') {
+        // Last Year shows all 12 months
+        monthNames.forEach((monthName, index) => {
+          if (monthMap[monthName]) {
+            data[index] = monthMap[monthName];
+            console.log(`  📊 ${monthName} → data[${index}] = ${monthMap[monthName]}`);
+          }
+        });
+      }
+    } else {
+      // For single month selections, put data in the last column (current behavior)
+      if (currentValue > 0) {
+        data[data.length - 1] = currentValue;
       }
     }
 
-    return { labels: months, data };
+    return { labels: months, data: data };
   };
 
-  // Generate emissions breakdown data
   const generateEmissionsData = () => {
-    console.log('=== EMISSIONS DATA GENERATION ===');
-    console.log('chartData:', chartData);
-    console.log('chartData.dataEntries:', chartData?.dataEntries);
-    
     if (!chartData || !chartData.dataEntries) {
-      console.log('No chart data or data entries for emissions - returning empty scopes');
       return {
         'Scope 1': { value: 0, color: '#ef4444', items: [] },
         'Scope 2': { value: 0, color: '#3b82f6', items: [] },
@@ -1092,50 +1244,90 @@ const Dashboard = () => {
       };
     }
 
-    // Group emissions data by scope
     const scopes = {
       'Scope 1': { value: 0, color: '#ef4444', items: [] },
       'Scope 2': { value: 0, color: '#3b82f6', items: [] },
       'Scope 3': { value: 0, color: '#6b7280', items: [] }
     };
 
-    console.log('Processing', chartData.dataEntries.length, 'data entries');
+    // UAE-specific emission factors from framework JSON files
+    const getEmissionFactor = (meterType) => {
+      const type = meterType.toLowerCase();
 
-    chartData.dataEntries.forEach((entry, index) => {
-      console.log(`Entry ${index}:`, entry);
-      
-      // Use meter type instead of element_name for proper categorization
-      const meterType = entry.meter ? entry.meter.type.toLowerCase() : '';
-      const value = parseFloat(entry.submission?.value) || 0;
-      
-      console.log(`  - Meter type: "${meterType}", Value: ${value}`);
-      
-      // Get display name from meter type instead of duplicate element_name
-      const displayName = entry.meter ? entry.meter.type : entry.element_name;
-      console.log(`  - Display name: "${displayName}"`);
-      
-      if (meterType.includes('fuel') || meterType.includes('gas') || meterType.includes('lpg')) {
-        console.log(`  - Adding to Scope 1: ${value} * 2.3 = ${value * 2.3}`);
-        scopes['Scope 1'].value += value * 2.3; // Convert to CO2e
-        scopes['Scope 1'].items.push(displayName);
-      } else if (meterType.includes('electricity') || meterType.includes('energy') || meterType.includes('renewable')) {
-        console.log(`  - Adding to Scope 2: ${value} * 0.85 = ${value * 0.85}`);
-        scopes['Scope 2'].value += value * 0.85; // Convert to CO2e
-        scopes['Scope 2'].items.push(displayName);
-      } else {
-        console.log(`  - Adding to Scope 3: ${value} * 0.1 = ${value * 0.1}`);
-        scopes['Scope 3'].value += value * 0.1; // Estimate CO2e
-        scopes['Scope 3'].items.push(displayName);
+      // Scope 1 - Direct emissions
+      if (type.includes('lpg') || type.includes('lpg gas')) {
+        return 0.003; // 3 kg CO2e/kg LPG
+      }
+      if (type.includes('petrol') || type.includes('gasoline')) {
+        return 0.00231; // 2.31 kg CO2e/L petrol
+      }
+      if (type.includes('diesel')) {
+        return 0.00268; // 2.68 kg CO2e/L diesel
+      }
+      if (type.includes('natural gas') || type.includes('gas')) {
+        return 0.002; // Estimated natural gas factor
+      }
+      if (type.includes('refrigerant')) {
+        return 1.3; // GWP factor for R134a (varies by refrigerant type)
+      }
+
+      // Scope 2 - Energy indirect emissions
+      if (type.includes('electricity') || type.includes('energy') || type.includes('renewable')) {
+        return 0.00023; // 0.23 kg CO2e/kWh UAE grid average
+      }
+      if (type.includes('district cooling') || type.includes('cooling')) {
+        return 0.00009; // 0.09 kg CO2e/RT-h district cooling
+      }
+
+      // Scope 3 - Other indirect emissions
+      if (type.includes('water')) {
+        return 0.0005; // 0.5 kg CO2e/m³ water treatment
+      }
+      if (type.includes('waste')) {
+        return 0.00006; // 0.06 kg CO2e/kg waste to landfill
+      }
+
+      // Default for unknown types
+      return 0.0001;
+    };
+
+    const getScopeForMeterType = (meterType) => {
+      const type = meterType.toLowerCase();
+
+      // Scope 1: Direct emissions from owned/controlled sources
+      if (type.includes('lpg') || type.includes('petrol') || type.includes('diesel') ||
+          type.includes('natural gas') || type.includes('gas') || type.includes('refrigerant')) {
+        return 'Scope 1';
+      }
+
+      // Scope 2: Indirect emissions from purchased energy
+      if (type.includes('electricity') || type.includes('energy') ||
+          type.includes('renewable') || type.includes('district cooling') || type.includes('cooling')) {
+        return 'Scope 2';
+      }
+
+      // Scope 3: Other indirect emissions
+      return 'Scope 3';
+    };
+
+    // Handle data for GHG emissions calculation
+    chartData.dataEntries.forEach((task) => {
+      if (task.meter && task.submission && task.submission.value) {
+        const meterType = task.meter.type;
+        const value = parseFloat(task.submission.value) || 0;
+        const displayName = task.meter.type;
+        const scope = getScopeForMeterType(meterType);
+        const emissionFactor = getEmissionFactor(meterType);
+
+        scopes[scope].value += value * emissionFactor;
+        scopes[scope].items.push(displayName);
       }
     });
 
-    // Remove duplicate items
     Object.keys(scopes).forEach(scopeName => {
       scopes[scopeName].items = [...new Set(scopes[scopeName].items)];
-      console.log(`Final ${scopeName}:`, scopes[scopeName]);
     });
 
-    console.log('=== FINAL EMISSIONS DATA ===', scopes);
     return scopes;
   };
 
@@ -1152,7 +1344,6 @@ const Dashboard = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      {/* Header with Back Button */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
         <div className="flex items-center space-x-4">
           <button
@@ -1167,10 +1358,9 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Time Range Selector */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-8 gap-4">
         <div className="flex flex-wrap gap-2 sm:gap-4">
-          {['Last 7 Days', 'This Month', 'Last Quarter', 'Last Year'].map((range) => (
+          {['Last 7 Days', `${getCurrentMonthName()} 2025`, 'Last Quarter', 'Last Year'].map((range) => (
             <button
               key={range}
               className={`px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm transition-colors ${
@@ -1190,8 +1380,7 @@ const Dashboard = () => {
             className="px-3 sm:px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-xs sm:text-sm font-medium transition-colors"
           >
             <i className="fas fa-download mr-1 sm:mr-2"></i>
-            <span className="hidden sm:inline">Export</span>
-            <span className="sm:hidden">Export</span>
+            <span>Export</span>
           </button>
           <button 
             onClick={handleExportData}
@@ -1204,8 +1393,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-
-      {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {kpiCards.map((kpi, index) => (
           <div key={index} className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
@@ -1230,7 +1417,6 @@ const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8 mb-8">
-        {/* Framework Progress */}
         <div className="xl:col-span-2 bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-2">
             <div>
@@ -1272,7 +1458,6 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Recent Activities */}
         <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -1297,69 +1482,91 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Charts Section */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8 mb-8">
-        {/* Energy Consumption Chart */}
         <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-2">
             <div className="flex-1 min-w-0">
               <h3 className="text-base sm:text-lg font-bold text-gray-900">Meter Data Analytics</h3>
-              <div className="h-5"> {/* Fixed height container */}
+              <div className="h-5">
                 <p className="text-gray-600 text-xs sm:text-sm truncate">
-                  {chartData?.meters?.[selectedMeter] ? 
-                    `${chartData.meters[selectedMeter].name} - ${chartData.meters[selectedMeter].type}` : 
-                    'Loading meter data...'
-                  }
+                  {(() => {
+                    const availableMeters = getAvailableMeters();
+                    if (availableMeters.length === 0) return 'No data available';
+
+                    const selectedMeterInfo = availableMeters[selectedMeter % availableMeters.length];
+                    return selectedMeterInfo.displayName;
+                  })()}
                 </p>
               </div>
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4 self-start sm:self-auto">
-              {chartData?.meters && chartData.meters.length > 1 && (
-                <span className="text-sm text-gray-500">
-                  {selectedMeter + 1} of {chartData.meters.length}
-                </span>
-              )}
+              {(() => {
+                const availableMeters = getAvailableMeters();
+                if (availableMeters.length <= 1) return null;
+
+                return (
+                  <span className="text-sm text-gray-500">
+                    {(selectedMeter % availableMeters.length) + 1} of {availableMeters.length}
+                  </span>
+                );
+              })()}
               <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-                {chartData?.meters?.[selectedMeter]?.type?.includes('Electricity') ? 'kWh' :
-                 chartData?.meters?.[selectedMeter]?.type?.includes('Fuel') ? 'Liters' :
-                 chartData?.meters?.[selectedMeter]?.type?.includes('Water') ? 'Liters' : 'Units'}
+                {(() => {
+                  const availableMeters = getAvailableMeters();
+                  if (availableMeters.length === 0) return 'Units';
+
+                  const selectedMeterInfo = availableMeters[selectedMeter % availableMeters.length];
+                  const currentMeterType = selectedMeterInfo.type;
+                  return currentMeterType?.includes('Electricity') ? 'kWh' :
+                         currentMeterType?.includes('Fuel') ? 'Liters' :
+                         currentMeterType?.includes('Water') ? 'Liters' : 'Units';
+                })()}
               </span>
             </div>
           </div>
           
-          {/* Chart Area with Floating Navigation */}
           <div className="h-48 sm:h-64 bg-gray-50 rounded-lg p-2 sm:p-4 relative group">
-            {/* Floating Left Arrow */}
-            {chartData?.meters && chartData.meters.length > 1 && (
-              <button 
-                onClick={() => handleMeterNavigation('prev')}
-                className="absolute left-2 top-1/2 transform -translate-y-1/2 z-10 
-                          p-2 bg-white/90 hover:bg-white rounded-full shadow-lg
-                          opacity-0 group-hover:opacity-100 transition-all duration-200
-                          hover:scale-110"
-                title="Previous meter"
-              >
-                <i className="fas fa-chevron-left text-gray-700 text-sm"></i>
-              </button>
-            )}
-            
-            {/* Floating Right Arrow */}
-            {chartData?.meters && chartData.meters.length > 1 && (
-              <button 
-                onClick={() => handleMeterNavigation('next')}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 z-10 
-                          p-2 bg-white/90 hover:bg-white rounded-full shadow-lg
-                          opacity-0 group-hover:opacity-100 transition-all duration-200
-                          hover:scale-110"
-                title="Next meter"
-              >
-                <i className="fas fa-chevron-right text-gray-700 text-sm"></i>
-              </button>
-            )}
-            
-            {/* Chart Content */}
+            {(() => {
+              const availableMeters = getAvailableMeters();
+              if (availableMeters.length <= 1) return null;
+
+              return (
+                <>
+                  <button
+                    onClick={() => handleMeterNavigation('prev')}
+                    className="absolute left-2 top-1/2 transform -translate-y-1/2 z-10
+                              p-2 bg-white/90 hover:bg-white rounded-full shadow-lg
+                              opacity-0 group-hover:opacity-100 transition-all duration-200
+                              hover:scale-110"
+                    title="Previous meter type"
+                  >
+                    <i className="fas fa-chevron-left text-gray-700 text-sm"></i>
+                  </button>
+                  <button
+                    onClick={() => handleMeterNavigation('next')}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 z-10
+                              p-2 bg-white/90 hover:bg-white rounded-full shadow-lg
+                              opacity-0 group-hover:opacity-100 transition-all duration-200
+                              hover:scale-110"
+                    title="Next meter type"
+                  >
+                    <i className="fas fa-chevron-right text-gray-700 text-sm"></i>
+                  </button>
+                </>
+              );
+            })()}
+
             {chartData ? (
-              <EnergyChart chartData={generateChartData()} meterType={chartData.meters?.[selectedMeter]?.type} />
+              <EnergyChart
+                chartData={generateChartData()}
+                meterType={(() => {
+                  const availableMeters = getAvailableMeters();
+                  if (availableMeters.length === 0) return null;
+
+                  const selectedMeterInfo = availableMeters[selectedMeter % availableMeters.length];
+                  return selectedMeterInfo.type;
+                })()}
+              />
             ) : (
               <div className="flex items-center justify-center h-full">
                 <div className="text-center">
@@ -1371,7 +1578,6 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Emissions Overview */}
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -1395,7 +1601,6 @@ const Dashboard = () => {
             </div>
           </div>
           
-          {/* Chart Area */}
           <div className="h-64 bg-gray-50 rounded-lg p-4">
             {chartData ? (
               <EmissionsChart 
@@ -1414,7 +1619,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Upcoming Deadlines */}
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 mb-8">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -1455,7 +1659,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Action Center */}
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -1487,7 +1690,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Export Modal */}
       <ExportModal
         isOpen={modalData.isOpen}
         onClose={closeModal}
@@ -1495,112 +1697,11 @@ const Dashboard = () => {
         data={modalData.data}
       />
 
-      {/* Deadline Modal */}
       <DeadlineModal
         isOpen={showDeadlineModal}
         onClose={handleDeadlineModalClose}
         onSelectType={handleDeadlineTypeSelect}
       />
-    </div>
-  );
-};
-
-// Deadline Modal Component
-const DeadlineModal = ({ isOpen, onClose, onSelectType }) => {
-  if (!isOpen) return null;
-  
-  const deadlineTypes = [
-    {
-      id: 'data',
-      icon: 'fas fa-database',
-      title: 'Data Collection Deadline',
-      description: 'Add monthly submission deadline for meter readings and ESG data',
-      color: 'blue'
-    },
-    {
-      id: 'framework',
-      icon: 'fas fa-file-alt',
-      title: 'Framework Compliance Deadline',
-      description: 'Add reporting deadline for ESG frameworks (DST, Green Key, etc.)',
-      color: 'green'
-    },
-    {
-      id: 'checklist',
-      icon: 'fas fa-tasks',
-      title: 'ESG Action Item Deadline',
-      description: 'Add deadline for checklist items and sustainability initiatives',
-      color: 'purple'
-    }
-  ];
-  
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-        {/* Modal Header */}
-        <div className="p-6 border-b bg-blue-50">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <i className="fas fa-calendar-plus text-blue-600"></i>
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900">Add New Deadline</h2>
-                <p className="text-gray-600">Choose the type of deadline you want to add</p>
-              </div>
-            </div>
-            <button 
-              onClick={onClose}
-              className="p-2 hover:bg-white rounded-lg transition-colors"
-            >
-              <i className="fas fa-times text-gray-500"></i>
-            </button>
-          </div>
-        </div>
-
-        {/* Modal Body */}
-        <div className="p-6">
-          <div className="space-y-4">
-            {deadlineTypes.map((type) => (
-              <button
-                key={type.id}
-                onClick={() => onSelectType(type.id)}
-                className={`w-full p-6 rounded-xl border-2 border-gray-200 hover:border-${type.color}-300 hover:shadow-md transition-all duration-200 text-left group`}
-              >
-                <div className="flex items-start space-x-4">
-                  <div className={`w-12 h-12 bg-${type.color}-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-${type.color}-200 transition-colors`}>
-                    <i className={`${type.icon} text-${type.color}-600 text-lg`}></i>
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
-                      {type.title}
-                    </h3>
-                    <p className="text-gray-600 leading-relaxed">
-                      {type.description}
-                    </p>
-                  </div>
-                  <div className="flex-shrink-0">
-                    <i className="fas fa-arrow-right text-gray-400 group-hover:text-blue-500 transition-colors"></i>
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Modal Footer */}
-        <div className="p-6 border-t bg-gray-50 flex justify-between">
-          <div className="text-sm text-gray-500">
-            <i className="fas fa-info-circle mr-2"></i>
-            You'll be taken to the relevant page to set up your deadline
-          </div>
-          <button 
-            onClick={onClose}
-            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
     </div>
   );
 };

@@ -10,7 +10,7 @@ const Data = () => {
   const location = useLocation();
   const { user, selectedCompany } = useAuth();
   const [selectedYear, setSelectedYear] = useState(2025); // Use 2025 to match backend data
-  const [selectedMonth, setSelectedMonth] = useState(8); // Use August to match current backend data
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1); // Dynamic current month
   const [searchTerm, setSearchTerm] = useState('');
   const [viewFilter, setViewFilter] = useState('All');
   const [groupBy, setGroupBy] = useState('Category');
@@ -29,6 +29,7 @@ const Data = () => {
   const [availableUsers, setAvailableUsers] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [assignmentFilter, setAssignmentFilter] = useState('all'); // 'all', 'assigned', 'unassigned'
+  const [assignments, setAssignments] = useState({ category_assignments: {}, element_assignments: {} });
   const [showViewFilterModal, setShowViewFilterModal] = useState(false);
   const [showGroupByModal, setShowGroupByModal] = useState(false);
   const [showAssignmentFilterModal, setShowAssignmentFilterModal] = useState(false);
@@ -161,16 +162,15 @@ const Data = () => {
 
   const fetchDataEntries = async (year, month) => {
     try {
-      const response = await makeAuthenticatedRequest(
-        `${API_BASE_URL}/api/data-collection/tasks/?company_id=${companyId}&year=${year}&month=${month}`
-      );
+      let url = `${API_BASE_URL}/api/data-collection/tasks/?company_id=${companyId}&year=${year}&month=${month}`;
+      const response = await makeAuthenticatedRequest(url);
       const data = await response.json();
-      console.log('🔍 fetchDataEntries raw API response:', {
-        user_role: user?.role,
-        data_count: data?.length || 0,
-        sample_entry: data?.[0],
-        all_entries: data
-      });
+      // console.log('🔍 fetchDataEntries raw API response:', {
+      //   user_role: user?.role,
+      //   data_count: data?.length || 0,
+      //   sample_entry: data?.[0],
+      //   all_entries: data
+      // });
       return data || [];
     } catch (error) {
       console.error('Error fetching data entries:', error);
@@ -180,10 +180,13 @@ const Data = () => {
 
   const fetchProgress = async (year, month = null) => {
     try {
-      const url = month 
-        ? `${API_BASE_URL}/api/data-collection/progress/?company_id=${companyId}&year=${year}&month=${month}`
-        : `${API_BASE_URL}/api/data-collection/progress/?company_id=${companyId}&year=${year}`;
-      
+      // Build URL for progress data
+      let url = `${API_BASE_URL}/api/data-collection/progress/?company_id=${companyId}&year=${year}`;
+
+      if (month) {
+        url += `&month=${month}`;
+      }
+
       const response = await makeAuthenticatedRequest(url);
       const data = await response.json();
       return data;
@@ -237,7 +240,7 @@ const Data = () => {
           }
         } else if (monthNum === currentMonth) {
           status = 'current';
-        } else if (monthNum > 11) { // Future months beyond reasonable planning
+        } else if (monthNum > 12) { // Future months beyond December (shouldn't happen)
           status = 'disabled';
         }
         
@@ -324,10 +327,14 @@ const Data = () => {
         });
 
         // Load data entries for current month - will include new meters automatically
-        console.log('Loading data entries for company:', companyId, 'year:', selectedYear, 'month:', selectedMonth);
+        // console.log('Loading data entries for company:', companyId, 'year:', selectedYear, 'month:', selectedMonth);
         const entries = await fetchDataEntries(selectedYear, selectedMonth);
-        console.log('Raw entries from API:', entries);
-        const transformedEntries = entries.map(entry => ({
+        // console.log('Raw entries from API:', entries);
+        
+        let transformedEntries = [];
+        
+        // Process entries data
+        transformedEntries = entries.map(entry => ({
           id: entry.submission.id,
           name: entry.element_name,
           meter: entry.meter ? `${entry.meter.name} (${entry.meter.type})` : 'N/A',
@@ -341,13 +348,16 @@ const Data = () => {
           category: entry.type,
           description: entry.element_description || '',
           evidence_file: entry.submission.evidence_file || null,
-          assignedTo: entry.submission.assigned_to ? 
+          assignedTo: entry.submission.assigned_to ?
             `${entry.submission.assigned_to.first_name || ''} ${entry.submission.assigned_to.last_name || ''}`.trim() || entry.submission.assigned_to.username || entry.submission.assigned_to.email
             : null,
           assignedUserId: entry.submission.assigned_to ? entry.submission.assigned_to.id : null,
-          assignedAt: entry.submission.assigned_at || null
+          assignedAt: entry.submission.assigned_at || null,
+          element_category: entry.element_category || 'Environmental',
+          element_id: entry.element_id
         }));
-        console.log('Transformed entries:', transformedEntries);
+        
+        // console.log('Transformed entries:', transformedEntries);
         setDataEntries(transformedEntries);
 
       } catch (error) {
@@ -360,13 +370,62 @@ const Data = () => {
     loadInitialData();
   }, [selectedYear, selectedMonth, companyId]);
 
+  // Fetch assignments for meter managers and uploaders
+  useEffect(() => {
+    if (companyId && ['meter_manager', 'uploader'].includes(user?.role)) {
+      console.log('🔧 Data.js - Fetching assignments for meter manager/uploader');
+      fetchAssignments();
+    }
+  }, [companyId, user?.role]);
+
   // Update filtered entries when search, filter, grouping, or assignment changes
   useEffect(() => {
     let filtered = applyFiltersAndSearch(dataEntries);
     
-    // Uploaders only see tasks assigned to them
-    if (canEditAssignedTasks) {
-      filtered = filtered.filter(entry => entry.assignedUserId === user?.id);
+    // Role-based assignment filtering for meter managers and uploaders
+    if (['meter_manager', 'uploader'].includes(user?.role) && assignments && Object.keys(assignments).length > 0) {
+      console.log('🔍 Data.js - Applying assignment filtering for', user?.role);
+      console.log('🔍 Data.js - Available assignments:', assignments);
+      console.log('🔍 Data.js - User ID:', user?.id);
+
+      const userAssignedTasks = [];
+
+      // Step 1: Check category assignments
+      Object.entries(assignments.category_assignments || {}).forEach(([category, assignedUserObj]) => {
+        console.log(`🔍 Data.js - Checking category: ${category} -> ${assignedUserObj?.user_id}`);
+        if (assignedUserObj?.user_id === user.id) {
+          console.log(`✅ Data.js - Category ${category} assigned to user ${user.id}`);
+          // Add ALL tasks from this assigned category
+          const categoryTasks = filtered.filter(task => {
+            return task.element_category === category;
+          });
+          userAssignedTasks.push(...categoryTasks);
+          console.log(`✅ Data.js - Added ${categoryTasks.length} tasks from category ${category}`);
+        }
+      });
+
+      // Step 2: Check individual element assignments
+      Object.entries(assignments.element_assignments || {}).forEach(([elementId, assignedUserObj]) => {
+        console.log(`🔍 Data.js - Checking element: ${elementId} -> ${assignedUserObj?.user_id}`);
+        if (assignedUserObj?.user_id === user.id) {
+          console.log(`✅ Data.js - Element ${elementId} assigned to user ${user.id}`);
+          // Add this specific assigned element's tasks
+          const elementTasks = filtered.filter(task => {
+            return task.element_id == elementId;
+          });
+
+          // Avoid duplicates from category assignments
+          elementTasks.forEach(task => {
+            if (!userAssignedTasks.some(existing => existing.id === task.id)) {
+              userAssignedTasks.push(task);
+              console.log(`✅ Data.js - Added task: ${task.name}`);
+            }
+          });
+        }
+      });
+
+      console.log(`🔍 Data.js - Final assigned tasks: ${userAssignedTasks.length}`);
+      filtered = userAssignedTasks;
     }
     
     // Filter by assignment status
@@ -377,52 +436,19 @@ const Data = () => {
     }
     
     setFilteredEntries(filtered);
-  }, [searchTerm, viewFilter, groupBy, dataEntries, assignmentFilter]);
+  }, [searchTerm, viewFilter, groupBy, dataEntries, assignmentFilter, assignments, user?.role, user?.id]);
 
-  // Add window focus listener to refresh data when user returns to tab
-  useEffect(() => {
-    const handleFocus = () => {
-      if (companyId) {
-        console.log('Window focused - refreshing data entries to include any new meters');
-        refreshDataEntries();
-      }
-    };
+  // Removed excessive window focus refresh to improve performance
 
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
-  }, [companyId, selectedYear, selectedMonth]);
+  // Removed excessive navigation-based refresh to improve performance
 
-  // Add navigation-based refresh - triggers when navigating to Data page
-  useEffect(() => {
-    if (location.pathname === '/data' && companyId) {
-      console.log('Navigated to Data page - refreshing data entries to include any meter changes');
-      refreshDataEntries();
-    }
-  }, [location.pathname, companyId, selectedYear, selectedMonth]);
-
-  // Add periodic refresh to catch meter changes
-  useEffect(() => {
-    if (!companyId) return;
-    
-    console.log('Setting up periodic refresh every 10 seconds');
-    const interval = setInterval(() => {
-      if (location.pathname === '/data') {
-        console.log('Periodic refresh - checking for meter changes');
-        refreshDataEntries();
-      }
-    }, 10000); // Refresh every 10 seconds when on Data page
-    
-    return () => {
-      console.log('Clearing periodic refresh interval');
-      clearInterval(interval);
-    };
-  }, [location.pathname, companyId, selectedYear, selectedMonth]);
+  // Removed periodic refresh to improve performance - users can use manual refresh button if needed
 
   // Helper function to refresh data entries and progress
   const refreshDataEntries = async () => {
     if (!companyId) return;
     
-    console.log('🔄 REFRESH START - Company:', companyId, 'Year:', selectedYear, 'Month:', selectedMonth);
+    // console.log('🔄 REFRESH START - Company:', companyId, 'Year:', selectedYear, 'Month:', selectedMonth);
     try {
       // Refresh both data entries and progress simultaneously
       const [entries, annualProgress, monthlyProgress] = await Promise.all([
@@ -431,10 +457,10 @@ const Data = () => {
         fetchProgress(selectedYear, selectedMonth)
       ]);
 
-      console.log('📊 Raw API responses:');
-      console.log('- Data entries count:', entries.length);
-      console.log('- Annual progress:', annualProgress);
-      console.log('- Monthly progress:', monthlyProgress);
+      // console.log('📊 Raw API responses:');
+      // console.log('- Data entries count:', entries.length);
+      // console.log('- Annual progress:', annualProgress);
+      // console.log('- Monthly progress:', monthlyProgress);
 
       // For meter managers, calculate progress based only on metered tasks
       let finalAnnualProgress = annualProgress;
@@ -455,10 +481,10 @@ const Data = () => {
           items_remaining: Math.max(0, meterProgress.total_points - meterProgress.completed_points)
         };
         
-        console.log('🔧 Meter Manager Progress Override:', {
-          original: monthlyProgress,
-          meter_override: finalMonthlyProgress
-        });
+        // console.log('🔧 Meter Manager Progress Override:', {
+        //   original: monthlyProgress,
+        //   meter_override: finalMonthlyProgress
+        // });
       }
 
       // Update progress data
@@ -467,12 +493,12 @@ const Data = () => {
         monthly: finalMonthlyProgress
       });
 
-      console.log('🔄 Transforming entries:', {
-        user_role: user?.role,
-        entries_count: entries.length,
-        entries_with_values: entries.filter(e => e.submission?.value).length,
-        entries_with_meters: entries.filter(e => e.meter_id || e.meter).length
-      });
+      // console.log('🔄 Transforming entries:', {
+      //   user_role: user?.role,
+      //   entries_count: entries.length,
+      //   entries_with_values: entries.filter(e => e.submission?.value).length,
+      //   entries_with_meters: entries.filter(e => e.meter_id || e.meter).length
+      // });
 
       const transformedEntries = entries.map(entry => {
         const assignedUser = entry.submission.assigned_to;
@@ -501,35 +527,37 @@ const Data = () => {
           evidence_file: entry.submission.evidence_file || null,
           assignedTo: assignedToName,
           assignedUserId: assignedUser ? assignedUser.id : null,
-          assignedAt: entry.submission.assigned_at || null
+          assignedAt: entry.submission.assigned_at || null,
+          element_category: entry.element_category || 'Environmental',
+          element_id: entry.element_id
         };
       });
       setDataEntries(transformedEntries);
-      console.log('✅ REFRESH COMPLETE - Found', transformedEntries.length, 'tasks');
-      console.log('- Raw entries breakdown with assignments:');
-      entries.forEach((entry, i) => {
-        const submission = entry.submission;
-        console.log(`  ${i + 1}. ${entry.element_name} - Meter: ${entry.meter ? entry.meter.name + ' (' + entry.meter.type + ')' : 'N/A'} - Status: ${submission?.status || 'missing'}`);
-        if (submission.assigned_to) {
-          console.log(`    ✅ Assignment: ${JSON.stringify(submission.assigned_to)}`);
-        } else {
-          console.log(`    ❌ No assignment data`);
-        }
-        
-        // Check if submission has all expected fields
-        console.log(`    Submission keys: ${Object.keys(submission)}`);
-        if (submission.assigned_to === null || submission.assigned_to === undefined) {
-          console.log(`    Assignment is explicitly null/undefined`);
-        }
-      });
-      console.log('- Expected total points (entries * 2):', transformedEntries.length * 2);
-      console.log('- Actual total points from API:', monthlyProgress.total_points);
-      console.log('- Completed points:', monthlyProgress.completed_points);
-      console.log('- Items remaining:', monthlyProgress.items_remaining);
-      console.log('- Progress calculations:');
-      console.log('  - Data progress:', monthlyProgress.data_progress);
-      console.log('  - Evidence progress:', monthlyProgress.evidence_progress);
-      console.log('  - Overall progress:', monthlyProgress.overall_progress);
+      // console.log('✅ REFRESH COMPLETE - Found', transformedEntries.length, 'tasks');
+      // console.log('- Raw entries breakdown with assignments:');
+      // entries.forEach((entry, i) => {
+      //   const submission = entry.submission;
+      //   console.log(`  ${i + 1}. ${entry.element_name} - Meter: ${entry.meter ? entry.meter.name + ' (' + entry.meter.type + ')' : 'N/A'} - Status: ${submission?.status || 'missing'}`);
+      //   if (submission.assigned_to) {
+      //     console.log(`    ✅ Assignment: ${JSON.stringify(submission.assigned_to)}`);
+      //   } else {
+      //     console.log(`    ❌ No assignment data`);
+      //   }
+      //   
+      //   // Check if submission has all expected fields
+      //   console.log(`    Submission keys: ${Object.keys(submission)}`);
+      //   if (submission.assigned_to === null || submission.assigned_to === undefined) {
+      //     console.log(`    Assignment is explicitly null/undefined`);
+      //   }
+      // });
+      // console.log('- Expected total points (entries * 2):', transformedEntries.length * 2);
+      // console.log('- Actual total points from API:', monthlyProgress.total_points);
+      // console.log('- Completed points:', monthlyProgress.completed_points);
+      // console.log('- Items remaining:', monthlyProgress.items_remaining);
+      // console.log('- Progress calculations:');
+      // console.log('  - Data progress:', monthlyProgress.data_progress);
+      // console.log('  - Evidence progress:', monthlyProgress.evidence_progress);
+      // console.log('  - Overall progress:', monthlyProgress.overall_progress);
     } catch (error) {
       console.error('❌ Error refreshing data entries:', error);
     }
@@ -651,11 +679,39 @@ const Data = () => {
   };
 
   const handleAutoSave = async (entryId, value, file) => {
-    // Skip if no value and no file
-    if (!value && !file) return;
-    
     // Skip if already saving this entry
     if (savingEntries[entryId]) return;
+
+    // Handle clearing data (empty value and no file)
+    if (!value && !file) {
+      setSavingEntries(prev => ({ ...prev, [entryId]: true }));
+
+      try {
+        const success = await saveDataEntry(entryId, '', null);
+        if (success) {
+          // Update the entry status to missing and clear value
+          setDataEntries(prev =>
+            prev.map(entry =>
+              entry.id === entryId
+                ? {
+                    ...entry,
+                    status: 'missing',
+                    value: ''
+                  }
+                : entry
+            )
+          );
+
+          // Refresh progress data
+          await refreshProgressData();
+        }
+      } catch (error) {
+        console.error('Error clearing entry:', error);
+      } finally {
+        setSavingEntries(prev => ({ ...prev, [entryId]: false }));
+      }
+      return;
+    }
 
     setSavingEntries(prev => ({ ...prev, [entryId]: true }));
     
@@ -722,25 +778,25 @@ const Data = () => {
 
   // Calculate progress for meter managers (only metered tasks)
   const calculateMeterManagerProgress = (entries) => {
-    console.log('🔧 Calculating meter manager progress:', {
-      total_entries: entries.length,
-      isMeterDataOnly: isMeterDataOnly,
-      user_role: user?.role
-    });
+    // console.log('🔧 Calculating meter manager progress:', {
+    //   total_entries: entries.length,
+    //   isMeterDataOnly: isMeterDataOnly,
+    //   user_role: user?.role
+    // });
     
     const meteredEntries = entries.filter(entry => entry.meter_id !== null);
     const totalMeteredTasks = meteredEntries.length;
     
-    console.log('📊 Metered entries found:', {
-      metered_count: totalMeteredTasks,
-      total_points_should_be: totalMeteredTasks * 2,
-      metered_entries: meteredEntries.map(e => ({
-        name: e.name,
-        meter_id: e.meter_id,
-        has_value: e.value !== null && e.value !== '',
-        has_evidence: !!e.evidence_file
-      }))
-    });
+    // console.log('📊 Metered entries found:', {
+    //   metered_count: totalMeteredTasks,
+    //   total_points_should_be: totalMeteredTasks * 2,
+    //   metered_entries: meteredEntries.map(e => ({
+    //     name: e.name,
+    //     meter_id: e.meter_id,
+    //     has_value: e.value !== null && e.value !== '',
+    //     has_evidence: !!e.evidence_file
+    //   }))
+    // });
     
     if (totalMeteredTasks === 0) {
       return {
@@ -771,7 +827,7 @@ const Data = () => {
       evidence_complete: evidenceCompleted
     };
     
-    console.log('✅ Meter manager progress calculated:', result);
+    // console.log('✅ Meter manager progress calculated:', result);
     return result;
   };
 
@@ -879,11 +935,11 @@ const Data = () => {
           items_remaining: Math.max(0, meterProgress.total_points - meterProgress.completed_points)
         };
         
-        console.log('🔧 Meter Manager Progress Refresh:', {
-          entries_count: filteredEntries.length,
-          metered_count: filteredEntries.filter(e => e.meter_id !== null).length,
-          progress: meterProgress
-        });
+        // console.log('🔧 Meter Manager Progress Refresh:', {
+        //   entries_count: filteredEntries.length,
+        //   metered_count: filteredEntries.filter(e => e.meter_id !== null).length,
+        //   progress: meterProgress
+        // });
       }
       
       setProgressData({
@@ -957,8 +1013,8 @@ const Data = () => {
 
   const handleMonthSelect = async (monthId) => {
     if (monthId !== selectedMonth) {
-      setSelectedMonth(monthId);
       setLoading(true);
+      console.log(`📅 Month selection: Switching from ${selectedMonth} to ${monthId}`);
       
       try {
         // Update months with new selected month
@@ -969,7 +1025,11 @@ const Data = () => {
 
         // Reload data entries for new month
         const entries = await fetchDataEntries(selectedYear, monthId);
-        const transformedEntries = entries.map(entry => ({
+
+        let transformedEntries = [];
+
+        // Process entries data
+        transformedEntries = entries.map(entry => ({
           id: entry.submission.id,
           name: entry.element_name,
           meter: entry.meter ? `${entry.meter.name} (${entry.meter.type})` : 'N/A',
@@ -983,12 +1043,15 @@ const Data = () => {
           category: entry.type,
           description: entry.element_description || '',
           evidence_file: entry.submission.evidence_file || null,
-          assignedTo: entry.submission.assigned_to ? 
+          assignedTo: entry.submission.assigned_to ?
             `${entry.submission.assigned_to.first_name || ''} ${entry.submission.assigned_to.last_name || ''}`.trim() || entry.submission.assigned_to.username || entry.submission.assigned_to.email
             : null,
           assignedUserId: entry.submission.assigned_to ? entry.submission.assigned_to.id : null,
-          assignedAt: entry.submission.assigned_at || null
+          assignedAt: entry.submission.assigned_at || null,
+          element_category: entry.element_category || 'Environmental',
+          element_id: entry.element_id
         }));
+
         setDataEntries(transformedEntries);
 
         // Update monthly progress
@@ -1004,6 +1067,10 @@ const Data = () => {
             total_points: monthlyProgress.total_points || 0
           }
         }));
+        
+        // Update selectedMonth only after all data is loaded to prevent race conditions
+        setSelectedMonth(monthId);
+        console.log(`✅ Month selection complete: Now showing data for month ${monthId}`);
       } catch (error) {
         console.error('Error loading month data:', error);
       } finally {
@@ -1080,23 +1147,39 @@ const Data = () => {
         
         // Apply role hierarchy - users cannot assign to higher or equal level roles
         if (canAssignToAnyone) {
-          // Super User: Can assign to Admin, Site Manager, Uploader, Meter Manager (but not other Super Users)
-          filteredUsers = filteredUsers.filter(u => 
-            ['admin', 'site_manager', 'uploader', 'meter_manager'].includes(u.role)
+          // Super User: Can assign to ALL roles including other Super Users (but not Viewers)
+          filteredUsers = filteredUsers.filter(u =>
+            ['super_user', 'admin', 'site_manager', 'uploader', 'meter_manager'].includes(u.role)
           );
         } else if (canAssignInCompany) {
-          // Admin: Can assign to Site Manager, Uploader, Meter Manager (but not Super User or other Admins)
-          filteredUsers = filteredUsers.filter(u => 
+          // Admin: Can assign to most roles (but not Super User or other Admins)
+          filteredUsers = filteredUsers.filter(u =>
             ['site_manager', 'uploader', 'meter_manager'].includes(u.role)
           );
         } else if (canAssignToUploadersAtOwnSites) {
-          // Site Manager: Can only assign to Uploaders and Meter Managers
-          filteredUsers = filteredUsers.filter(u => 
+          // Site Manager: Can assign to Uploaders and Meter Managers
+          filteredUsers = filteredUsers.filter(u =>
             ['uploader', 'meter_manager'].includes(u.role)
           );
+        } else {
+          // For any other case (including users who normally can't assign),
+          // show all assignable users to avoid empty lists
+          console.log('⚠️ Data.js - Showing all assignable users for role:', user?.role);
+          filteredUsers = filteredUsers.filter(u =>
+            ['super_user', 'admin', 'site_manager', 'uploader', 'meter_manager'].includes(u.role)
+          );
         }
-        
-        console.log('Available users for assignment:', filteredUsers);
+
+        console.log('🔍 Data.js - User assignment filtering:', {
+          currentUser: user?.role,
+          canAssignToAnyone,
+          canAssignInCompany,
+          canAssignToUploadersAtOwnSites,
+          cannotAssignTasks,
+          allUsers: users.length,
+          filteredUsers: filteredUsers.length,
+          users: filteredUsers.map(u => ({ id: u.id, role: u.role, name: u.username }))
+        });
         setAvailableUsers(filteredUsers);
       } else {
         console.error('Failed to fetch available users, status:', response.status);
@@ -1108,6 +1191,26 @@ const Data = () => {
     }
   };
 
+  // Fetch assignments for filtering (used by meter managers and uploaders)
+  const fetchAssignments = async () => {
+    if (!companyId) return;
+
+    try {
+      let url = `${API_BASE_URL}/api/element-assignments/get_assignments/?company_id=${companyId}`;
+
+      const response = await makeAuthenticatedRequest(url);
+      if (response.ok) {
+        const data = await response.json();
+        setAssignments(data);
+        console.log('🔍 Data.js - Fetched assignments:', data);
+      } else {
+        console.error('Failed to fetch assignments, status:', response.status);
+      }
+    } catch (error) {
+      console.error('Error fetching assignments:', error);
+    }
+  };
+
   // Handle opening assignment modal
   const handleOpenAssignModal = (task) => {
     setSelectedTaskForAssignment(task);
@@ -1115,48 +1218,41 @@ const Data = () => {
     fetchAvailableUsers();
   };
 
-  // Handle task assignment
-  const handleAssignTask = async (userId, taskId) => {
+  // Handle element assignment - assigns element and all its related tasks
+  const handleAssignElement = async (userId) => {
     try {
-      const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/data-collection/assign-task/`, {
+      const checklistItemId = selectedTaskForAssignment.checklist_item_id;
+
+      if (!checklistItemId) {
+        console.error('No checklist item ID found for assignment');
+        return;
+      }
+
+      const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/element-assignments/assign_element/`, {
         method: 'POST',
         body: JSON.stringify({
-          task_id: taskId,
-          assigned_user_id: userId
+          checklist_item_id: checklistItemId,
+          user_id: userId
         })
       });
-      
+
       if (response.ok) {
         const responseData = await response.json();
-        console.log('Assignment response:', responseData);
-        
-        // Update the task in the data entries
-        const assignedUser = availableUsers.find(u => u.id === userId);
-        const assignedName = assignedUser ? 
-          `${assignedUser.first_name || ''} ${assignedUser.last_name || ''}`.trim() || assignedUser.name || assignedUser.email
-          : 'Unknown User';
-        
-        console.log('Updating entry with assignment:', { taskId, assignedName, userId });
-        
-        setDataEntries(prev => prev.map(entry => 
-          entry.id === taskId 
-            ? { ...entry, assignedTo: assignedName, assignedUserId: userId }
-            : entry
-        ));
-        
+        console.log('Element assignment response:', responseData);
+
         setShowAssignModal(false);
         setSelectedTaskForAssignment(null);
-        console.log('Task assigned successfully to:', assignedName);
-        
+        console.log('Element assigned successfully - all related tasks will be assigned');
+
         // Refresh data to get updated assignment info from server
         refreshDataEntries();
       } else {
-        console.error('Failed to assign task, status:', response.status);
+        console.error('Failed to assign element, status:', response.status);
         const errorText = await response.text();
         console.error('Error response:', errorText);
       }
     } catch (error) {
-      console.error('Error assigning task:', error);
+      console.error('Error assigning element:', error);
     }
   };
 
@@ -1166,6 +1262,18 @@ const Data = () => {
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           <span className="ml-3 text-gray-600">Loading data collection interface...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading while component is fetching data
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto px-4">
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <span className="ml-3 text-sm sm:text-base text-gray-600">Loading data entries...</span>
         </div>
       </div>
     );
@@ -1960,7 +2068,7 @@ const Data = () => {
         >
           <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 max-h-96 overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Assign Task</h3>
+              <h3 className="text-lg font-semibold text-gray-900">Assign Element</h3>
               <button 
                 className="text-gray-400 hover:text-gray-600"
                 onClick={() => {
@@ -1972,9 +2080,13 @@ const Data = () => {
               </button>
             </div>
             
-            <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+            <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
               <h4 className="font-medium text-gray-900 mb-1">{selectedTaskForAssignment.name}</h4>
-              <p className="text-sm text-gray-600">{selectedTaskForAssignment.description}</p>
+              <p className="text-sm text-gray-600 mb-2">{selectedTaskForAssignment.description}</p>
+              <div className="text-sm text-blue-700 bg-blue-100 px-3 py-2 rounded-md">
+                <i className="fas fa-info-circle mr-2"></i>
+                Assigning this element will assign ALL related tasks (annual, monthly, metered variants) to the selected user across all time periods.
+              </div>
               <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
                 <span>Unit: {selectedTaskForAssignment.unit}</span>
                 <span>Frequency: {selectedTaskForAssignment.frequency}</span>
@@ -1986,7 +2098,7 @@ const Data = () => {
 
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Select User to Assign:
+                Select User to Assign Element:
               </label>
               {loadingUsers ? (
                 <div className="flex items-center justify-center py-4">
@@ -2003,7 +2115,7 @@ const Data = () => {
                     <div
                       key={availableUser.id}
                       className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
-                      onClick={() => handleAssignTask(availableUser.id, selectedTaskForAssignment.id)}
+                      onClick={() => handleAssignElement(availableUser.id)}
                     >
                       <div className="flex items-center space-x-3">
                         <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">

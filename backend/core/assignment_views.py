@@ -158,7 +158,7 @@ class ElementAssignmentViewSet(viewsets.ModelViewSet):
                 
                 if existing:
                     skipped_assignments.append({
-                        'element': checklist_item.element_name,
+                        'element': checklist_item.element.name,
                         'reason': 'Already assigned'
                     })
                     continue
@@ -348,9 +348,23 @@ class ElementAssignmentViewSet(viewsets.ModelViewSet):
             existing.assigned_to = assigned_to
             existing.assigned_by = request.user
             existing.save()
+
+            # Propagate assignment to all elements in this category
+            from .models import CompanyDataSubmission, DataElement
+            elements_in_category = DataElement.objects.filter(category=category)
+            total_tasks_updated = 0
+            for element in elements_in_category:
+                updated_tasks = CompanyDataSubmission.objects.filter(
+                    company=company,
+                    element=element
+                ).update(assigned_to=assigned_to)
+                total_tasks_updated += updated_tasks
+
             return Response({
                 'message': f'{category} category reassigned to {assigned_to.username}',
-                'assignment_id': existing.id
+                'assignment_id': existing.id,
+                'elements_in_category': elements_in_category.count(),
+                'propagated_tasks': total_tasks_updated
             })
         
         # Create new category assignment
@@ -361,10 +375,23 @@ class ElementAssignmentViewSet(viewsets.ModelViewSet):
             assigned_to=assigned_to,
             assigned_by=request.user
         )
-        
+
+        # Propagate assignment to all elements in this category
+        from .models import CompanyDataSubmission, DataElement
+        elements_in_category = DataElement.objects.filter(category=category)
+        total_tasks_updated = 0
+        for element in elements_in_category:
+            updated_tasks = CompanyDataSubmission.objects.filter(
+                company=company,
+                element=element
+            ).update(assigned_to=assigned_to)
+            total_tasks_updated += updated_tasks
+
         return Response({
             'message': f'{category} category assigned to {assigned_to.username}',
-            'assignment_id': assignment.id
+            'assignment_id': assignment.id,
+            'elements_in_category': elements_in_category.count(),
+            'propagated_tasks': total_tasks_updated
         }, status=status.HTTP_201_CREATED)
     
     @action(detail=False, methods=['post'])
@@ -398,9 +425,18 @@ class ElementAssignmentViewSet(viewsets.ModelViewSet):
             existing.assigned_to = assigned_to
             existing.assigned_by = request.user
             existing.save()
+
+            # Propagate assignment to all related CompanyDataSubmission tasks
+            from .models import CompanyDataSubmission
+            updated_tasks = CompanyDataSubmission.objects.filter(
+                company=checklist_item.company,
+                element=checklist_item.element
+            ).update(assigned_to=assigned_to)
+
             return Response({
-                'message': f'{checklist_item.element_name} reassigned to {assigned_to.username}',
-                'assignment_id': existing.id
+                'message': f'{checklist_item.element.name} reassigned to {assigned_to.username}',
+                'assignment_id': existing.id,
+                'propagated_tasks': updated_tasks
             })
         
         # Create new element assignment
@@ -411,10 +447,18 @@ class ElementAssignmentViewSet(viewsets.ModelViewSet):
             assigned_to=assigned_to,
             assigned_by=request.user
         )
-        
+
+        # Propagate assignment to all related CompanyDataSubmission tasks
+        from .models import CompanyDataSubmission
+        updated_tasks = CompanyDataSubmission.objects.filter(
+            company=checklist_item.company,
+            element=checklist_item.element
+        ).update(assigned_to=assigned_to)
+
         return Response({
-            'message': f'{checklist_item.element_name} assigned to {assigned_to.username}',
-            'assignment_id': assignment.id
+            'message': f'{checklist_item.element.name} assigned to {assigned_to.username}',
+            'assignment_id': assignment.id,
+            'propagated_tasks': updated_tasks
         }, status=status.HTTP_201_CREATED)
     
     @action(detail=False, methods=['get'])
@@ -444,7 +488,8 @@ class ElementAssignmentViewSet(viewsets.ModelViewSet):
                     'email': assignment.assigned_to.email
                 }
             else:
-                element_assignments[assignment.checklist_item.id] = {
+                # Use element_id instead of checklist_item.id for frontend matching
+                element_assignments[assignment.checklist_item.element.element_id] = {
                     'user_id': assignment.assigned_to.id,
                     'username': assignment.assigned_to.username,
                     'email': assignment.assigned_to.email

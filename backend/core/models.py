@@ -68,6 +68,11 @@ class Company(models.Model):
     company_code = models.CharField(max_length=10, unique=True, help_text="Unique company identifier code (e.g., DXB001)")
     emirate = models.CharField(max_length=100, choices=EMIRATE_CHOICES)
     sector = models.CharField(max_length=100, choices=SECTOR_CHOICES)
+
+    # Framework tracking fields
+    has_green_key = models.BooleanField(default=False, help_text="Company has Green Key certification")
+    active_frameworks = models.JSONField(default=list, help_text="List of active framework codes ['E', 'D', 'G']")
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -78,6 +83,44 @@ class Company(models.Model):
     
     def __str__(self):
         return f"{self.name} (User: {self.user.username})"
+
+    def update_active_frameworks(self):
+        """Update active_frameworks based on company profile and assignments"""
+        frameworks = ['E']  # All companies get ESG
+
+        # Add DST for Dubai companies
+        if self.emirate == 'dubai':
+            frameworks.append('D')
+
+        # Add Green Key if company has certification
+        if self.has_green_key:
+            frameworks.append('G')
+
+        self.active_frameworks = frameworks
+        self.save()
+        return frameworks
+
+    def get_available_elements(self):
+        """Get data elements available for this company based on active frameworks"""
+        if not self.active_frameworks:
+            self.update_active_frameworks()
+
+        # Build a query to get elements that match any of the company's active frameworks
+        from django.db.models import Q
+
+        # Create Q objects for each active framework
+        framework_queries = Q()
+        for framework in self.active_frameworks:
+            # Match elements where frameworks field contains this framework code
+            # Using icontains to handle "E, D, G" or "E,D,G" formatting
+            framework_queries |= Q(frameworks__icontains=framework)
+
+        # Get elements that match any of the active frameworks and exclude legacy elements
+        available_elements = DataElement.objects.filter(
+            framework_queries
+        ).exclude(element_id__startswith='LEGACY_')
+
+        return available_elements
 
 
 class Site(models.Model):
@@ -162,13 +205,25 @@ class DataElement(models.Model):
         ('must_have', 'Must Have'),
         ('conditional', 'Conditional'),
     ]
-    
+
     CATEGORY_CHOICES = [
         ('Environmental', 'Environmental'),
         ('Social', 'Social'),
         ('Governance', 'Governance'),
     ]
-    
+
+    ESG_CATEGORY_CHOICES = [
+        ('E', 'Environmental'),
+        ('S', 'Social'),
+        ('G', 'Governance'),
+    ]
+
+    REQUIREMENT_TYPE_CHOICES = [
+        ('must-have', 'Must Have'),
+        ('conditional', 'Conditional'),
+    ]
+
+    # Existing fields (preserved for compatibility)
     element_id = models.CharField(max_length=50, primary_key=True)
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
@@ -176,7 +231,31 @@ class DataElement(models.Model):
     is_metered = models.BooleanField(default=False)
     type = models.CharField(max_length=50, choices=ELEMENT_TYPES)
     unit = models.CharField(max_length=50, blank=True)
-    
+
+    # New comprehensive ESG framework fields
+    master_id = models.CharField(max_length=20, unique=True, null=True, blank=True,
+                               help_text='Unique master ID from Excel (e.g., HOSP-E-001)')
+    esg_category = models.CharField(max_length=1, choices=ESG_CATEGORY_CHOICES, null=True, blank=True,
+                                  help_text='ESG category from Excel')
+    requirement_type = models.CharField(max_length=20, choices=REQUIREMENT_TYPE_CHOICES, null=True, blank=True,
+                                      help_text='Whether element is required or conditional')
+    frameworks = models.CharField(max_length=100, null=True, blank=True,
+                                help_text='Applicable frameworks (E/D/G) from Excel')
+    cadence = models.CharField(max_length=20, null=True, blank=True,
+                             help_text='Collection frequency (monthly, annual, etc.)')
+    is_derived = models.BooleanField(default=False,
+                                   help_text='Whether this element is calculated (D) or collected (C)')
+    ghg_scope = models.CharField(max_length=10, null=True, blank=True,
+                               help_text='GHG scope (1, 2, 3) if applicable')
+    condition_logic = models.TextField(null=True, blank=True,
+                                     help_text='Business logic condition for conditional elements')
+    wizard_question = models.TextField(null=True, blank=True,
+                                     help_text='Question text for profiling wizard')
+    detailed_prompt = models.TextField(null=True, blank=True,
+                                     help_text='Detailed instructions for data collection')
+    legacy_element_id = models.CharField(max_length=50, null=True, blank=True,
+                                       help_text='Store old element_id for backward compatibility')
+
     def __str__(self):
         return self.name
 

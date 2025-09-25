@@ -1,16 +1,10 @@
-list:11   GET https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js net::ERR_NAME_NOT_RESOLVED
-[NEW] Explain Console errors by using Copilot in Edge: click
-         
-         to explain an error. 
-        Learn more
-        Don't show again
 react refresh:37 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
-App.js:27 App.js loaded
+App.js:30 App.js loaded
 index.js:7 index.js loaded
-index.js:10 Root element: div#root
+index.js:10 Root element: <div id=​"root">​…​</div>​<div class=​"App min-h-screen bg-gray-50">​…​</div>​<div class=​"bg-gradient-to-br from-purple-600 via-purple-700 to-blue-700 shadow-2xl relative" style=​"z-index:​ 1000;​">​…​</div>​<div class=​"w-full px-4 py-8">​…​</div>​<div class=​"max-w-6xl mx-auto px-4 sm:​px-6 lg:​px-8">​…​</div>​<div class=​"bg-white rounded-xl p-4 sm:​p-6 shadow-sm border border-gray-200 mb-8">​…​</div>​<h3 class=​"text-base sm:​text-lg font-semibold text-gray-900 mb-4 sm:​mb-6">​Reporting Period​</h3>​<div class=​"flex flex-col sm:​flex-row sm:​items-center space-y-4 sm:​space-y-0 sm:​space-x-6">​…​</div>​flex<div>​…​</div>​<label class=​"block text-sm font-medium text-gray-700 mb-2">​Year​</label>​<select class=​"border border-gray-300 rounded-lg px-4 py-2 w-full sm:​w-32">​…​</select>​</div>​<div class=​"flex-1">​…​</div>​<label class=​"block text-sm font-medium text-gray-700 mb-2">​Month​</label>​<div class=​"grid grid-cols-3 sm:​grid-cols-6 gap-2">​…​</div>​grid</div>​</div>​</div>​<div class=​"grid grid-cols-1 lg:​grid-cols-2 gap-6 mb-8">​…​</div>​grid<div class=​"bg-white rounded-xl shadow-sm border border-gray-200 mb-8">​…​</div>​<div class=​"p-6 border-b border-gray-200">​…​</div>​<div class=​"flex items-center justify-between mb-4">​…​</div>​flex<div class=​"flex items-center space-x-4">​…​</div>​flex<div class=​"flex items-center space-x-2">​…​</div>​flex<label class=​"text-sm font-medium text-gray-700">​View by:​</label>​<button class=​"flex items-center space-x-2 px-3 py-1 border border-gray-300 rounded-lg hover:​bg-gray-50 text-sm">​…​</button>​flex</div>​<div class=​"flex items-center space-x-2">​…​</div>​flex<label class=​"text-sm font-medium text-gray-700">​Group by:​</label>​<button class=​"flex items-center space-x-2 px-3 py-1 border border-gray-300 rounded-lg hover:​bg-gray-50 text-sm">​…​</button>​flex</div>​<div class=​"flex items-center space-x-2">​…​</div>​flex<label class=​"text-sm font-medium text-gray-700">​Assignment:​</label>​<button class=​"flex items-center space-x-2 px-3 py-1 border border-gray-300 rounded-lg hover:​bg-gray-50 text-sm">​…​</button>​flex</div>​<div class=​"flex-1">​…​</div>​<input type=​"text" placeholder=​"Search data elements..." class=​"w-full border border-gray-300 rounded-lg px-3 py-1 text-sm" value>​</div>​</div>​</div>​<div class=​"p-6">​…​</div>​<div class=​"space-y-6">​…​</div>​<div>​…​</div>​<div class=​"flex items-center mb-4">​…​</div>​flex<div class=​"space-y-4">​…​</div>​<div class=​"rounded-xl shadow-sm hover:​shadow-md transition-shadow duration-200 bg-orange-50 border border-orange-200">​…​</div>​<div class=​"flex items-center justify-between p-4 border-b border-gray-100">​…​</div>​flex<div class=​"flex">​…​</div>​flex<div class=​"flex-1 p-4 pr-2" style=​"width:​ 50%;​">​…​</div>​<div class=​"space-y-3">​…​</div>​<div class=​"flex items-center space-x-2 mb-2">​…​</div>​flex<div class=​"flex items-center space-x-3">​…​</div>​flex<div class=​"relative flex-1">​…​</div>​<input type=​"number" class=​"w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-lg font-medium focus:​bg-white focus:​ring-2 focus:​ring-blue-500 focus:​border-blue-500 transition-all duration-200" placeholder=​"0" value=​"1000">​<div class=​"absolute right-3 top-1/​2 transform -translate-y-1/​2 text-sm font-medium text-gray-500 bg-white px-2 rounded">​kWh​</div>​</div>​</div>​</div>​</div>​<div class=​"w-px bg-gray-200">​</div>​<div class=​"p-4 pl-2" style=​"width:​ 50%;​">​…​</div>​</div>​</div>​<div class=​"rounded-xl shadow-sm hover:​shadow-md transition-shadow duration-200 bg-orange-50 border border-orange-200">​…​</div>​<div class=​"flex items-center justify-between p-4 border-b border-gray-100">​…​</div>​flex<div class=​"flex">​…​</div>​flex<div class=​"flex-1 p-4 pr-2" style=​"width:​ 50%;​">​…​</div>​<div class=​"space-y-3">​…​</div>​<div class=​"flex items-center space-x-2 mb-2">​…​</div>​flex<div class=​"flex items-center space-x-3">​…​</div>​flex<div class=​"relative flex-1">​…​</div>​<input type=​"number" class=​"w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-lg font-medium focus:​bg-white focus:​ring-2 focus:​ring-blue-500 focus:​border-blue-500 transition-all duration-200" placeholder=​"0" value=​"2000">​<div class=​"absolute right-3 top-1/​2 transform -translate-y-1/​2 text-sm font-medium text-gray-500 bg-white px-2 rounded">​mÂ³​</div>​</div>​</div>​</div>​</div>​<div class=​"w-px bg-gray-200">​</div>​<div class=​"p-4 pl-2" style=​"width:​ 50%;​">​…​</div>​</div>​</div>​<div class=​"rounded-xl shadow-sm hover:​shadow-md transition-shadow duration-200 bg-red-50 border border-red-200">​…​</div>​<div class=​"flex items-center justify-between p-4 border-b border-gray-100">​…​</div>​flex<div class=​"flex">​…​</div>​flex<div class=​"flex-1 p-4 pr-2" style=​"width:​ 50%;​">​…​</div>​<div class=​"space-y-3">​…​</div>​<div class=​"flex items-center space-x-2 mb-2">​…​</div>​flex<div class=​"flex items-center space-x-3">​…​</div>​flex<div class=​"relative flex-1">​…​</div>​<input type=​"number" class=​"w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-lg font-medium focus:​bg-white focus:​ring-2 focus:​ring-blue-500 focus:​border-blue-500 transition-all duration-200" placeholder=​"0" value>​<div class=​"absolute right-3 top-1/​2 transform -translate-y-1/​2 text-sm font-medium text-gray-500 bg-white px-2 rounded">​RT-h​</div>​</div>​</div>​</div>​</div>​<div class=​"w-px bg-gray-200">​</div>​<div class=​"p-4 pl-2" style=​"width:​ 50%;​">​…​</div>​</div>​</div>​<div class=​"rounded-xl shadow-sm hover:​shadow-md transition-shadow duration-200 bg-red-50 border border-red-200">​…​</div>​<div class=​"flex items-center justify-between p-4 border-b border-gray-100">​…​</div>​flex<div class=​"flex">​…​</div>​flex<div class=​"flex-1 p-4 pr-2" style=​"width:​ 50%;​">​…​</div>​<div class=​"space-y-3">​…​</div>​<div class=​"flex items-center space-x-2 mb-2">​…​</div>​flex<div class=​"flex items-center space-x-3">​…​</div>​flex<div class=​"relative flex-1">​…​</div>​<input type=​"number" class=​"w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-lg font-medium focus:​bg-white focus:​ring-2 focus:​ring-blue-500 focus:​border-blue-500 transition-all duration-200" placeholder=​"0" value>​<div class=​"absolute right-3 top-1/​2 transform -translate-y-1/​2 text-sm font-medium text-gray-500 bg-white px-2 rounded">​kWh​</div>​</div>​</div>​</div>​</div>​<div class=​"w-px bg-gray-200">​</div>​<div class=​"p-4 pl-2" style=​"width:​ 50%;​">​…​</div>​</div>​</div>​<div class=​"rounded-xl shadow-sm hover:​shadow-md transition-shadow duration-200 bg-red-50 border border-red-200">​…​</div>​<div class=​"flex items-center justify-between p-4 border-b border-gray-100">​…​</div>​flex<div class=​"flex">​…​</div>​flex<div class=​"flex-1 p-4 pr-2" style=​"width:​ 50%;​">​…​</div>​<div class=​"space-y-3">​…​</div>​<div class=​"flex items-center space-x-2 mb-2">​…​</div>​flex<div class=​"flex items-center space-x-3">​…​</div>​flex<div class=​"relative flex-1">​…​</div>​<input type=​"number" class=​"w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-lg font-medium focus:​bg-white focus:​ring-2 focus:​ring-blue-500 focus:​border-blue-500 transition-all duration-200" placeholder=​"0" value>​<div class=​"absolute right-3 top-1/​2 transform -translate-y-1/​2 text-sm font-medium text-gray-500 bg-white px-2 rounded">​kWh​</div>​</div>​</div>​</div>​</div>​<div class=​"w-px bg-gray-200">​</div>​<div class=​"p-4 pl-2" style=​"width:​ 50%;​">​…​</div>​</div>​</div>​<div class=​"rounded-xl shadow-sm hover:​shadow-md transition-shadow duration-200 bg-red-50 border border-red-200">​…​</div>​<div class=​"flex items-center justify-between p-4 border-b border-gray-100">​…​</div>​flex<div class=​"flex">​…​</div>​flex<div class=​"flex-1 p-4 pr-2" style=​"width:​ 50%;​">​…​</div>​<div class=​"space-y-3">​…​</div>​<div class=​"flex items-center space-x-2 mb-2">​…​</div>​flex<div class=​"flex items-center space-x-3">​…​</div>​flex<div class=​"relative flex-1">​…​</div>​<input type=​"number" class=​"w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-lg font-medium focus:​bg-white focus:​ring-2 focus:​ring-blue-500 focus:​border-blue-500 transition-all duration-200" placeholder=​"0" value>​<div class=​"absolute right-3 top-1/​2 transform -translate-y-1/​2 text-sm font-medium text-gray-500 bg-white px-2 rounded">​mÂ³​</div>​</div>​</div>​</div>​</div>​<div class=​"w-px bg-gray-200">​</div>​<div class=​"p-4 pl-2" style=​"width:​ 50%;​">​…​</div>​</div>​</div>​<div class=​"rounded-xl shadow-sm hover:​shadow-md transition-shadow duration-200 bg-red-50 border border-red-200">​…​</div>​<div class=​"flex items-center justify-between p-4 border-b border-gray-100">​…​</div>​flex<div class=​"flex">​…​</div>​flex<div class=​"flex-1 p-4 pr-2" style=​"width:​ 50%;​">​…​</div>​<div class=​"space-y-3">​…​</div>​<div class=​"flex items-center space-x-2 mb-2">​…​</div>​flex<div class=​"flex items-center space-x-3">​…​</div>​flex<div class=​"relative flex-1">​…​</div>​<input type=​"number" class=​"w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-lg font-medium focus:​bg-white focus:​ring-2 focus:​ring-blue-500 focus:​border-blue-500 transition-all duration-200" placeholder=​"0" value>​<div class=​"absolute right-3 top-1/​2 transform -translate-y-1/​2 text-sm font-medium text-gray-500 bg-white px-2 rounded">​%​</div>​</div>​</div>​</div>​</div>​<div class=​"w-px bg-gray-200">​</div>​<div class=​"p-4 pl-2" style=​"width:​ 50%;​">​…​</div>​</div>​</div>​</div>​</div>​<div>​…​</div>​<div class=​"flex items-center mb-4">​…​</div>​flex<div class=​"space-y-4">​…​</div>​<div class=​"rounded-xl shadow-sm hover:​shadow-md transition-shadow duration-200 bg-red-50 border border-red-200">​…​</div>​<div class=​"flex items-center justify-between p-4 border-b border-gray-100">​…​</div>​flex<div class=​"flex">​…​</div>​flex<div class=​"flex-1 p-4 pr-2" style=​"width:​ 50%;​">​…​</div>​<div class=​"space-y-3">​…​</div>​<div class=​"flex items-center space-x-2 mb-2">​…​</div>​flex<div class=​"flex items-center space-x-3">​…​</div>​flex<div class=​"relative flex-1">​…​</div>​<input type=​"number" class=​"w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-lg font-medium focus:​bg-white focus:​ring-2 focus:​ring-blue-500 focus:​border-blue-500 transition-all duration-200" placeholder=​"0" value>​<div class=​"absolute right-3 top-1/​2 transform -translate-y-1/​2 text-sm font-medium text-gray-500 bg-white px-2 rounded">​kg​</div>​</div>​</div>​</div>​</div>​<div class=​"w-px bg-gray-200">​</div>​<div class=​"p-4 pl-2" style=​"width:​ 50%;​">​…​</div>​</div>​</div>​<div class=​"rounded-xl shadow-sm hover:​shadow-md transition-shadow duration-200 bg-red-50 border border-red-200">​…​</div>​<div class=​"flex items-center justify-between p-4 border-b border-gray-100">​…​</div>​flex<div class=​"flex">​…​</div>​flex<div class=​"flex-1 p-4 pr-2" style=​"width:​ 50%;​">​…​</div>​<div class=​"space-y-3">​…​</div>​<div class=​"flex items-center space-x-2 mb-2">​…​</div>​flex<div class=​"flex items-center space-x-3">​…​</div>​flex<div class=​"relative flex-1">​…​</div>​<input type=​"number" class=​"w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-lg font-medium focus:​bg-white focus:​ring-2 focus:​ring-blue-500 focus:​border-blue-500 transition-all duration-200" placeholder=​"0" value>​<div class=​"absolute right-3 top-1/​2 transform -translate-y-1/​2 text-sm font-medium text-gray-500 bg-white px-2 rounded">​kg​</div>​</div>​</div>​</div>​</div>​<div class=​"w-px bg-gray-200">​</div>​<div class=​"p-4 pl-2" style=​"width:​ 50%;​">​…​</div>​</div>​</div>​<div class=​"rounded-xl shadow-sm hover:​shadow-md transition-shadow duration-200 bg-red-50 border border-red-200">​…​</div>​<div class=​"flex items-center justify-between p-4 border-b border-gray-100">​…​</div>​flex<div class=​"flex">​…​</div>​flex<div class=​"flex-1 p-4 pr-2" style=​"width:​ 50%;​">​…​</div>​<div class=​"space-y-3">​…​</div>​<div class=​"flex items-center space-x-2 mb-2">​…​</div>​flex<div class=​"flex items-center space-x-3">​…​</div>​flex<div class=​"relative flex-1">​…​</div>​<input type=​"number" class=​"w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-lg font-medium focus:​bg-white focus:​ring-2 focus:​ring-blue-500 focus:​border-blue-500 transition-all duration-200" placeholder=​"0" value>​<div class=​"absolute right-3 top-1/​2 transform -translate-y-1/​2 text-sm font-medium text-gray-500 bg-white px-2 rounded">​kg​</div>​</div>​</div>​</div>​</div>​<div class=​"w-px bg-gray-200">​</div>​<div class=​"p-4 pl-2" style=​"width:​ 50%;​">​…​</div>​</div>​</div>​<div class=​"rounded-xl shadow-sm hover:​shadow-md transition-shadow duration-200 bg-red-50 border border-red-200">​…​</div>​<div class=​"flex items-center justify-between p-4 border-b border-gray-100">​…​</div>​flex<div class=​"flex">​…​</div>​flex<div class=​"flex-1 p-4 pr-2" style=​"width:​ 50%;​">​…​</div>​<div class=​"space-y-3">​…​</div>​<div class=​"flex items-center space-x-2 mb-2">​…​</div>​flex<div class=​"flex items-center space-x-3">​…​</div>​flex<div class=​"relative flex-1">​…​</div>​<input type=​"number" class=​"w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-lg font-medium focus:​bg-white focus:​ring-2 focus:​ring-blue-500 focus:​border-blue-500 transition-all duration-200" placeholder=​"0" value>​<div class=​"absolute right-3 top-1/​2 transform -translate-y-1/​2 text-sm font-medium text-gray-500 bg-white px-2 rounded">​liters​</div>​</div>​</div>​</div>​</div>​<div class=​"w-px bg-gray-200">​</div>​<div class=​"p-4 pl-2" style=​"width:​ 50%;​">​…​</div>​</div>​</div>​<div class=​"rounded-xl shadow-sm hover:​shadow-md transition-shadow duration-200 bg-red-50 border border-red-200">​…​</div>​<div class=​"flex items-center justify-between p-4 border-b border-gray-100">​…​</div>​flex<div class=​"flex">​…​</div>​flex<div class=​"flex-1 p-4 pr-2" style=​"width:​ 50%;​">​…​</div>​<div class=​"space-y-3">​…​</div>​<div class=​"flex items-center space-x-2 mb-2">​…​</div>​flex<div class=​"flex items-center space-x-3">​…​</div>​flex<div class=​"relative flex-1">​…​</div>​<input type=​"number" class=​"w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-lg font-medium focus:​bg-white focus:​ring-2 focus:​ring-blue-500 focus:​border-blue-500 transition-all duration-200" placeholder=​"0" value>​<div class=​"absolute right-3 top-1/​2 transform -translate-y-1/​2 text-sm font-medium text-gray-500 bg-white px-2 rounded">​liters​</div>​</div>​</div>​</div>​</div>​<div class=​"w-px bg-gray-200">​</div>​<div class=​"p-4 pl-2" style=​"width:​ 50%;​">​…​</div>​</div>​</div>​<div class=​"rounded-xl shadow-sm hover:​shadow-md transition-shadow duration-200 bg-red-50 border border-red-200">​…​</div>​<div class=​"flex items-center justify-between p-4 border-b border-gray-100">​…​</div>​flex<div class=​"flex">​…​</div>​flex<div class=​"flex-1 p-4 pr-2" style=​"width:​ 50%;​">​…​</div>​<div class=​"space-y-3">​…​</div>​<div class=​"flex items-center space-x-2 mb-2">​…​</div>​flex<div class=​"flex items-center space-x-3">​…​</div>​flex<div class=​"relative flex-1">​…​</div>​<input type=​"number" class=​"w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-lg font-medium focus:​bg-white focus:​ring-2 focus:​ring-blue-500 focus:​border-blue-500 transition-all duration-200" placeholder=​"0" value>​<div class=​"absolute right-3 top-1/​2 transform -translate-y-1/​2 text-sm font-medium text-gray-500 bg-white px-2 rounded">​liters​</div>​</div>​</div>​</div>​</div>​<div class=​"w-px bg-gray-200">​</div>​<div class=​"p-4 pl-2" style=​"width:​ 50%;​">​…​</div>​</div>​</div>​<div class=​"rounded-xl shadow-sm hover:​shadow-md transition-shadow duration-200 bg-red-50 border border-red-200">​…​</div>​<div class=​"flex items-center justify-between p-4 border-b border-gray-100">​…​</div>​flex<div class=​"flex">​…​</div>​flex<div class=​"flex-1 p-4 pr-2" style=​"width:​ 50%;​">​…​</div>​<div class=​"space-y-3">​…​</div>​<div class=​"flex items-center space-x-2 mb-2">​…​</div>​flex<div class=​"flex items-center space-x-3">​…​</div>​flex<div class=​"relative flex-1">​…​</div>​<input type=​"number" class=​"w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-lg font-medium focus:​bg-white focus:​ring-2 focus:​ring-blue-500 focus:​border-blue-500 transition-all duration-200" placeholder=​"0" value>​<div class=​"absolute right-3 top-1/​2 transform -translate-y-1/​2 text-sm font-medium text-gray-500 bg-white px-2 rounded">​kg​</div>​</div>​</div>​</div>​</div>​<div class=​"w-px bg-gray-200">​</div>​<div class=​"p-4 pl-2" style=​"width:​ 50%;​">​…​</div>​</div>​</div>​<div class=​"rounded-xl shadow-sm hover:​shadow-md transition-shadow duration-200 bg-red-50 border border-red-200">​…​</div>​<div class=​"flex items-center justify-between p-4 border-b border-gray-100">​…​</div>​flex<div class=​"flex">​…​</div>​flex<div class=​"flex-1 p-4 pr-2" style=​"width:​ 50%;​">​…​</div>​<div class=​"space-y-3">​…​</div>​<div class=​"flex items-center space-x-2 mb-2">​…​</div>​flex<div class=​"flex items-center space-x-3">​…​</div>​flex<div class=​"relative flex-1">​…​</div>​<input type=​"number" class=​"w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-lg font-medium focus:​bg-white focus:​ring-2 focus:​ring-blue-500 focus:​border-blue-500 transition-all duration-200" placeholder=​"0" value>​<div class=​"absolute right-3 top-1/​2 transform -translate-y-1/​2 text-sm font-medium text-gray-500 bg-white px-2 rounded">​liters​</div>​</div>​</div>​</div>​</div>​<div class=​"w-px bg-gray-200">​</div>​<div class=​"p-4 pl-2" style=​"width:​ 50%;​">​…​</div>​</div>​</div>​<div class=​"rounded-xl shadow-sm hover:​shadow-md transition-shadow duration-200 bg-red-50 border border-red-200">​…​</div>​<div class=​"flex items-center justify-between p-4 border-b border-gray-100">​…​</div>​flex<div class=​"flex">​…​</div>​flex<div class=​"flex-1 p-4 pr-2" style=​"width:​ 50%;​">​…​</div>​<div class=​"space-y-3">​…​</div>​<div class=​"flex items-center space-x-2 mb-2">​…​</div>​flex<div class=​"flex items-center space-x-3">​…​</div>​flex<div class=​"relative flex-1">​…​</div>​<input type=​"number" class=​"w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-lg font-medium focus:​bg-white focus:​ring-2 focus:​ring-blue-500 focus:​border-blue-500 transition-all duration-200" placeholder=​"0" value>​<div class=​"absolute right-3 top-1/​2 transform -translate-y-1/​2 text-sm font-medium text-gray-500 bg-white px-2 rounded">​boolean​</div>​</div>​</div>​</div>​</div>​<div class=​"w-px bg-gray-200">​</div>​<div class=​"p-4 pl-2" style=​"width:​ 50%;​">​…​</div>​</div>​</div>​<div class=​"rounded-xl shadow-sm hover:​shadow-md transition-shadow duration-200 bg-red-50 border border-red-200">​…​</div>​<div class=​"flex items-center justify-between p-4 border-b border-gray-100">​…​</div>​flex<div class=​"flex">​…​</div>​flex<div class=​"flex-1 p-4 pr-2" style=​"width:​ 50%;​">​…​</div>​<div class=​"space-y-3">​…​</div>​<div class=​"flex items-center space-x-2 mb-2">​…​</div>​flex<div class=​"flex items-center space-x-3">​…​</div>​flex<div class=​"relative flex-1">​…​</div>​<input type=​"number" class=​"w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-lg font-medium focus:​bg-white focus:​ring-2 focus:​ring-blue-500 focus:​border-blue-500 transition-all duration-200" placeholder=​"0" value>​<div class=​"absolute right-3 top-1/​2 transform -translate-y-1/​2 text-sm font-medium text-gray-500 bg-white px-2 rounded">​%​</div>​</div>​</div>​</div>​</div>​<div class=​"w-px bg-gray-200">​</div>​<div class=​"p-4 pl-2" style=​"width:​ 50%;​">​…​</div>​</div>​</div>​<div class=​"rounded-xl shadow-sm hover:​shadow-md transition-shadow duration-200 bg-red-50 border border-red-200">​…​</div>​<div class=​"flex items-center justify-between p-4 border-b border-gray-100">​…​</div>​flex<div class=​"flex">​…​</div>​flex<div class=​"flex-1 p-4 pr-2" style=​"width:​ 50%;​">​…​</div>​<div class=​"space-y-3">​…​</div>​<div class=​"flex items-center space-x-2 mb-2">​…​</div>​flex<div class=​"flex items-center space-x-3">​…​</div>​flex<div class=​"relative flex-1">​…​</div>​<input type=​"number" class=​"w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-lg font-medium focus:​bg-white focus:​ring-2 focus:​ring-blue-500 focus:​border-blue-500 transition-all duration-200" placeholder=​"0" value>​<div class=​"absolute right-3 top-1/​2 transform -translate-y-1/​2 text-sm font-medium text-gray-500 bg-white px-2 rounded">​kg​</div>​</div>​</div>​</div>​</div>​<div class=​"w-px bg-gray-200">​</div>​<div class=​"p-4 pl-2" style=​"width:​ 50%;​">​…​</div>​</div>​</div>​<div class=​"rounded-xl shadow-sm hover:​shadow-md transition-shadow duration-200 bg-red-50 border border-red-200">​…​</div>​<div class=​"flex items-center justify-between p-4 border-b border-gray-100">​…​</div>​flex<div class=​"flex">​…​</div>​flex<div class=​"flex-1 p-4 pr-2" style=​"width:​ 50%;​">​…​</div>​<div class=​"space-y-3">​…​</div>​<div class=​"flex items-center space-x-2 mb-2">​…​</div>​flex<div class=​"flex items-center space-x-3">​…​</div>​flex<div class=​"relative flex-1">​…​</div>​<input type=​"number" class=​"w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-lg font-medium focus:​bg-white focus:​ring-2 focus:​ring-blue-500 focus:​border-blue-500 transition-all duration-200" placeholder=​"0" value>​<div class=​"absolute right-3 top-1/​2 transform -translate-y-1/​2 text-sm font-medium text-gray-500 bg-white px-2 rounded">​count​</div>​</div>​</div>​</div>​</div>​<div class=​"w-px bg-gray-200">​</div>​<div class=​"p-4 pl-2" style=​"width:​ 50%;​">​…​</div>​</div>​</div>​</div>​</div>​</div>​</div>​</div>​<div class=​"flex items-center justify-between bg-white rounded-xl p-6 shadow-sm border border-gray-200">​…​</div>​flex</div>​</div>​</div>​</div>​
 index.js:16 Rendering App...
 index.js:20 App render called
-App.js:30 App component rendering
+App.js:33 App component rendering
 deprecations.ts:9  ⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
 warnOnce @ deprecations.ts:9
 logDeprecation @ deprecations.ts:13
@@ -43,189 +37,52 @@ flushPassiveEffects @ react-dom.development.js:27023
 workLoop @ scheduler.development.js:266
 flushWork @ scheduler.development.js:239
 performWorkUntilDeadline @ scheduler.development.js:533
-about:client:1   GET https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap net::ERR_INTERNET_DISCONNECTED
-contentScript.bundle.js:34   GET https://ab.reasonlabsapi.com/api/features/sdk-QtSYWOMLlkHBbNMB net::ERR_INTERNET_DISCONNECTED
-fetchFeaturesCall @ contentScript.bundle.js:34
-Ji @ contentScript.bundle.js:34
-instance @ contentScript.bundle.js:34
-await in instance
-qi @ contentScript.bundle.js:34
-_refresh @ contentScript.bundle.js:34
-init @ contentScript.bundle.js:34
-(anonymous) @ contentScript.bundle.js:36
-await in (anonymous)
-registerEventsListeners @ contentScript.bundle.js:36
-(anonymous) @ contentScript.bundle.js:36
-(anonymous) @ contentScript.bundle.js:36
-(anonymous) @ contentScript.bundle.js:36
+[NEW] Explain Console errors by using Copilot in Edge: click
+         
+         to explain an error. 
+        Learn more
+        Don't show again
 AuthContext.js:123 ✅ User authenticated: {id: 10, username: 'super1', email: 'super1@dubai.com', name: 'super1', role: 'super_user', …}
 AuthContext.js:150 🏢 User companies fetched: [{…}]
 AuthContext.js:153 🔍 Available companies for user: [{…}]
 AuthContext.js:157 🏢 Using user assigned company: {id: 6, name: 'Dubai Luxury Hotel', emirate: 'dubai', sector: 'hospitality', created_at: '2025-08-26T10:07:36.142826+04:00'}
-TopNavbar.js:146 TopNavbar rendering
-TopNavbar.js:150 Current location: /list
-List.js:34 List component - selectedCompany: {id: 6, name: 'Dubai Luxury Hotel', emirate: 'dubai', sector: 'hospitality', created_at: '2025-08-26T10:07:36.142826+04:00'}
-List.js:35 List component - companyId: 6
-List.js:36 List component - user: {id: 10, username: 'super1', email: 'super1@dubai.com', name: 'super1', role: 'super_user', …}
-List.js:382 🔍 Component render state: {companyId: 6, answersCount: 0, questionsCount: 0, allQuestionsAnswered: false, showChecklist: false, …}
-List.js:65 Fetching profiling questions for company: 6
-AuthContext.js:46 🔄 Making request to: http://localhost:8080/api/profiling-questions/for_company/?company_id=6
+AuthContext.js:46 🔄 Making request to: http://localhost:8080/api/data-collection/available_months/?year=2025
 AuthContext.js:52 🔑 CSRF token: obtained
-List.js:34 List component - selectedCompany: {id: 6, name: 'Dubai Luxury Hotel', emirate: 'dubai', sector: 'hospitality', created_at: '2025-08-26T10:07:36.142826+04:00'}
-List.js:35 List component - companyId: 6
-List.js:36 List component - user: {id: 10, username: 'super1', email: 'super1@dubai.com', name: 'super1', role: 'super_user', …}
-List.js:382 🔍 Component render state: {companyId: 6, answersCount: 0, questionsCount: 0, allQuestionsAnswered: false, showChecklist: false, …}
-AuthContext.js:76 ✅ Request completed: http://localhost:8080/api/profiling-questions/for_company/?company_id=6 Status: 200
-List.js:67 Response status: 200 Response ok: true
-List.js:71 Fetched questions from backend: (4) [{…}, {…}, {…}, {…}]
-List.js:72 Questions type: object Length: 4
-List.js:81 Transformed questions: (4) [{…}, {…}, {…}, {…}]
-List.js:122 Fetching existing profile answers for company: 6
-AuthContext.js:46 🔄 Making request to: http://localhost:8080/api/companies/6/profile_answers/
+AuthContext.js:76 ✅ Request completed: http://localhost:8080/api/data-collection/available_months/?year=2025 Status: 200
+AuthContext.js:46 🔄 Making request to: http://localhost:8080/api/data-collection/progress/?company_id=6&year=2025&month=1
+AuthContext.js:46 🔄 Making request to: http://localhost:8080/api/data-collection/progress/?company_id=6&year=2025&month=2
+AuthContext.js:46 🔄 Making request to: http://localhost:8080/api/data-collection/progress/?company_id=6&year=2025&month=3
+AuthContext.js:46 🔄 Making request to: http://localhost:8080/api/data-collection/progress/?company_id=6&year=2025&month=4
+AuthContext.js:46 🔄 Making request to: http://localhost:8080/api/data-collection/progress/?company_id=6&year=2025&month=5
+AuthContext.js:46 🔄 Making request to: http://localhost:8080/api/data-collection/progress/?company_id=6&year=2025&month=6
+AuthContext.js:46 🔄 Making request to: http://localhost:8080/api/data-collection/progress/?company_id=6&year=2025&month=7
+AuthContext.js:46 🔄 Making request to: http://localhost:8080/api/data-collection/progress/?company_id=6&year=2025&month=8
 AuthContext.js:52 🔑 CSRF token: obtained
-List.js:34 List component - selectedCompany: {id: 6, name: 'Dubai Luxury Hotel', emirate: 'dubai', sector: 'hospitality', created_at: '2025-08-26T10:07:36.142826+04:00'}
-List.js:35 List component - companyId: 6
-List.js:36 List component - user: {id: 10, username: 'super1', email: 'super1@dubai.com', name: 'super1', role: 'super_user', …}
-List.js:382 🔍 Component render state: {companyId: 6, answersCount: 0, questionsCount: 4, allQuestionsAnswered: false, showChecklist: false, …}
-AuthContext.js:76 ✅ Request completed: http://localhost:8080/api/companies/6/profile_answers/ Status: 200
-List.js:127 Loaded profile answers from API: (4) [{…}, {…}, {…}, {…}]
-List.js:135 Setting answers state to: {has_company_vehicles: true, has_backup_generators: true, has_renewable_energy: true, uses_lpg: true}
-List.js:140 Answers found, checking if should show checklist
-List.js:155 🔍 Checking if checklist exists for company: 6
-AuthContext.js:46 🔄 Making request to: http://localhost:8080/api/checklist/?company_id=6
 AuthContext.js:52 🔑 CSRF token: obtained
-List.js:34 List component - selectedCompany: {id: 6, name: 'Dubai Luxury Hotel', emirate: 'dubai', sector: 'hospitality', created_at: '2025-08-26T10:07:36.142826+04:00'}
-List.js:35 List component - companyId: 6
-List.js:36 List component - user: {id: 10, username: 'super1', email: 'super1@dubai.com', name: 'super1', role: 'super_user', …}
-List.js:382 🔍 Component render state: {companyId: 6, answersCount: 4, questionsCount: 4, allQuestionsAnswered: true, showChecklist: false, …}
-AuthContext.js:76 ✅ Request completed: http://localhost:8080/api/checklist/?company_id=6 Status: 200
-List.js:160 ✅ Checklist exists check result: true
-AuthContext.js:46 🔄 Making request to: http://localhost:8080/api/companies/6/profile_answers/
 AuthContext.js:52 🔑 CSRF token: obtained
-List.js:34 List component - selectedCompany: {id: 6, name: 'Dubai Luxury Hotel', emirate: 'dubai', sector: 'hospitality', created_at: '2025-08-26T10:07:36.142826+04:00'}
-List.js:35 List component - companyId: 6
-List.js:36 List component - user: {id: 10, username: 'super1', email: 'super1@dubai.com', name: 'super1', role: 'super_user', …}
-List.js:382 🔍 Component render state: {companyId: 6, answersCount: 4, questionsCount: 4, allQuestionsAnswered: true, showChecklist: false, …}
-AuthContext.js:76 ✅ Request completed: http://localhost:8080/api/companies/6/profile_answers/ Status: 200
-AuthContext.js:46 🔄 Making request to: http://localhost:8080/api/profiling-questions/for_company/?company_id=6
 AuthContext.js:52 🔑 CSRF token: obtained
-AuthContext.js:76 ✅ Request completed: http://localhost:8080/api/profiling-questions/for_company/?company_id=6 Status: 200
-List.js:189 Profiling wizard completed
-List.js:155 🔍 Checking if checklist exists for company: 6
-AuthContext.js:46 🔄 Making request to: http://localhost:8080/api/checklist/?company_id=6
 AuthContext.js:52 🔑 CSRF token: obtained
-AuthContext.js:76 ✅ Request completed: http://localhost:8080/api/checklist/?company_id=6 Status: 200
-List.js:160 ✅ Checklist exists check result: true
-List.js:192 Checklist exists, showing checklist view
-List.js:34 List component - selectedCompany: {id: 6, name: 'Dubai Luxury Hotel', emirate: 'dubai', sector: 'hospitality', created_at: '2025-08-26T10:07:36.142826+04:00'}
-List.js:35 List component - companyId: 6
-List.js:36 List component - user: {id: 10, username: 'super1', email: 'super1@dubai.com', name: 'super1', role: 'super_user', …}
-List.js:382 🔍 Component render state: {companyId: 6, answersCount: 4, questionsCount: 4, allQuestionsAnswered: true, showChecklist: true, …}
+AuthContext.js:52 🔑 CSRF token: obtained
+AuthContext.js:52 🔑 CSRF token: obtained
+AuthContext.js:76 ✅ Request completed: http://localhost:8080/api/data-collection/progress/?company_id=6&year=2025&month=1 Status: 200
+AuthContext.js:52 🔑 CSRF token: obtained
+AuthContext.js:76 ✅ Request completed: http://localhost:8080/api/data-collection/progress/?company_id=6&year=2025&month=2 Status: 200
+AuthContext.js:76 ✅ Request completed: http://localhost:8080/api/data-collection/progress/?company_id=6&year=2025&month=3 Status: 200
+AuthContext.js:76 ✅ Request completed: http://localhost:8080/api/data-collection/progress/?company_id=6&year=2025&month=5 Status: 200
+AuthContext.js:76 ✅ Request completed: http://localhost:8080/api/data-collection/progress/?company_id=6&year=2025&month=4 Status: 200
+AuthContext.js:76 ✅ Request completed: http://localhost:8080/api/data-collection/progress/?company_id=6&year=2025&month=7 Status: 200
+AuthContext.js:76 ✅ Request completed: http://localhost:8080/api/data-collection/progress/?company_id=6&year=2025&month=8 Status: 200
+AuthContext.js:76 ✅ Request completed: http://localhost:8080/api/data-collection/progress/?company_id=6&year=2025&month=6 Status: 200
+AuthContext.js:46 🔄 Making request to: http://localhost:8080/api/data-collection/progress/?company_id=6&year=2025
+AuthContext.js:52 🔑 CSRF token: obtained
+AuthContext.js:76 ✅ Request completed: http://localhost:8080/api/data-collection/progress/?company_id=6&year=2025 Status: 200
+AuthContext.js:46 🔄 Making request to: http://localhost:8080/api/data-collection/progress/?company_id=6&year=2025&month=9
+AuthContext.js:52 🔑 CSRF token: obtained
+AuthContext.js:76 ✅ Request completed: http://localhost:8080/api/data-collection/progress/?company_id=6&year=2025&month=9 Status: 200
+AuthContext.js:46 🔄 Making request to: http://localhost:8080/api/data-collection/tasks/?company_id=6&year=2025&month=9
+AuthContext.js:52 🔑 CSRF token: obtained
+AuthContext.js:76 ✅ Request completed: http://localhost:8080/api/data-collection/tasks/?company_id=6&year=2025&month=9 Status: 200
 AuthContext.js:46 🔄 Making request to: http://localhost:8080/api/users/
-List.js:34 List component - selectedCompany: {id: 6, name: 'Dubai Luxury Hotel', emirate: 'dubai', sector: 'hospitality', created_at: '2025-08-26T10:07:36.142826+04:00'}
-List.js:35 List component - companyId: 6
-List.js:36 List component - user: {id: 10, username: 'super1', email: 'super1@dubai.com', name: 'super1', role: 'super_user', …}
-List.js:382 🔍 Component render state: {companyId: 6, answersCount: 4, questionsCount: 4, allQuestionsAnswered: true, showChecklist: true, …}
 AuthContext.js:52 🔑 CSRF token: obtained
 AuthContext.js:76 ✅ Request completed: http://localhost:8080/api/users/ Status: 200
-List.js:509 Available users for assignment: (5) [{…}, {…}, {…}, {…}, {…}]
-List.js:34 List component - selectedCompany: {id: 6, name: 'Dubai Luxury Hotel', emirate: 'dubai', sector: 'hospitality', created_at: '2025-08-26T10:07:36.142826+04:00'}
-List.js:35 List component - companyId: 6
-List.js:36 List component - user: {id: 10, username: 'super1', email: 'super1@dubai.com', name: 'super1', role: 'super_user', …}
-List.js:382 🔍 Component render state: {companyId: 6, answersCount: 4, questionsCount: 4, allQuestionsAnswered: true, showChecklist: true, …}
-AuthContext.js:46 🔄 Making request to: http://localhost:8080/api/users/
-List.js:34 List component - selectedCompany: {id: 6, name: 'Dubai Luxury Hotel', emirate: 'dubai', sector: 'hospitality', created_at: '2025-08-26T10:07:36.142826+04:00'}
-List.js:35 List component - companyId: 6
-List.js:36 List component - user: {id: 10, username: 'super1', email: 'super1@dubai.com', name: 'super1', role: 'super_user', …}
-List.js:382 🔍 Component render state: {companyId: 6, answersCount: 4, questionsCount: 4, allQuestionsAnswered: true, showChecklist: true, …}
-AuthContext.js:52 🔑 CSRF token: obtained
-AuthContext.js:76 ✅ Request completed: http://localhost:8080/api/users/ Status: 200
-List.js:509 Available users for assignment: (5) [{…}, {…}, {…}, {…}, {…}]
-List.js:34 List component - selectedCompany: {id: 6, name: 'Dubai Luxury Hotel', emirate: 'dubai', sector: 'hospitality', created_at: '2025-08-26T10:07:36.142826+04:00'}
-List.js:35 List component - companyId: 6
-List.js:36 List component - user: {id: 10, username: 'super1', email: 'super1@dubai.com', name: 'super1', role: 'super_user', …}
-List.js:382 🔍 Component render state: {companyId: 6, answersCount: 4, questionsCount: 4, allQuestionsAnswered: true, showChecklist: true, …}
-AuthContext.js:46 🔄 Making request to: http://localhost:8080/api/users/
-List.js:34 List component - selectedCompany: {id: 6, name: 'Dubai Luxury Hotel', emirate: 'dubai', sector: 'hospitality', created_at: '2025-08-26T10:07:36.142826+04:00'}
-List.js:35 List component - companyId: 6
-List.js:36 List component - user: {id: 10, username: 'super1', email: 'super1@dubai.com', name: 'super1', role: 'super_user', …}
-List.js:382 🔍 Component render state: {companyId: 6, answersCount: 4, questionsCount: 4, allQuestionsAnswered: true, showChecklist: true, …}
-AuthContext.js:52 🔑 CSRF token: obtained
-AuthContext.js:76 ✅ Request completed: http://localhost:8080/api/users/ Status: 200
-List.js:509 Available users for assignment: (5) [{…}, {…}, {…}, {…}, {…}]
-List.js:34 List component - selectedCompany: {id: 6, name: 'Dubai Luxury Hotel', emirate: 'dubai', sector: 'hospitality', created_at: '2025-08-26T10:07:36.142826+04:00'}
-List.js:35 List component - companyId: 6
-List.js:36 List component - user: {id: 10, username: 'super1', email: 'super1@dubai.com', name: 'super1', role: 'super_user', …}
-List.js:382 🔍 Component render state: {companyId: 6, answersCount: 4, questionsCount: 4, allQuestionsAnswered: true, showChecklist: true, …}
-AuthContext.js:46 🔄 Making request to: http://localhost:8080/api/users/
-List.js:34 List component - selectedCompany: {id: 6, name: 'Dubai Luxury Hotel', emirate: 'dubai', sector: 'hospitality', created_at: '2025-08-26T10:07:36.142826+04:00'}
-List.js:35 List component - companyId: 6
-List.js:36 List component - user: {id: 10, username: 'super1', email: 'super1@dubai.com', name: 'super1', role: 'super_user', …}
-List.js:382 🔍 Component render state: {companyId: 6, answersCount: 4, questionsCount: 4, allQuestionsAnswered: true, showChecklist: true, …}
-AuthContext.js:52 🔑 CSRF token: obtained
-AuthContext.js:76 ✅ Request completed: http://localhost:8080/api/users/ Status: 200
-List.js:509 Available users for assignment: (5) [{…}, {…}, {…}, {…}, {…}]
-List.js:34 List component - selectedCompany: {id: 6, name: 'Dubai Luxury Hotel', emirate: 'dubai', sector: 'hospitality', created_at: '2025-08-26T10:07:36.142826+04:00'}
-List.js:35 List component - companyId: 6
-List.js:36 List component - user: {id: 10, username: 'super1', email: 'super1@dubai.com', name: 'super1', role: 'super_user', …}
-List.js:382 🔍 Component render state: {companyId: 6, answersCount: 4, questionsCount: 4, allQuestionsAnswered: true, showChecklist: true, …}
-AuthContext.js:46 🔄 Making request to: http://localhost:8080/api/users/
-List.js:34 List component - selectedCompany: {id: 6, name: 'Dubai Luxury Hotel', emirate: 'dubai', sector: 'hospitality', created_at: '2025-08-26T10:07:36.142826+04:00'}
-List.js:35 List component - companyId: 6
-List.js:36 List component - user: {id: 10, username: 'super1', email: 'super1@dubai.com', name: 'super1', role: 'super_user', …}
-List.js:382 🔍 Component render state: {companyId: 6, answersCount: 4, questionsCount: 4, allQuestionsAnswered: true, showChecklist: true, …}
-AuthContext.js:52 🔑 CSRF token: obtained
-AuthContext.js:76 ✅ Request completed: http://localhost:8080/api/users/ Status: 200
-List.js:509 Available users for assignment: (5) [{…}, {…}, {…}, {…}, {…}]
-List.js:34 List component - selectedCompany: {id: 6, name: 'Dubai Luxury Hotel', emirate: 'dubai', sector: 'hospitality', created_at: '2025-08-26T10:07:36.142826+04:00'}
-List.js:35 List component - companyId: 6
-List.js:36 List component - user: {id: 10, username: 'super1', email: 'super1@dubai.com', name: 'super1', role: 'super_user', …}
-List.js:382 🔍 Component render state: {companyId: 6, answersCount: 4, questionsCount: 4, allQuestionsAnswered: true, showChecklist: true, …}
-AuthContext.js:46 🔄 Making request to: http://localhost:8080/api/users/
-List.js:34 List component - selectedCompany: {id: 6, name: 'Dubai Luxury Hotel', emirate: 'dubai', sector: 'hospitality', created_at: '2025-08-26T10:07:36.142826+04:00'}
-List.js:35 List component - companyId: 6
-List.js:36 List component - user: {id: 10, username: 'super1', email: 'super1@dubai.com', name: 'super1', role: 'super_user', …}
-List.js:382 🔍 Component render state: {companyId: 6, answersCount: 4, questionsCount: 4, allQuestionsAnswered: true, showChecklist: true, …}
-AuthContext.js:52 🔑 CSRF token: obtained
-AuthContext.js:76 ✅ Request completed: http://localhost:8080/api/users/ Status: 200
-List.js:509 Available users for assignment: (5) [{…}, {…}, {…}, {…}, {…}]
-List.js:34 List component - selectedCompany: {id: 6, name: 'Dubai Luxury Hotel', emirate: 'dubai', sector: 'hospitality', created_at: '2025-08-26T10:07:36.142826+04:00'}
-List.js:35 List component - companyId: 6
-List.js:36 List component - user: {id: 10, username: 'super1', email: 'super1@dubai.com', name: 'super1', role: 'super_user', …}
-List.js:382 🔍 Component render state: {companyId: 6, answersCount: 4, questionsCount: 4, allQuestionsAnswered: true, showChecklist: true, …}
-AuthContext.js:46 🔄 Making request to: http://localhost:8080/api/users/
-List.js:34 List component - selectedCompany: {id: 6, name: 'Dubai Luxury Hotel', emirate: 'dubai', sector: 'hospitality', created_at: '2025-08-26T10:07:36.142826+04:00'}
-List.js:35 List component - companyId: 6
-List.js:36 List component - user: {id: 10, username: 'super1', email: 'super1@dubai.com', name: 'super1', role: 'super_user', …}
-List.js:382 🔍 Component render state: {companyId: 6, answersCount: 4, questionsCount: 4, allQuestionsAnswered: true, showChecklist: true, …}
-AuthContext.js:52 🔑 CSRF token: obtained
-AuthContext.js:76 ✅ Request completed: http://localhost:8080/api/users/ Status: 200
-List.js:509 Available users for assignment: (5) [{…}, {…}, {…}, {…}, {…}]
-List.js:34 List component - selectedCompany: {id: 6, name: 'Dubai Luxury Hotel', emirate: 'dubai', sector: 'hospitality', created_at: '2025-08-26T10:07:36.142826+04:00'}
-List.js:35 List component - companyId: 6
-List.js:36 List component - user: {id: 10, username: 'super1', email: 'super1@dubai.com', name: 'super1', role: 'super_user', …}
-List.js:382 🔍 Component render state: {companyId: 6, answersCount: 4, questionsCount: 4, allQuestionsAnswered: true, showChecklist: true, …}
-AuthContext.js:46 🔄 Making request to: http://localhost:8080/api/users/
-List.js:34 List component - selectedCompany: {id: 6, name: 'Dubai Luxury Hotel', emirate: 'dubai', sector: 'hospitality', created_at: '2025-08-26T10:07:36.142826+04:00'}
-List.js:35 List component - companyId: 6
-List.js:36 List component - user: {id: 10, username: 'super1', email: 'super1@dubai.com', name: 'super1', role: 'super_user', …}
-List.js:382 🔍 Component render state: {companyId: 6, answersCount: 4, questionsCount: 4, allQuestionsAnswered: true, showChecklist: true, …}
-AuthContext.js:52 🔑 CSRF token: obtained
-AuthContext.js:76 ✅ Request completed: http://localhost:8080/api/users/ Status: 200
-List.js:509 Available users for assignment: (5) [{…}, {…}, {…}, {…}, {…}]
-List.js:34 List component - selectedCompany: {id: 6, name: 'Dubai Luxury Hotel', emirate: 'dubai', sector: 'hospitality', created_at: '2025-08-26T10:07:36.142826+04:00'}
-List.js:35 List component - companyId: 6
-List.js:36 List component - user: {id: 10, username: 'super1', email: 'super1@dubai.com', name: 'super1', role: 'super_user', …}
-List.js:382 🔍 Component render state: {companyId: 6, answersCount: 4, questionsCount: 4, allQuestionsAnswered: true, showChecklist: true, …}
-AuthContext.js:46 🔄 Making request to: http://localhost:8080/api/users/
-List.js:34 List component - selectedCompany: {id: 6, name: 'Dubai Luxury Hotel', emirate: 'dubai', sector: 'hospitality', created_at: '2025-08-26T10:07:36.142826+04:00'}
-List.js:35 List component - companyId: 6
-List.js:36 List component - user: {id: 10, username: 'super1', email: 'super1@dubai.com', name: 'super1', role: 'super_user', …}
-List.js:382 🔍 Component render state: {companyId: 6, answersCount: 4, questionsCount: 4, allQuestionsAnswered: true, showChecklist: true, …}
-AuthContext.js:52 🔑 CSRF token: obtained
-AuthContext.js:76 ✅ Request completed: http://localhost:8080/api/users/ Status: 200
-List.js:509 Available users for assignment: (5) [{…}, {…}, {…}, {…}, {…}]
-List.js:34 List component - selectedCompany: {id: 6, name: 'Dubai Luxury Hotel', emirate: 'dubai', sector: 'hospitality', created_at: '2025-08-26T10:07:36.142826+04:00'}
-List.js:35 List component - companyId: 6
-List.js:36 List component - user: {id: 10, username: 'super1', email: 'super1@dubai.com', name: 'super1', role: 'super_user', …}
-List.js:382 🔍 Component render state: {companyId: 6, answersCount: 4, questionsCount: 4, allQuestionsAnswered: true, showChecklist: true, …}
+Data.js:1173 🔍 Data.js - User assignment filtering: {currentUser: 'super_user', canAssignToAnyone: true, canAssignInCompany: false, canAssignToUploadersAtOwnSites: false, cannotAssignTasks: false, …}

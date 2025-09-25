@@ -22,50 +22,50 @@ class SignupView(APIView):
         email = request.data.get('email', '').strip()
         company_name = request.data.get('companyName', '').strip()
         password = request.data.get('password', '')
-        
+
         # Validation
         if not username or not password:
             return Response({
                 'error': 'Username and password are required'
             }, status=status.HTTP_400_BAD_REQUEST)
-        
+
         if not email:
             return Response({
                 'error': 'Email address is required'
             }, status=status.HTTP_400_BAD_REQUEST)
-        
+
         if not company_name:
             return Response({
                 'error': 'Company name is required'
             }, status=status.HTTP_400_BAD_REQUEST)
-        
+
         if len(password) < 6:
             return Response({
                 'error': 'Password must be at least 6 characters long'
             }, status=status.HTTP_400_BAD_REQUEST)
-        
+
         if len(username) < 3:
             return Response({
                 'error': 'Username must be at least 3 characters long'
             }, status=status.HTTP_400_BAD_REQUEST)
-        
+
         # Email validation (now required)
         if not re.match(r'^[^\s@]+@[^\s@]+\.[^\s@]+$', email):
             return Response({
                 'error': 'Please enter a valid email address'
             }, status=status.HTTP_400_BAD_REQUEST)
-        
+
         # Check if user exists
         if User.objects.filter(username=username).exists():
             return Response({
                 'error': 'Username already exists'
             }, status=status.HTTP_400_BAD_REQUEST)
-        
+
         if email and User.objects.filter(email=email).exists():
             return Response({
                 'error': 'Email already registered'
             }, status=status.HTTP_400_BAD_REQUEST)
-        
+
         # Step 1: Create user account in explicit transaction
         try:
             with transaction.atomic():
@@ -129,11 +129,10 @@ class SignupView(APIView):
             return Response({
                 'error': 'Failed to create account. Please try again.'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
+
         print(f"✅ User account created successfully: {user.email}")
         print(f"📧 Email verification will be handled automatically by signals")
-        
-        
+
         response_message = 'Account created successfully! Please check your email to verify your account.'
         next_step = 'Click the verification link in your email to activate your account.'
 
@@ -143,6 +142,7 @@ class SignupView(APIView):
             'email_sent': True,  # Signal will handle email sending
             'next_step': next_step
         }, status=status.HTTP_201_CREATED)
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginView(APIView):

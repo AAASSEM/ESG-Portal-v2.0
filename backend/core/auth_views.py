@@ -70,7 +70,7 @@ class SignupView(APIView):
         try:
             with transaction.atomic():
                 print("🔄 Starting user creation transaction...")
-                
+
                 # Create inactive user (email verification required)
                 user = User.objects.create_user(
                     username=username,
@@ -80,14 +80,14 @@ class SignupView(APIView):
                     is_staff=True,      # Can access Django admin
                     is_superuser=True   # Has all permissions
                 )
-                
+
                 # Create a default company for the new user
                 from .models import UserProfile, Company
                 import random
-                
+
                 # Generate unique company code
                 company_code = f"USR{user.id:03d}"
-                
+
                 # Create company with provided name
                 company = Company.objects.create(
                     user=user,
@@ -96,11 +96,11 @@ class SignupView(APIView):
                     emirate='dubai',  # Default emirate
                     sector='hospitality'  # Default sector
                 )
-                
+
                 # Set company directly on User for fast access
                 user.company = company
                 user.save()
-                
+
                 # Create UserProfile linked to the company
                 UserProfile.objects.create(
                     user=user,
@@ -109,21 +109,25 @@ class SignupView(APIView):
                     company=company,
                     email_verified=False  # Will be set to True after email verification
                 )
-                
-                # Auto-assign mandatory frameworks to the new company
-                from .services import FrameworkService
-                FrameworkService.assign_mandatory_frameworks(company, user)
 
-                # Update active_frameworks field based on company location
-                company.update_active_frameworks()
-                print("✅ Framework assignment completed")
-                
+                # Auto-assign mandatory frameworks to the new company
+                try:
+                    from .services import FrameworkService
+                    FrameworkService.assign_mandatory_frameworks(company, user)
+                    company.update_active_frameworks()
+                    print("✅ Framework assignment completed")
+                except Exception as framework_error:
+                    print(f"⚠️ Framework assignment error (non-critical): {str(framework_error)}")
+                    # Don't fail signup if framework assignment fails
+
                 print("✅ User creation transaction completed - all data committed")
-                
+
         except Exception as e:
             print(f"❌ Error creating user account: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return Response({
-                'error': 'Failed to create account'
+                'error': 'Failed to create account. Please try again.'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         print(f"✅ User account created successfully: {user.email}")

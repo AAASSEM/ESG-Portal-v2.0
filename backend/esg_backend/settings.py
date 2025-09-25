@@ -105,17 +105,33 @@ WSGI_APPLICATION = 'esg_backend.wsgi.application'
 
 # Database
 # Use PostgreSQL in production (Render), SQLite in development
-import dj_database_url
+try:
+    import dj_database_url
+except ImportError:
+    print("⚠️ dj_database_url not installed - using default database configuration")
+    dj_database_url = None
 
-if os.environ.get('DATABASE_URL'):
+if os.environ.get('DATABASE_URL') and dj_database_url:
     # Production database (Render PostgreSQL)
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=os.environ.get('DATABASE_URL'),
-            conn_max_age=600,
-            conn_health_checks=True,
-        )
-    }
+    try:
+        DATABASES = {
+            'default': dj_database_url.config(
+                default=os.environ.get('DATABASE_URL'),
+                conn_max_age=600,
+                conn_health_checks=True,
+            )
+        }
+        print("✅ Using production PostgreSQL database")
+    except Exception as db_error:
+        print(f"❌ Error configuring production database: {db_error}")
+        # Fallback to SQLite if database config fails
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
+        }
+        print("⚠️ Falling back to SQLite database")
 else:
     # Development database (SQLite)
     DATABASES = {
@@ -124,6 +140,7 @@ else:
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
+    print("✅ Using development SQLite database")
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -273,6 +290,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:8000",
     "http://localhost:8080",
     "http://127.0.0.1:8080",
+    "https://esg-portal.onrender.com",  # Production URL
     "https://esg-portal-v2-0-v5jv-qy71s8853-aaassems-projects.vercel.app",  # Your Vercel URL
 ]
 
@@ -296,7 +314,7 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = True  # Temporarily allow all origins for debugging
+CORS_ALLOW_ALL_ORIGINS = DEBUG  # Only allow all origins in development
 CORS_ALLOWED_HEADERS = [
     'accept',
     'accept-encoding',
@@ -327,6 +345,7 @@ CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:7701',
     'http://localhost:7702',
     'http://127.0.0.1:7702',
+    'https://esg-portal.onrender.com',  # Production URL
     'https://*.onrender.com',
     'http://*.onrender.com',
     'https://*.ngrok-free.app',
@@ -341,6 +360,44 @@ if os.environ.get('RENDER_EXTERNAL_HOSTNAME'):
 
 # File uploads (removed Pillow dependency for now)
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
+
+# Logging configuration for production debugging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose' if not DEBUG else 'simple',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO' if not DEBUG else 'DEBUG',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'core': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
 
 # UAE Emirates choices
 UAE_EMIRATES = [

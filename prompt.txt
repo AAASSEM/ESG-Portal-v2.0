@@ -1,4 +1,4 @@
-How the System Handles CORS (Cross-Origin Resource Sharing)
+How the System should Handles CORS (Cross-Origin Resource Sharing)
 
   1. Backend CORS Configuration (settings.py)
 
@@ -279,3 +279,168 @@ How the System Handles CORS (Cross-Origin Resource Sharing)
 
   The system uses a comprehensive CORS configuration that balances security with development flexibility, supporting multiple deployment
   platforms while maintaining proper cross-origin protection.
+
+
+
+
+the error i got in the production 
+
+'AuthContext.js:113 GET https://esg-portal.onrender.com/api/auth/user/ 401 (Unauthorized)
+AuthContext.js:127 ❌ User not authenticated
+AuthContext.js:293 POST https://esg-portal.onrender.com/api/auth/signup/ 502 (Bad Gateway)
+AuthContext.js:322 Signup error: SyntaxError: Failed to execute 'json' on 'Response': Unexpected end of JSON input at signup (AuthContext.js:302:35) at async onSubmit (Signup.js:68:11)'
+
+2025-09-25T12:10:38.238566825Z ==> Deploying...
+2025-09-25T12:11:29.315079764Z ==> Running ' cd backend && gunicorn esg_backend.wsgi:application'
+2025-09-25T12:11:34.237983574Z [2025-09-25 16:11:34 +0400] [56] [INFO] Starting gunicorn 21.2.0
+2025-09-25T12:11:34.238513827Z [2025-09-25 16:11:34 +0400] [56] [INFO] Listening at: http://0.0.0.0:10000 (56)
+2025-09-25T12:11:34.238526688Z [2025-09-25 16:11:34 +0400] [56] [INFO] Using worker: sync
+2025-09-25T12:11:34.316812125Z [2025-09-25 16:11:34 +0400] [57] [INFO] Booting worker with pid: 57
+2025-09-25T12:11:36.731477225Z 127.0.0.1 - - [25/Sep/2025:16:11:36 +0400] "HEAD / HTTP/1.1" 200 895 "-" "Go-http-client/1.1"
+2025-09-25T12:11:39.024198827Z ==> Your service is live 🎉
+2025-09-25T12:11:39.051351477Z ==> 
+2025-09-25T12:11:39.452040851Z ==> ///////////////////////////////////////////////////////////
+2025-09-25T12:11:39.47753354Z ==> 
+2025-09-25T12:11:39.50406547Z ==> Available at your primary URL https://esg-portal.onrender.com
+2025-09-25T12:11:39.531175059Z ==> 
+2025-09-25T12:11:39.556797559Z ==> ///////////////////////////////////////////////////////////
+2025-09-25T12:11:40.430650759Z 127.0.0.1 - - [25/Sep/2025:16:11:40 +0400] "GET / HTTP/1.1" 200 895 "-" "Go-http-client/2.0"
+2025-09-25T12:11:57.096753955Z 127.0.0.1 - - [25/Sep/2025:16:11:57 +0400] "GET / HTTP/1.1" 200 895 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-09-25T12:11:57.854111857Z 127.0.0.1 - - [25/Sep/2025:16:11:57 +0400] "GET /static/css/main.73cfe63c.css HTTP/1.1" 200 0 "https://esg-portal.onrender.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-09-25T12:11:57.85992946Z 127.0.0.1 - - [25/Sep/2025:16:11:57 +0400] "GET /static/js/main.9f6cba5c.js HTTP/1.1" 200 0 "https://esg-portal.onrender.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+2025-09-25T12:12:00.178644553Z Unauthorized: /api/auth/user/
+2025-09-25T12:12:00.178923Z 127.0.0.1 - - [25/Sep/2025:16:12:00 +0400] "GET /api/auth/user/ HTTP/1.1" 401 29 "https://esg-portal.onrender.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+
+Looking at your error logs, you have a Django backend with React frontend deployed on Render. The issue appears to be with your authentication setup. Here's what's happening and how to fix it:
+
+The Problems:
+401 Unauthorized on /api/auth/user/ - This is expected for unauthenticated users
+502 Bad Gateway on /api/auth/signup/ - This is the real problem preventing signup
+JSON parsing error - The backend isn't returning valid JSON
+Solutions to Try:
+1. Check Django ALLOWED_HOSTS and CORS settings
+In your Django settings.py, ensure these are configured:
+
+python
+# settings.py
+ALLOWED_HOSTS = ['esg-portal.onrender.com', 'localhost', '127.0.0.1']
+
+# CORS settings
+CORS_ALLOWED_ORIGINS = [
+    "https://esg-portal.onrender.com",
+    "http://localhost:3000",  # for local development
+]
+
+# Or for development/testing (less secure):
+CORS_ALLOW_ALL_ORIGINS = True  # Only for debugging, remove in production
+
+CORS_ALLOW_CREDENTIALS = True
+2. Fix the 502 Bad Gateway Error
+The 502 error suggests your Django backend is crashing when handling the signup request. Check for:
+
+python
+# In your signup view, add proper error handling:
+from django.http import JsonResponse
+import json
+
+def signup(request):
+    try:
+        # Your signup logic here
+        data = json.loads(request.body)
+        # Process signup...
+        
+    except json.JSONDecodeError as e:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        # Log the actual error
+        print(f"Signup error: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)
+3. Add Logging to Debug
+Add logging to see what's happening:
+
+python
+# settings.py
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
+}
+4. Check Database Connection
+502 errors often occur when the database isn't accessible:
+
+python
+# settings.py
+# Make sure your database is configured correctly for Render
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DATABASE_NAME'),
+        'USER': os.environ.get('DATABASE_USER'),
+        'PASSWORD': os.environ.get('DATABASE_PASSWORD'),
+        'HOST': os.environ.get('DATABASE_HOST'),
+        'PORT': os.environ.get('DATABASE_PORT', '5432'),
+    }
+}
+5. Update Your Frontend Error Handling
+In AuthContext.js, improve error handling:
+
+javascript
+const signup = async (userData) => {
+    try {
+        const response = await fetch('https://esg-portal.onrender.com/api/auth/signup/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(userData),
+        });
+
+        // Check if response is ok before parsing
+        if (!response.ok) {
+            const text = await response.text();
+            console.error('Signup failed:', response.status, text);
+            throw new Error(`Signup failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Signup error:', error);
+        throw error;
+    }
+};
+6. Quick Debugging Steps:
+Test the API directly using curl or Postman:
+bash
+curl -X POST https://esg-portal.onrender.com/api/auth/signup/ \
+  -H "Content-Type: application/json" \
+  -d '{"username":"test","password":"test123","email":"test@example.com"}'
+Check Render logs for the full error:
+bash
+# In Render dashboard, check the service logs for Python errors
+Verify static files are serving correctly:
+Your static files seem to be loading (returning 200)
+But make sure STATIC_ROOT and STATIC_URL are configured properly
+7. Environment Variables
+Make sure all required environment variables are set in Render:
+
+Database credentials
+SECRET_KEY
+DEBUG=False (for production)
+Any API keys or other configs
+The 502 error typically means your Django app is crashing when processing the signup request. Check the Render service logs for the actual Python error message, which will give you more specific information about what's failing.

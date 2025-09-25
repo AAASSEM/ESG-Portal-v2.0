@@ -111,10 +111,12 @@ class SignupView(APIView):
                 )
                 
                 # Auto-assign mandatory frameworks to the new company
-                # TEMPORARILY DISABLED FOR EMAIL TESTING
-                # from .services import FrameworkService
-                # FrameworkService.assign_mandatory_frameworks(company, user)
-                print("⚠️ Framework assignment SKIPPED for email testing")
+                from .services import FrameworkService
+                FrameworkService.assign_mandatory_frameworks(company, user)
+
+                # Update active_frameworks field based on company location
+                company.update_active_frameworks()
+                print("✅ Framework assignment completed")
                 
                 print("✅ User creation transaction completed - all data committed")
                 

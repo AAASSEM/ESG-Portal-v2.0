@@ -56,19 +56,8 @@ class FrameworkService:
             )
             frameworks_to_assign.append(dst_framework)
         
-        # Dubai Energy Regulations - mandatory for all Dubai establishments
-        if company.emirate == 'dubai':
-            energy_framework, _ = Framework.objects.get_or_create(
-                framework_id='DUBAI_ENERGY_REGULATIONS',
-                defaults={
-                    'name': 'Dubai Supreme Council of Energy Regulations',
-                    'type': 'mandatory_conditional',
-                    'description': 'Mandatory compliance - Dubai Supreme Council of Energy',
-                    'condition_emirate': 'dubai',
-                    'condition_sector': ''
-                }
-            )
-            frameworks_to_assign.append(energy_framework)
+        # Dubai Energy Regulations is VOLUNTARY, not auto-assigned
+        # Users can select it manually if needed
         
         # UAE ESG Reporting Requirements - mandatory for listed companies
         # For now, we'll make it conditional based on a future profiling question

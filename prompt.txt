@@ -1,165 +1,281 @@
-Excellent catch! Looking at column F (Frameworks), the elements are tagged with different framework requirements that should control their activation. Here's how to prompt this:
+How the System Handles CORS (Cross-Origin Resource Sharing)
 
----
+  1. Backend CORS Configuration (settings.py)
 
-## Framework-Based Activation Logic for Claude Code:
+  CORS Package Installation (line 64):
 
-The system should NOT activate all 80 elements for every company. Elements should be activated based on **framework requirements (column F)** AND **conditional logic (column L)**.
+  INSTALLED_APPS = [
+      'django.contrib.admin',
+      # ... other apps
+      'rest_framework',
+      'corsheaders',    # ← Django CORS headers package
+      'core',
+  ]
 
-### Framework Codes in Column F:
-- **E** = ESG Framework (Mandatory for all)
-- **D** = Dubai Sustainable Tourism/DST (Only for Dubai-based companies)  
-- **G** = Green Key Certification (Voluntary/Optional)
+  CORS Middleware Configuration (line 69):
 
-### Framework Distribution from Excel:
-- **"E, D, G"**: 3 elements (required for all frameworks)
-- **"E, D"**: 7 elements (ESG + Dubai only)
-- **"E, G"**: 1 element (ESG + Green Key only)
-- **"D, G"**: 3 elements (Dubai + Green Key only)
-- **"E"**: 27 elements (ESG only)
-- **"D"**: 17 elements (Dubai only)
-- **"G"**: 22 elements (Green Key only)
+  MIDDLEWARE = [
+      'corsheaders.middleware.CorsMiddleware',    # ← Must be first middleware
+      'django.middleware.security.SecurityMiddleware',
+      'whitenoise.middleware.WhiteNoiseMiddleware',
+      'django.contrib.sessions.middleware.SessionMiddleware',
+      'django.middleware.common.CommonMiddleware',
+      # ... other middleware
+  ]
 
-### Activation Rules:
+  CORS Allowed Origins (lines 298-315):
 
-```python
-def should_activate_element(element, company):
-    # Parse frameworks from column F
-    frameworks = element.frameworks.split(',')  # e.g., "E, D, G" -> ["E", "D", "G"]
-    frameworks = [f.strip() for f in frameworks]
-    
-    # Check framework requirements
-    has_required_framework = False
-    
-    # E - Mandatory ESG (all companies have this)
-    if 'E' in frameworks:
-        has_required_framework = True
-    
-    # D - Dubai Sustainable Tourism (location-based)
-    if 'D' in frameworks:
-        if company.location == 'Dubai' or company.country == 'UAE':
-            has_required_framework = True
-        else:
-            # If D is required but company not in Dubai, skip this element
-            if 'E' not in frameworks:  # Unless E is also present
-                return False
-    
-    # G - Green Key (optional certification)
-    if 'G' in frameworks:
-        if company.has_green_key_certification:
-            has_required_framework = True
-        elif 'E' not in frameworks and 'D' not in frameworks:
-            # If ONLY G and company doesn't have Green Key, skip
-            return False
-    
-    # If element has required framework, check must-have vs conditional
-    if has_required_framework:
-        if element.requirement_type == 'must-have':
-            return True
-        elif element.requirement_type == 'conditional':
-            # Check condition_logic (column L)
-            return check_condition_met(element.condition_logic, company.profile_answers)
-    
-    return False
-```
+  CORS_ALLOWED_ORIGINS = [
+      # Development - React frontend
+      "http://localhost:3000",
+      "http://localhost:3001",
+      "http://localhost:3002",
+      "http://localhost:3003",
+      "http://localhost:7701",    # Previous frontend port
+      "http://127.0.0.1:3000",
+      "http://127.0.0.1:3001",
+      "http://127.0.0.1:3002",
+      "http://127.0.0.1:3003",
+      "http://127.0.0.1:7701",
 
-### Company Onboarding Flow:
+      # Development - Django backend
+      "http://localhost:8000",
+      "http://127.0.0.1:8000",
+      "http://localhost:8080",
+      "http://127.0.0.1:8080",
 
-```python
-# Step 1: Determine company frameworks
-company_frameworks = ['E']  # All companies get ESG
+      # Production - Vercel
+      "https://esg-portal-v2-0-v5jv-qy71s8853-aaassems-projects.vercel.app",
+  ]
 
-if company.location in ['Dubai', 'UAE']:
-    company_frameworks.append('D')
+  Dynamic Production URLs (lines 317-322):
 
-# Step 2: Ask about optional certification
-green_key_question = "Is your company pursuing or certified with Green Key?"
-if answer == 'Yes':
-    company_frameworks.append('G')
+  # Add Render URLs to CORS if in production
+  if os.environ.get('RENDER_EXTERNAL_HOSTNAME'):
+      CORS_ALLOWED_ORIGINS.extend([
+          f"https://{os.environ.get('RENDER_EXTERNAL_HOSTNAME')}",
+          f"http://{os.environ.get('RENDER_EXTERNAL_HOSTNAME')}",
+      ])
 
-# Step 3: Filter profiling questions
-# Only show questions for conditional elements in active frameworks
-relevant_conditions = []
-for element in all_elements:
-    if element_matches_company_frameworks(element, company_frameworks):
-        if element.requirement_type == 'conditional' and element.condition_logic:
-            relevant_conditions.append(element.condition_logic)
+  CORS Origin Regex Patterns (lines 325-334):
 
-# Show only unique conditions as questions
-unique_questions = generate_questions_from_conditions(set(relevant_conditions))
-```
+  CORS_ALLOWED_ORIGIN_REGEXES = [
+      r"^https://.*\.onrender\.com$",      # Render deployments
+      r"^http://.*\.onrender\.com$",       # Render HTTP (dev)
+      r"^https://.*\.ngrok-free\.app$",    # ngrok tunneling
+      r"^https://.*\.ngrok\.io$",
+      r"^https://.*\.ngrok\.app$",
+      r"^https://.*\.ngrok\.dev$",
+      r"^https://.*\.vercel\.app$",        # Vercel deployments
+      r"^https://.*\.vercel\.com$",        # Vercel custom domains
+  ]
 
-### Expected Behavior by Location:
+  CORS Credentials and Headers (lines 336-348):
 
-**For a company NOT in Dubai, WITHOUT Green Key:**
-- Gets only "E" framework elements
-- Approximately 30-35 elements (27 E-only + some from "E, D, G" and "E, D" where E is included)
-- Shows fewer profiling questions (only conditions for E elements)
+  CORS_ALLOW_CREDENTIALS = True          # ← Allow cookies/sessions
+  CORS_ALLOW_ALL_ORIGINS = True          # ← Temporary debug setting
+  CORS_ALLOWED_HEADERS = [
+      'accept',
+      'accept-encoding',
+      'authorization',
+      'content-type',
+      'dnt',
+      'origin',
+      'user-agent',
+      'x-csrftoken',                      # ← CSRF token header
+      'x-requested-with',
+  ]
 
-**For a company in Dubai, WITHOUT Green Key:**
-- Gets "E" and "D" framework elements  
-- Approximately 55-60 elements
-- Shows profiling questions for E and D conditional elements
+  CSRF Trusted Origins (lines 354-374):
 
-**For a company in Dubai WITH Green Key:**
-- Gets all "E", "D", and "G" framework elements
-- All 80 elements available (but still conditional on profiling answers)
-- Shows all 22 conditional element questions
+  CSRF_TRUSTED_ORIGINS = [
+      # Development
+      'http://localhost:8000',
+      'http://127.0.0.1:8000',
+      'http://localhost:8080',
+      'http://127.0.0.1:8080',
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'http://localhost:3002',
+      'http://localhost:3003',
+      'http://127.0.0.1:3003',
+      'http://localhost:7701',
+      'http://127.0.0.1:7701',
+      'http://localhost:7702',
+      'http://127.0.0.1:7702',
 
-### Implementation Update:
+      # Production patterns
+      'https://*.onrender.com',
+      'http://*.onrender.com',
+      'https://*.ngrok-free.app',
+      'https://*.ngrok.io',
+      'https://*.ngrok.app',
+      'https://*.ngrok.dev',
+  ]
 
-```python
-# DataElement model should include:
-frameworks = models.CharField(max_length=20)  # Store as "E, D, G"
+  2. Frontend CORS Interaction
 
-# Company model should track:
-location = models.CharField(max_length=100)
-has_green_key = models.BooleanField(default=False)
-active_frameworks = models.JSONField(default=list)  # ["E", "D", "G"]
+  Universal Credentials Inclusion:
 
-# Element filtering:
-def get_available_elements(company):
-    all_elements = DataElement.objects.all()
-    available = []
-    
-    for element in all_elements:
-        element_frameworks = [f.strip() for f in element.frameworks.split(',')]
-        
-        # Check if element's frameworks intersect with company's frameworks
-        if any(f in company.active_frameworks for f in element_frameworks):
-            available.append(element)
-    
-    return available
-```
+  Fetch API (AuthContext.js examples):
 
-### Profiling Question Generation:
+  // All requests include credentials for session cookies
+  const response = await fetch(`${API_BASE_URL}/api/auth/login/`, {
+    method: 'POST',
+    credentials: 'include',    // ← Sends cookies/sessions across origins
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(requestBody)
+  });
 
-```python
-def get_profiling_questions(company):
-    # Get only elements matching company's frameworks
-    available_elements = get_available_elements(company)
-    
-    # Extract conditions only from available conditional elements
-    conditions = []
-    for element in available_elements:
-        if element.requirement_type == 'conditional' and element.condition_logic:
-            conditions.append({
-                'condition': element.condition_logic,
-                'element_id': element.master_id
-            })
-    
-    # Generate questions from unique conditions
-    # This should generate ~5-10 questions for E-only companies
-    # Up to ~15 for Dubai companies  
-    # Up to ~22 for Dubai + Green Key companies
-    return create_questions_from_conditions(conditions)
-```
+  Axios Requests (LocationContext.js examples):
 
-This ensures:
-1. Companies only see relevant elements for their location/certification
-2. Profiling questions are filtered to relevant conditional elements
-3. The system scales based on company context rather than showing all 80 elements to everyone
+  // Axios configured with credentials
+  const response = await axios.get(`${API_BASE_URL}/api/sites/active/`, {
+    withCredentials: true      // ← Axios equivalent of credentials: 'include'
+  });
 
----
+  Authenticated Request Helper (AuthContext.js:69-75):
 
-This framework-based approach means the system should be much more targeted and efficient, only tracking what's relevant for each company's regulatory and voluntary requirements.
+  // Centralized authenticated request function
+  const makeAuthenticatedRequest = async (url, options = {}) => {
+    const headers = {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': await getCsrfToken(),    // CSRF protection
+      ...options.headers,
+    };
+
+    const response = await fetch(finalUrl, {
+      credentials: 'include',                  // Always include credentials
+      ...options,
+      headers,
+    });
+
+    return response;
+  };
+
+  CSRF Token Management (AuthContext.js:15-35):
+
+  // CSRF token fetching for secure requests
+  const getCsrfToken = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/csrf/`, {
+        method: 'GET',
+        credentials: 'include',    // Include cookies to get CSRF token
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.csrfToken;
+      }
+    } catch (error) {
+      console.error('Error fetching CSRF token:', error);
+    }
+    return null;
+  };
+
+  3. CORS Security Implementation
+
+  Session-Based Authentication:
+
+  - Backend: Uses Django sessions stored in cookies
+  - Frontend: Includes cookies in all requests via credentials: 'include'
+  - CORS: CORS_ALLOW_CREDENTIALS = True permits credential sharing
+
+  CSRF Protection:
+
+  - Token Generation: Backend provides CSRF tokens via /api/auth/csrf/
+  - Token Inclusion: Frontend includes X-CSRFToken header in requests
+  - Validation: Django validates tokens for state-changing operations
+
+  Origin Validation:
+
+  # Multiple layers of origin validation:
+
+  1. CORS_ALLOWED_ORIGINS: Explicit URL allowlist
+  2. CORS_ALLOWED_ORIGIN_REGEXES: Pattern matching for dynamic subdomains
+  3. CSRF_TRUSTED_ORIGINS: Additional CSRF-specific origins
+  4. Environment-based: Dynamic addition based on deployment environment
+
+  4. Development vs Production Handling
+
+  Development Configuration:
+
+  # Permissive settings for local development
+  CORS_ALLOW_ALL_ORIGINS = True           # Temporary - allows any origin
+  ALLOWED_HOSTS = [
+      'localhost', '127.0.0.1', '0.0.0.0'  # Local development hosts
+  ]
+
+  Production Configuration:
+
+  # Dynamic configuration based on environment
+  if os.environ.get('RENDER_EXTERNAL_HOSTNAME'):
+      ALLOWED_HOSTS.append(os.environ.get('RENDER_EXTERNAL_HOSTNAME'))
+      CORS_ALLOWED_ORIGINS.extend([...])
+      CSRF_TRUSTED_ORIGINS.append(f"https://{os.environ.get('RENDER_EXTERNAL_HOSTNAME')}")
+
+  Multi-Platform Support:
+
+  - Render: Dynamic hostname detection
+  - Vercel: Explicit URL inclusion
+  - ngrok: Regex patterns for tunneling
+  - Local: Multiple port configurations
+
+  5. CORS Error Handling
+
+  Common CORS Issues Addressed:
+
+  Preflight Requests:
+
+  # CORS middleware automatically handles OPTIONS preflight requests
+  CORS_ALLOWED_HEADERS = [
+      'content-type',      # For JSON requests
+      'x-csrftoken',      # For CSRF protection
+      'authorization',     # For future token auth
+      'x-requested-with',  # AJAX detection
+  ]
+
+  Credential Requirements:
+
+  // Frontend consistently includes credentials
+  credentials: 'include'        // fetch API
+  withCredentials: true         // Axios
+
+  Mixed Content Prevention:
+
+  # Production enforces HTTPS
+  SESSION_COOKIE_SECURE = True        # HTTPS-only cookies
+  CSRF_COOKIE_SECURE = True          # HTTPS-only CSRF tokens
+
+  6. CORS Flow Summary
+
+  Typical Request Flow:
+
+  1. Frontend makes request to http://localhost:3000 → http://localhost:8080/api/
+  2. Browser sends preflight OPTIONS request (if needed)
+  3. Django CORS Middleware checks origin against allowed list
+  4. Response Headers include appropriate CORS headers:
+  Access-Control-Allow-Origin: http://localhost:3000
+  Access-Control-Allow-Credentials: true
+  Access-Control-Allow-Headers: content-type, x-csrftoken, ...
+  5. Browser permits the actual request
+  6. Session Authentication works via cookies
+  7. CSRF Protection validates via X-CSRFToken header
+
+  Security Benefits:
+
+  - Origin Validation: Only approved frontends can access the API
+  - Credential Protection: Session cookies only sent to trusted origins
+  - CSRF Prevention: State-changing requests require valid CSRF tokens
+  - Production Security: HTTPS enforcement and secure cookie settings
+
+  Development Flexibility:
+
+  - Multiple Ports: Supports various development server configurations
+  - Tunneling Support: Works with ngrok and similar tools
+  - Debug Mode: Temporary permissive settings for troubleshooting
+
+  The system uses a comprehensive CORS configuration that balances security with development flexibility, supporting multiple deployment
+  platforms while maintaining proper cross-origin protection.

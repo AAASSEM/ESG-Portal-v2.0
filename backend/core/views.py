@@ -105,7 +105,29 @@ class CompanyViewSet(viewsets.ModelViewSet):
         # Auto-assign mandatory frameworks
         FrameworkService.assign_mandatory_frameworks(company, self.request.user)
         return company
-    
+
+    def update(self, request, *args, **kwargs):
+        """Custom update method to handle emirate changes and reassign frameworks"""
+        instance = self.get_object()
+        old_emirate = instance.emirate
+
+        # Perform the standard update
+        response = super().update(request, *args, **kwargs)
+
+        # Check if emirate changed and reassign frameworks if needed
+        if 'emirate' in request.data:
+            new_emirate = request.data['emirate']
+            if old_emirate != new_emirate:
+                print(f"🔄 Emirate changed from {old_emirate} to {new_emirate}, reassigning frameworks...")
+                # Reassign mandatory frameworks based on new emirate
+                FrameworkService.assign_mandatory_frameworks(instance, request.user)
+                # Update active_frameworks field
+                instance.refresh_from_db()  # Refresh to get updated data
+                instance.update_active_frameworks()
+                print(f"✅ Frameworks updated for emirate change")
+
+        return response
+
     def get_object(self):
         # CRITICAL: Additional security check
         obj = super().get_object()
@@ -153,7 +175,15 @@ class CompanyViewSet(viewsets.ModelViewSet):
             
             company.save()
             print(f"✅ Company saved successfully")
-            
+
+            # If emirate changed, reassign frameworks
+            if 'emirate' in request.data:
+                from .services import FrameworkService
+                print(f"🔄 Emirate changed, reassigning mandatory frameworks...")
+                FrameworkService.assign_mandatory_frameworks(company, request.user)
+                company.update_active_frameworks()
+                print(f"✅ Frameworks updated for new emirate: {company.emirate}")
+
             # Return updated company data
             serializer = self.get_serializer(company)
             response_data = serializer.data

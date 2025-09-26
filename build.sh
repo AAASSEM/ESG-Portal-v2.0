@@ -32,9 +32,9 @@ python3 manage.py migrate
 echo "Loading comprehensive ESG framework (80 elements)..."
 python3 manage.py loaddata fixtures/data_elements_fixture.json || echo "Data elements fixture not found"
 
-# Populate profiling questions
-echo "Populating profiling questions..."
-python3 manage.py populate_profiling_questions
+# Load 22 profiling questions from fixtures
+echo "Loading profiling questions (22 questions)..."
+python3 manage.py loaddata fixtures/profiling_questions_fixture.json || echo "Profiling questions fixture not found"
 
 # Initialize production data
 echo "Initializing production data..."

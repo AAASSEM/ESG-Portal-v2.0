@@ -1,0 +1,200 @@
+[
+  {
+    "model": "core.profilingquestion",
+    "pk": "cond_hosp_e_003",
+    "fields": {
+      "text": "Does your company use a district cooling service for air conditioning?",
+      "activates_element": "HOSP-E-003",
+      "order": 1
+    }
+  },
+  {
+    "model": "core.profilingquestion",
+    "pk": "cond_hosp_e_004",
+    "fields": {
+      "text": "Do you use LPG (cooking gas or similar fuel) in your operations?",
+      "activates_element": "HOSP-E-004",
+      "order": 2
+    }
+  },
+  {
+    "model": "core.profilingquestion",
+    "pk": "cond_hosp_e_006",
+    "fields": {
+      "text": "Do you segregate and recycle any of your waste (paper, plastic, etc.)?",
+      "activates_element": "HOSP-E-006",
+      "order": 3
+    }
+  },
+  {
+    "model": "core.profilingquestion",
+    "pk": "cond_hosp_e_007",
+    "fields": {
+      "text": "Do you have petrol-fueled vehicles (company cars/fleet)?",
+      "activates_element": "HOSP-E-007",
+      "order": 4
+    }
+  },
+  {
+    "model": "core.profilingquestion",
+    "pk": "cond_hosp_e_008",
+    "fields": {
+      "text": "Do your company vehicles use diesel fuel (e.g., trucks or generators on wheels)?",
+      "activates_element": "HOSP-E-008",
+      "order": 5
+    }
+  },
+  {
+    "model": "core.profilingquestion",
+    "pk": "cond_hosp_e_009",
+    "fields": {
+      "text": "Does your company use diesel backup generators for power?",
+      "activates_element": "HOSP-E-009",
+      "order": 6
+    }
+  },
+  {
+    "model": "core.profilingquestion",
+    "pk": "cond_hosp_e_010",
+    "fields": {
+      "text": "Do you have air conditioning or refrigeration units that require refrigerant (gas) top-ups or servicing?",
+      "activates_element": "HOSP-E-010",
+      "order": 7
+    }
+  },
+  {
+    "model": "core.profilingquestion",
+    "pk": "cond_hosp_e_017",
+    "fields": {
+      "text": "Does your organization have significant value chain emissions that should be reported?",
+      "activates_element": "HOSP-E-017",
+      "order": 8
+    }
+  },
+  {
+    "model": "core.profilingquestion",
+    "pk": "cond_hosp_e_021",
+    "fields": {
+      "text": "Does your organization purchase carbon offsets to compensate for emissions?",
+      "activates_element": "HOSP-E-021",
+      "order": 9
+    }
+  },
+  {
+    "model": "core.profilingquestion",
+    "pk": "cond_hosp_e_022",
+    "fields": {
+      "text": "Does your company generate any hazardous waste (e.g. chemicals, batteries, medical waste)?",
+      "activates_element": "HOSP-E-022",
+      "order": 10
+    }
+  },
+  {
+    "model": "core.profilingquestion",
+    "pk": "cond_hosp_e_023",
+    "fields": {
+      "text": "Do you generate any electricity on-site from renewable sources (solar panels, etc.)?",
+      "activates_element": "HOSP-E-023",
+      "order": 11
+    }
+  },
+  {
+    "model": "core.profilingquestion",
+    "pk": "cond_hosp_s_034",
+    "fields": {
+      "text": "Does your company make financial or in-kind donations to the community or charitable causes?",
+      "activates_element": "HOSP-S-034",
+      "order": 12
+    }
+  },
+  {
+    "model": "core.profilingquestion",
+    "pk": "cond_hosp_g_041",
+    "fields": {
+      "text": "Do you have a formal process for selecting or evaluating your main suppliers?",
+      "activates_element": "HOSP-G-041",
+      "order": 13
+    }
+  },
+  {
+    "model": "core.profilingquestion",
+    "pk": "cond_hosp_e_042",
+    "fields": {
+      "text": "Do you have diesel-fueled vehicles or generators?",
+      "activates_element": "HOSP-E-042",
+      "order": 14
+    }
+  },
+  {
+    "model": "core.profilingquestion",
+    "pk": "cond_hosp_g_061",
+    "fields": {
+      "text": "Have you set a target to reduce your carbon footprint?",
+      "activates_element": "HOSP-G-061",
+      "order": 15
+    }
+  },
+  {
+    "model": "core.profilingquestion",
+    "pk": "cond_hosp_e_066",
+    "fields": {
+      "text": "Do you have separate water meters for high consumption areas?",
+      "activates_element": "HOSP-E-066",
+      "order": 16
+    }
+  },
+  {
+    "model": "core.profilingquestion",
+    "pk": "cond_hosp_e_069",
+    "fields": {
+      "text": "Do you use or purchase renewable energy?",
+      "activates_element": "HOSP-E-069",
+      "order": 17
+    }
+  },
+  {
+    "model": "core.profilingquestion",
+    "pk": "cond_hosp_g_070",
+    "fields": {
+      "text": "Do you have automatic systems to turn off electricity when rooms are not in use?",
+      "activates_element": "HOSP-G-070",
+      "order": 18
+    }
+  },
+  {
+    "model": "core.profilingquestion",
+    "pk": "cond_hosp_e_072",
+    "fields": {
+      "text": "Do you track your recycling rate?",
+      "activates_element": "HOSP-E-072",
+      "order": 19
+    }
+  },
+  {
+    "model": "core.profilingquestion",
+    "pk": "cond_hosp_e_073",
+    "fields": {
+      "text": "Do you compost your organic waste?",
+      "activates_element": "HOSP-E-073",
+      "order": 20
+    }
+  },
+  {
+    "model": "core.profilingquestion",
+    "pk": "cond_hosp_s_077",
+    "fields": {
+      "text": "Do you collaborate with local stakeholders on environmental initiatives?",
+      "activates_element": "HOSP-S-077",
+      "order": 21
+    }
+  },
+  {
+    "model": "core.profilingquestion",
+    "pk": "cond_hosp_g_080",
+    "fields": {
+      "text": "Do you purchase eco-labeled equipment?",
+      "activates_element": "HOSP-G-080",
+      "order": 22
+    }
+  }
+]

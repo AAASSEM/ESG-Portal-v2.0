@@ -38,13 +38,9 @@ python manage.py migrate
 echo "📊 Loading comprehensive ESG framework (80 elements)..."
 python manage.py loaddata fixtures/data_elements_fixture.json || echo "⚠️ Data elements fixture not found"
 
-# Create missing DataElements needed for profiling questions
-echo "➕ Creating missing DataElements..."
-python manage.py create_missing_elements
-
-# Populate profiling questions for the wizard (now all 22 will work)
-echo "❓ Populating profiling questions..."
-python manage.py populate_profiling_questions
+# Load 22 profiling questions from fixtures
+echo "❓ Loading profiling questions (22 questions)..."
+python manage.py loaddata fixtures/profiling_questions_fixture.json || echo "⚠️ Profiling questions fixture not found"
 
 # Populate initial data if needed (development only)
 if [ "$NODE_ENV" != "production" ]; then

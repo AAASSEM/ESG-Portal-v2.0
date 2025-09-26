@@ -9,6 +9,15 @@ from .email_service import send_email_verification, send_password_reset_email, s
 from .models import EmailVerificationToken
 import logging
 
+# SendGrid imports with error handling
+try:
+    import sendgrid
+    from sendgrid.helpers.mail import Mail
+    SENDGRID_AVAILABLE = True
+except ImportError:
+    SENDGRID_AVAILABLE = False
+    print("⚠️ SendGrid not installed - using fallback email for development")
+
 logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=User)
@@ -96,15 +105,33 @@ def send_email_after_token_creation(sender, instance, created, **kwargs):
                     subject = f"{settings.EMAIL_SUBJECT_PREFIX}Password Reset Verification Code"
                     html_message = render_to_string('emails/password_reset.html', context)
                     plain_message = render_to_string('emails/password_reset.txt', context)
-                    
-                    send_result = send_mail(
-                        subject=subject,
-                        message=plain_message,
-                        from_email=settings.DEFAULT_FROM_EMAIL,
-                        recipient_list=[instance.user.email],
-                        html_message=html_message,
-                        fail_silently=False,
-                    )
+
+                    if settings.USE_REAL_EMAIL and SENDGRID_AVAILABLE:
+                        try:
+                            sg = sendgrid.SendGridAPIClient(api_key=settings.SENDGRID_API_KEY)
+                            message = Mail(
+                                from_email=settings.DEFAULT_FROM_EMAIL,
+                                to_emails=instance.user.email,
+                                subject=subject,
+                                html_content=html_message,
+                                plain_text_content=plain_message
+                            )
+                            response = sg.send(message)
+                            print(f"✅ SendGrid API response: {response.status_code}")
+                            send_result = 1 if response.status_code in [200, 201, 202] else 0
+                        except Exception as e:
+                            print(f"❌ SendGrid API error: {e}")
+                            send_result = 0
+                    else:
+                        # Fallback to Django's send_mail for local development
+                        send_result = send_mail(
+                            subject=subject,
+                            message=plain_message,
+                            from_email=settings.DEFAULT_FROM_EMAIL,
+                            recipient_list=[instance.user.email],
+                            html_message=html_message,
+                            fail_silently=False,
+                        )
                     
                     result = {
                         'success': True,
@@ -133,15 +160,33 @@ def send_email_after_token_creation(sender, instance, created, **kwargs):
                     subject = f"{settings.EMAIL_SUBJECT_PREFIX}Verify Your Email Address"
                     html_message = render_to_string('emails/email_verification_magic.html', context)
                     plain_message = render_to_string('emails/email_verification_magic.txt', context)
-                    
-                    send_result = send_mail(
-                        subject=subject,
-                        message=plain_message,
-                        from_email=settings.DEFAULT_FROM_EMAIL,
-                        recipient_list=[instance.user.email],
-                        html_message=html_message,
-                        fail_silently=False,
-                    )
+
+                    if settings.USE_REAL_EMAIL and SENDGRID_AVAILABLE:
+                        try:
+                            sg = sendgrid.SendGridAPIClient(api_key=settings.SENDGRID_API_KEY)
+                            message = Mail(
+                                from_email=settings.DEFAULT_FROM_EMAIL,
+                                to_emails=instance.user.email,
+                                subject=subject,
+                                html_content=html_message,
+                                plain_text_content=plain_message
+                            )
+                            response = sg.send(message)
+                            print(f"✅ SendGrid API response: {response.status_code}")
+                            send_result = 1 if response.status_code in [200, 201, 202] else 0
+                        except Exception as e:
+                            print(f"❌ SendGrid API error: {e}")
+                            send_result = 0
+                    else:
+                        # Fallback to Django's send_mail for local development
+                        send_result = send_mail(
+                            subject=subject,
+                            message=plain_message,
+                            from_email=settings.DEFAULT_FROM_EMAIL,
+                            recipient_list=[instance.user.email],
+                            html_message=html_message,
+                            fail_silently=False,
+                        )
                     
                     result = {
                         'success': True,
@@ -185,15 +230,33 @@ def send_email_after_token_creation(sender, instance, created, **kwargs):
                     subject = f"{settings.EMAIL_SUBJECT_PREFIX}You've been invited to ESG Portal"
                     html_message = render_to_string('emails/invitation.html', context)
                     plain_message = render_to_string('emails/invitation.txt', context)
-                    
-                    send_result = send_mail(
-                        subject=subject,
-                        message=plain_message,
-                        from_email=settings.DEFAULT_FROM_EMAIL,
-                        recipient_list=[instance.user.email],
-                        html_message=html_message,
-                        fail_silently=False,
-                    )
+
+                    if settings.USE_REAL_EMAIL and SENDGRID_AVAILABLE:
+                        try:
+                            sg = sendgrid.SendGridAPIClient(api_key=settings.SENDGRID_API_KEY)
+                            message = Mail(
+                                from_email=settings.DEFAULT_FROM_EMAIL,
+                                to_emails=instance.user.email,
+                                subject=subject,
+                                html_content=html_message,
+                                plain_text_content=plain_message
+                            )
+                            response = sg.send(message)
+                            print(f"✅ SendGrid API response: {response.status_code}")
+                            send_result = 1 if response.status_code in [200, 201, 202] else 0
+                        except Exception as e:
+                            print(f"❌ SendGrid API error: {e}")
+                            send_result = 0
+                    else:
+                        # Fallback to Django's send_mail for local development
+                        send_result = send_mail(
+                            subject=subject,
+                            message=plain_message,
+                            from_email=settings.DEFAULT_FROM_EMAIL,
+                            recipient_list=[instance.user.email],
+                            html_message=html_message,
+                            fail_silently=False,
+                        )
                     
                     result = {
                         'success': True,

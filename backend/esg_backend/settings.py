@@ -196,6 +196,8 @@ if USE_REAL_EMAIL:
         EMAIL_USE_TLS = True
         EMAIL_HOST_USER = 'apikey'  # This is literally 'apikey' for SendGrid
         EMAIL_HOST_PASSWORD = os.environ.get('SENDGRID_API_KEY')
+        # Add this line after EMAIL_HOST_PASSWORD
+        SENDGRID_API_KEY = EMAIL_HOST_PASSWORD  # Use the same value
     else:
         # SMTP email sending (Gmail, etc.)
         EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

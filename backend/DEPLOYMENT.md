@@ -27,8 +27,20 @@ ALLOWED_HOSTS=esg-portal.onrender.com
 
 ### Build Command
 ```bash
-cd backend && pip install -r requirements.txt && python manage.py migrate && python manage.py collectstatic --noinput
+cd backend && pip install -r requirements.txt && python manage.py migrate && python manage.py populate_profiling_questions && python manage.py collectstatic --noinput
 ```
+
+### Post-Deployment Setup
+After deployment, run this command to ensure profiling questions are populated:
+
+```bash
+python manage.py populate_profiling_questions
+```
+
+This command will:
+- Populate all 22 profiling questions needed for the wizard
+- Skip questions where corresponding data elements don't exist
+- Can be run multiple times safely (idempotent)
 
 ## Fixes Applied
 

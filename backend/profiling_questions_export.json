@@ -1,0 +1,135 @@
+✅ Using development SQLite database
+[
+  {
+    "question_id": "cond_hosp_e_003",
+    "text": "Does your company use a district cooling service for air conditioning?",
+    "activates_element": "HOSP-E-003",
+    "order": 1
+  },
+  {
+    "question_id": "cond_hosp_e_004",
+    "text": "Do you use LPG (cooking gas or similar fuel) in your operations?",
+    "activates_element": "HOSP-E-004",
+    "order": 2
+  },
+  {
+    "question_id": "cond_hosp_e_006",
+    "text": "Do you segregate and recycle any of your waste (paper, plastic, etc.)?",
+    "activates_element": "HOSP-E-006",
+    "order": 3
+  },
+  {
+    "question_id": "cond_hosp_e_007",
+    "text": "Do you have petrol-fueled vehicles (company cars/fleet)?",
+    "activates_element": "HOSP-E-007",
+    "order": 4
+  },
+  {
+    "question_id": "cond_hosp_e_008",
+    "text": "Do your company vehicles use diesel fuel (e.g., trucks or generators on wheels)?",
+    "activates_element": "HOSP-E-008",
+    "order": 5
+  },
+  {
+    "question_id": "cond_hosp_e_009",
+    "text": "Does your company use diesel backup generators for power?",
+    "activates_element": "HOSP-E-009",
+    "order": 6
+  },
+  {
+    "question_id": "cond_hosp_e_010",
+    "text": "Do you have air conditioning or refrigeration units that require refrigerant (gas) top-ups or servicing?",
+    "activates_element": "HOSP-E-010",
+    "order": 7
+  },
+  {
+    "question_id": "cond_hosp_e_017",
+    "text": "Does your organization have significant value chain emissions that should be reported?",
+    "activates_element": "HOSP-E-017",
+    "order": 8
+  },
+  {
+    "question_id": "cond_hosp_e_021",
+    "text": "Does your organization purchase carbon offsets to compensate for emissions?",
+    "activates_element": "HOSP-E-021",
+    "order": 9
+  },
+  {
+    "question_id": "cond_hosp_e_022",
+    "text": "Does your company generate any hazardous waste (e.g. chemicals, batteries, medical waste)?",
+    "activates_element": "HOSP-E-022",
+    "order": 10
+  },
+  {
+    "question_id": "cond_hosp_e_023",
+    "text": "Do you generate any electricity on-site from renewable sources (solar panels, etc.)?",
+    "activates_element": "HOSP-E-023",
+    "order": 11
+  },
+  {
+    "question_id": "cond_hosp_s_034",
+    "text": "Does your company make financial or in-kind donations to the community or charitable causes?",
+    "activates_element": "HOSP-S-034",
+    "order": 12
+  },
+  {
+    "question_id": "cond_hosp_g_041",
+    "text": "Do you have a formal process for selecting or evaluating your main suppliers?",
+    "activates_element": "HOSP-G-041",
+    "order": 13
+  },
+  {
+    "question_id": "cond_hosp_e_042",
+    "text": "Do you have diesel-fueled vehicles or generators?",
+    "activates_element": "HOSP-E-042",
+    "order": 14
+  },
+  {
+    "question_id": "cond_hosp_g_061",
+    "text": "Have you set a target to reduce your carbon footprint?",
+    "activates_element": "HOSP-G-061",
+    "order": 15
+  },
+  {
+    "question_id": "cond_hosp_e_066",
+    "text": "Do you have separate water meters for high consumption areas?",
+    "activates_element": "HOSP-E-066",
+    "order": 16
+  },
+  {
+    "question_id": "cond_hosp_e_069",
+    "text": "Do you use or purchase renewable energy?",
+    "activates_element": "HOSP-E-069",
+    "order": 17
+  },
+  {
+    "question_id": "cond_hosp_g_070",
+    "text": "Do you have automatic systems to turn off electricity when rooms are not in use?",
+    "activates_element": "HOSP-G-070",
+    "order": 18
+  },
+  {
+    "question_id": "cond_hosp_e_072",
+    "text": "Do you track your recycling rate?",
+    "activates_element": "HOSP-E-072",
+    "order": 19
+  },
+  {
+    "question_id": "cond_hosp_e_073",
+    "text": "Do you compost your organic waste?",
+    "activates_element": "HOSP-E-073",
+    "order": 20
+  },
+  {
+    "question_id": "cond_hosp_s_077",
+    "text": "Do you collaborate with local stakeholders on environmental initiatives?",
+    "activates_element": "HOSP-S-077",
+    "order": 21
+  },
+  {
+    "question_id": "cond_hosp_g_080",
+    "text": "Do you purchase eco-labeled equipment?",
+    "activates_element": "HOSP-G-080",
+    "order": 22
+  }
+]

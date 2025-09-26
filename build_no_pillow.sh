@@ -28,6 +28,10 @@ python3 manage.py collectstatic --no-input
 echo "Running database migrations..."
 python3 manage.py migrate
 
+# Populate profiling questions
+echo "Populating profiling questions..."
+python3 manage.py populate_profiling_questions
+
 # Initialize production data
 echo "Initializing production data..."
 python3 init_production_data.py

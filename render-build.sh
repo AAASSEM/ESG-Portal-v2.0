@@ -34,6 +34,10 @@ python manage.py collectstatic --noinput
 echo "🗃️  Running database migrations..."
 python manage.py migrate
 
+# Populate profiling questions for the wizard
+echo "❓ Populating profiling questions..."
+python manage.py populate_profiling_questions
+
 # Populate initial data if needed (development only)
 if [ "$NODE_ENV" != "production" ]; then
     echo "🌱 Populating initial data..."

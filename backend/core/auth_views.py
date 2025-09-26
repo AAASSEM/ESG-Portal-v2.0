@@ -436,10 +436,15 @@ class ResetPasswordView(APIView):
             if current_password == 'temporary_setup_password':
                 success_message = 'Account setup completed successfully'
                 print(f"✅ Account setup completed for user: {request.user.username}")
+
+                # Refresh user session with complete data after account setup
+                from django.contrib.auth import login
+                login(request, request.user)
+                print(f"🔄 User session refreshed with complete data")
             else:
                 success_message = 'Password reset successfully'
                 print(f"✅ Password reset completed for user: {request.user.username}")
-            
+
             return Response({
                 'message': success_message,
                 'success': True

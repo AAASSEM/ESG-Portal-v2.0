@@ -28,6 +28,10 @@ python3 manage.py collectstatic --no-input
 echo "Running database migrations..."
 python3 manage.py migrate
 
+# Load 80 ESG framework elements from fixtures
+echo "Loading comprehensive ESG framework (80 elements)..."
+python3 manage.py loaddata fixtures/data_elements_fixture.json || echo "Data elements fixture not found"
+
 # Populate profiling questions
 echo "Populating profiling questions..."
 python3 manage.py populate_profiling_questions

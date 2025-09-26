@@ -1,289 +1,274 @@
- How Email Sending Works Locally vs Production       
 
-  1. Email Backend Configuration (settings.py:168-207)
+this from another model , but that how it should work 
 
-  Environment-Based Email Backend Selection:
 
-  # Email Configuration
-  USE_REAL_EMAIL = os.environ.get('USE_REAL_EMAIL', 'False').lower() == 'true'
-  EMAIL_SERVICE = os.environ.get('EMAIL_SERVICE', 'console')  # console, smtp, sendgrid
+How Questions Are Populated in the Database
 
-  if USE_REAL_EMAIL:
-      if EMAIL_SERVICE == 'sendgrid':
-          # Production: SendGrid API email sending (recommended)
-          EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-          EMAIL_HOST = 'smtp.sendgrid.net'
-          EMAIL_PORT = 587
-          EMAIL_USE_TLS = True
-          EMAIL_HOST_USER = 'apikey'  # Literally 'apikey' for SendGrid
-          EMAIL_HOST_PASSWORD = os.environ.get('SENDGRID_API_KEY')
-      else:
-          # Alternative: SMTP email sending (Gmail, etc.)
-          EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-          EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
-          EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
-          EMAIL_USE_TLS = True
-          EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
-          EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
-  else:
-      # Development: Print emails to console
-      EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+  The system uses a dual approach for populating profiling questions: Legacy System for basic questions and New Framework System for dynamic
+  questions.
 
-  Email Settings:
+  1. Legacy Question Population (populate_initial_data.py)
 
-  DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@esgportal.com')
-  EMAIL_SUBJECT_PREFIX = '[ESG Portal] '
-  EMAIL_VERIFICATION_TOKEN_EXPIRE_HOURS = 24
+  Management Command Approach:
 
-  # Frontend URL for email links
-  FRONTEND_URL = os.environ.get('FRONTEND_URL',
-      'https://esg-portal.onrender.com' if not DEBUG else 'http://localhost:3001')
+  python manage.py populate_initial_data
 
-  # Backend URL for magic links (API endpoint, not frontend)
-  BACKEND_URL = os.environ.get('BACKEND_URL',
-      'https://esg-portal.onrender.com' if not DEBUG else 'http://localhost:8080')
+  Hardcoded Questions (lines 279-314):
 
-  2. Email Sending Implementation
+  def create_profiling_questions(self):
+      """Create profiling wizard questions"""
+      questions = [
+          {
+              'question_id': 'has_backup_generators',
+              'text': 'Do you have backup generators on-site?',
+              'activates_element_id': 'generator_fuel',
+              'order': 1
+          },
+          {
+              'question_id': 'has_company_vehicles',
+              'text': 'Do you own or operate company vehicles for operations?',
+              'activates_element_id': 'vehicle_fuel',
+              'order': 2
+          },
+          {
+              'question_id': 'uses_lpg',
+              'text': 'Do you use LPG (liquid petroleum gas) in your operations?',
+              'activates_element_id': 'lpg_usage',
+              'order': 3
+          },
+          {
+              'question_id': 'has_renewable_energy',
+              'text': 'Do you use solar panels or other renewable energy sources?',
+              'activates_element_id': 'renewable_energy',
+              'order': 4
+          }
+      ]
 
-  Core Email Service (email_service.py:133-140):
+      for question_data in questions:
+          ProfilingQuestion.objects.get_or_create(
+              question_id=question_data['question_id'],
+              defaults=question_data
+          )
 
-  send_result = send_mail(
-      subject=subject,
-      message=plain_message,
-      from_email=settings.DEFAULT_FROM_EMAIL,
-      recipient_list=[recipient_email],
-      html_message=html_message,
-      fail_silently=False,
+  Related Data Elements Created (lines 187-234):
+
+  # Conditional data elements that questions activate
+  conditional_elements = [
+      {
+          'element_id': 'generator_fuel',
+          'name': 'Generator Fuel Consumption',
+          'description': 'Fuel for backup generators',
+          'unit': 'liters',
+          'is_metered': True,
+          'frameworks': [('DST', 'monthly'), ('ESG', 'monthly')]
+      },
+      {
+          'element_id': 'vehicle_fuel',
+          'name': 'Vehicle Fuel Consumption',
+          'description': 'Company vehicle fuel',
+          'unit': 'liters',
+          'is_metered': True,
+          'frameworks': [('DST', 'monthly'), ('ESG', 'monthly')]
+      },
+      # ... more elements
+  ]
+
+  2. New Framework System (load_initial_data.py)
+
+  JSON Fixture-Based Population:
+
+  python manage.py load_initial_data
+
+  Framework Loading (lines 34-39):
+
+  # Load from fixtures/frameworks.json
+  call_command('loaddata', 'fixtures/frameworks.json')
+
+  # Load from fixtures/framework_elements.json  
+  call_command('loaddata', 'fixtures/framework_elements.json')
+
+  # Auto-assign mandatory frameworks to companies
+  call_command('assign_mandatory_frameworks')
+
+  Framework Elements Fixture (fixtures/framework_elements.json):
+
+  {
+    "model": "core.frameworkelement",
+    "pk": "UAE-CLIMATE-E-001",
+    "fields": {
+      "framework_id": "UAE-CLIMATE-LAW-2024",
+      "element_id": "UAE-CLIMATE-E-001",
+      "name": "Direct greenhouse gas emissions (Scope 1)",
+      "description": "Total direct GHG emissions from sources owned/controlled by organization",
+      "type": "conditional",
+      "condition_logic": "has_direct_emissions == true",
+      "cadence": "annually",
+      "category": "Environmental"
+    }
+  }
+
+  3. Dynamic Question Generation
+
+  Runtime Question Creation (services.py:648-724):
+
+  class FrameworkProcessor:
+      """Processes framework elements and evaluates conditional logic"""
+
+      def get_applicable_elements(self, framework_id=None, sector=None):
+          """Get all applicable framework elements for this company"""
+          queryset = FrameworkElement.objects.all()
+          applicable_elements = []
+
+          for element in queryset:
+              if self._is_element_applicable(element):
+                  applicable_elements.append(element)
+
+          return applicable_elements
+
+      def _is_element_applicable(self, element):
+          """Evaluate if an element is applicable based on conditional logic"""
+          # Must-have elements are always applicable
+          if element.type == 'must-have':
+              return True
+
+          # Evaluate conditional logic
+          if not element.condition_logic:
+              return True
+
+          return self._evaluate_condition(element.condition_logic)
+
+  Smart Question Generation (views.py:1239-1245):
+
+  # Get or create ProfilingQuestion dynamically during answer saving
+  question, created = ProfilingQuestion.objects.get_or_create(
+      question_id=element_id,
+      defaults={
+          'text': element_id,  # Simple text from element ID
+          'activates_element': dummy_element
+      }
   )
 
-  # Check if email was actually sent
-  if send_result == 1:
-      email_sent = True
-      print(f"✅ Email sent successfully to {recipient_email}")
-  else:
-      print(f"❌ Email send failed (result={send_result})")
+  4. Question Retrieval System
 
-  Signal-Based Email Triggers (signals.py:27-68, 73-221):
+  Company-Specific Questions (services.py:134-149):
 
-  # User creation signal - triggers invitation emails
-  @receiver(post_save, sender=User)
-  def send_user_creation_email(sender, instance, created, **kwargs):
-      if created and instance.email:
-          def send_user_email():
-              has_password = instance.has_usable_password()
+  @staticmethod
+  def get_profiling_questions(company):
+      """Get all profiling questions relevant to company's frameworks"""
+      # Get company's assigned frameworks
+      company_frameworks = company.companyframework_set.all().values_list('framework_id', flat=True)
 
-              if has_password:
-                  # Self-signup: Send email verification
-                  token_obj = EmailVerificationToken.objects.create(
-                      user=instance,
-                      token_type='email_verification'
-                  )
-              else:
-                  # Admin-created: Send invitation email
-                  token_obj = EmailVerificationToken.objects.create(
-                      user=instance,
-                      token_type='invitation'
-                  )
+      # Get conditional elements required by company's frameworks
+      conditional_elements = DataElement.objects.filter(
+          type='conditional',
+          dataelementframeworkmapping__framework_id__in=company_frameworks
+      ).distinct()
 
-          # Send after database transaction commits
-          transaction.on_commit(send_user_email)
+      # Get profiling questions for these elements
+      questions = ProfilingQuestion.objects.filter(
+          activates_element__in=conditional_elements
+      ).order_by('order')
 
-  # Token creation signal - sends the actual emails
-  @receiver(post_save, sender=EmailVerificationToken)
-  def send_email_after_token_creation(sender, instance, created, **kwargs):
-      if created and instance.user.email:
-          def send_token_email():
-              if instance.token_type == 'password_reset':
-                  # Send password reset with 6-digit code
-                  send_mail(...)
-              elif instance.token_type == 'email_verification':
-                  # Send email verification with magic link
-                  send_mail(...)
-              elif instance.token_type == 'invitation':
-                  # Send invitation with magic link
-                  send_mail(...)
+      return questions
 
-          transaction.on_commit(send_token_email)
+  API Endpoint (views.py:1149-1164):
 
-  3. Local Development Email Handling
+  def for_company(self, request):
+      """Get profiling questions for a specific company"""
+      company_id = request.query_params.get('company_id')
+      company = get_user_company(request.user, company_id)
 
-  Console Backend (when USE_REAL_EMAIL=False):
+      questions = ProfilingService.get_profiling_questions(company)
+      serializer = self.get_serializer(questions, many=True)
+      return Response(serializer.data)
 
-  EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+  5. Population Methods Comparison
 
-  How it works:
-  - No actual emails sent - emails are printed to console/terminal
-  - Development debugging - see exact email content and formatting
-  - No external dependencies - no SMTP server or API keys needed
-  - Instant feedback - emails appear immediately in Django console
+  Legacy System (ProfilingQuestion):
 
-  Example Console Output:
-  Content-Type: text/plain; charset="utf-8"
-  MIME-Version: 1.0
-  Content-Transfer-Encoding: 8bit
-  Subject: [ESG Portal] You've been invited to ESG Portal
-  From: noreply@esgportal.com
-  To: user@example.com
-  Date: Thu, 26 Sep 2025 10:30:00 -0000
-  Message-ID: <...>
+  # Hardcoded questions in management command
+  QUESTIONS = [
+      'has_backup_generators',
+      'has_company_vehicles',
+      'uses_lpg',
+      'has_renewable_energy'
+  ]
 
-  Welcome to ESG Portal, John!
+  # Links to specific DataElement records
+  activates_element_id = 'generator_fuel'
 
-  You've been invited to join ESG Portal as a Site Manager.
+  New System (FrameworkElement):
 
-  Click the magic link below to access your account:
-  http://localhost:8080/api/auth/magic-link/abc123def456ghi789jkl/
+  // Dynamic questions from framework elements
+  {
+    "element_id": "UAE-CLIMATE-E-005",
+    "condition_logic": "facility_type == 'manufacturing'",
+    "type": "conditional"
+  }
 
-  This invitation link will expire in 7 days.
+  6. Database Population Workflow
 
-  Local Email Testing Options:
+  Initial Setup:
 
-  1. Console Backend (default): Print to terminal
-  2. File Backend: Save emails as files
-  3. Dummy Backend: Discard emails silently
-  4. SMTP Backend: Use local SMTP server (mailcatcher, etc.)
+  1. Run Migrations: python manage.py migrate
+  2. Load Framework Data: python manage.py load_initial_data
+  3. Create Companies: Via admin/API
+  4. Auto-Assign Frameworks: Mandatory frameworks automatically assigned
 
-  4. Production Email Handling
+  Question Generation Flow:
 
-  SendGrid Configuration (Production Recommended):
+  1. Company Created → Gets mandatory frameworks
+  2. Framework Assigned → Contains FrameworkElements
+  3. User Access Profiling → Questions filtered by company's frameworks
+  4. Conditional Logic → Only applicable questions shown
+  5. Answer Saved → ProfilingQuestion created if needed
 
-  # Environment variables needed in production:
-  USE_REAL_EMAIL=true
-  EMAIL_SERVICE=sendgrid
-  SENDGRID_API_KEY=SG.your_sendgrid_api_key_here
-  DEFAULT_FROM_EMAIL=noreply@yourdomain.com
+  Data Sources:
 
-  SendGrid Setup:
-  EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-  EMAIL_HOST = 'smtp.sendgrid.net'
-  EMAIL_PORT = 587
-  EMAIL_USE_TLS = True
-  EMAIL_HOST_USER = 'apikey'  # Literally 'apikey'
-  EMAIL_HOST_PASSWORD = os.environ.get('SENDGRID_API_KEY')
+  populate_initial_data.py (Legacy)
+  ├── 4 hardcoded questions
+  ├── Links to DataElement
+  └── Basic conditional logic
 
-  Alternative SMTP Configuration:
+  fixtures/framework_elements.json (New)  
+  ├── 100+ dynamic elements
+  ├── Complex condition_logic
+  ├── Framework-specific
+  └── Sector-specific
 
-  # Environment variables for Gmail/custom SMTP:
-  USE_REAL_EMAIL=true
-  EMAIL_SERVICE=smtp
-  EMAIL_HOST=smtp.gmail.com
-  EMAIL_PORT=587
-  EMAIL_HOST_USER=your-email@gmail.com
-  EMAIL_HOST_PASSWORD=your-app-password
+  7. Question Types
 
-  5. Email Types and Templates
+  Static Questions (Legacy):
 
-  Email Templates Structure (/backend/templates/emails/):
+  - Source: Management command
+  - Count: ~4 basic questions
+  - Logic: Simple yes/no → activate element
+  - Maintenance: Code changes required
 
-  templates/emails/
-  ├── email_verification.html        # Legacy email verification
-  ├── email_verification_magic.html  # Magic link email verification  
-  ├── password_reset.html            # Password reset with 6-digit code
-  ├── invitation.html                # User invitation magic link
-  └── corresponding .txt files       # Plain text versions
+  Dynamic Questions (New):
 
-  Email Types and Content:
+  - Source: JSON fixtures + framework assignment
+  - Count: Unlimited based on frameworks
+  - Logic: Complex conditional evaluation
+  - Maintenance: JSON file updates
 
-  1. Invitation Email (invitation.html):
+  8. Population Commands
 
-  - Trigger: Admin creates user without password
-  - Content: Magic link for account setup
-  - URL: {BACKEND_URL}/api/auth/magic-link/{token}/
-  - Expiry: 7 days
-  - Template Variables: user_name, invitation_url, site_name, role
+  Available Commands:
 
-  2. Email Verification (email_verification_magic.html):
+  # Legacy system
+  python manage.py populate_initial_data
 
-  - Trigger: Self-signup with email
-  - Content: Magic link for email verification
-  - URL: Same magic link endpoint
-  - Expiry: 24 hours
-  - Template Variables: user_name, verification_url, site_name
+  # New system  
+  python manage.py load_initial_data
+  python manage.py load_frameworks
+  python manage.py assign_mandatory_frameworks
 
-  3. Password Reset (password_reset.html):
+  # Force reload
+  python manage.py load_initial_data --force
 
-  - Trigger: User requests password reset
-  - Content: 6-digit verification code
-  - Method: Code entry in frontend form
-  - Expiry: 1 hour
-  - Template Variables: user_name, verification_code, site_name
+  Summary:
 
-  Magic Link URLs:
-
-  # Development
-  magic_link_url = f"http://localhost:8080/api/auth/magic-link/{token}/"
-
-  # Production  
-  magic_link_url = f"https://esg-portal.onrender.com/api/auth/magic-link/{token}/"
-
-  6. Privacy Protection with SimpleLogin
-
-  Email Address Resolution (email_service.py:26-58):
-
-  def get_user_email_address(user):
-      """
-      Get email address for sending - uses SimpleLogin alias if available
-      """
-      if not getattr(settings, 'SIMPLELOGIN_API_KEY', None):
-          return user.email  # Direct email if no SimpleLogin
-
-      try:
-          # Try to get SimpleLogin alias
-          alias_info = simplelogin.get_user_alias(user.email)
-          if alias_info and alias_info.get('alias'):
-              logger.info(f"Using SimpleLogin alias for {user.email}")
-              return alias_info['alias']
-      except Exception as e:
-          logger.error(f"SimpleLogin error: {str(e)}, using direct email")
-
-      return user.email  # Fallback to direct email
-
-  SimpleLogin Integration:
-
-  - Purpose: Privacy protection for user email addresses
-  - Functionality: Creates alias emails that forward to user's real email
-  - Configuration: SIMPLELOGIN_API_KEY environment variable
-  - Fallback: Uses direct email if SimpleLogin unavailable
-
-  7. Email Delivery Flow
-
-  Complete Email Sending Process:
-
-  1. Trigger Event: User creation, password reset request, etc.
-  2. Signal Handler: Django signal creates EmailVerificationToken
-  3. Token Creation: Generates unique token with expiry
-  4. Email Assembly:
-    - Template rendering with context variables
-    - HTML and plain text versions
-    - Subject line with prefix
-  5. Address Resolution: SimpleLogin alias or direct email
-  6. Backend Selection: Console (dev) or SMTP/SendGrid (prod)
-  7. Email Dispatch: send_mail() function call
-  8. Delivery Confirmation: Check return value (1 = success)
-  9. Error Handling: Log failures, continue gracefully
-
-  Development vs Production Comparison:
-
-  | Aspect                | Local Development            | Production                   |
-  |-----------------------|------------------------------|------------------------------|
-  | Backend               | Console (prints to terminal) | SendGrid/SMTP (real sending) |
-  | API Keys              | Not required                 | SENDGRID_API_KEY required    |
-  | Email Delivery        | Immediate console output     | Actual email delivery        |
-  | Testing               | View email content instantly | Need real email account      |
-  | External Dependencies | None                         | SendGrid account/SMTP server |
-  | URLs in emails        | localhost:8080               | esg-portal.onrender.com      |
-  | From Address          | noreply@esgportal.com        | Configured domain email      |
-  | Privacy Protection    | Optional SimpleLogin         | Same SimpleLogin integration |
-
-  Production Environment Variables Required:
-
-  USE_REAL_EMAIL=true
-  EMAIL_SERVICE=sendgrid
-  SENDGRID_API_KEY=SG.your_api_key_here
-  DEFAULT_FROM_EMAIL=noreply@yourdomain.com
-  FRONTEND_URL=https://your-frontend.onrender.com
-  BACKEND_URL=https://your-backend.onrender.com
-  SIMPLELOGIN_API_KEY=optional_privacy_key
-
-  The system provides a robust email infrastructure that seamlessly transitions from development (console output) to production (real email        
-  delivery) through environment variable configuration, with comprehensive template support and privacy protection features.
+  The system evolved from hardcoded questions in management commands to dynamic framework-based questions loaded from JSON fixtures. Questions     
+  are now company-specific, framework-driven, and support complex conditional logic for applicability. The new system generates questions
+  on-demand based on assigned frameworks and evaluates conditional logic to show only relevant questions to each company.

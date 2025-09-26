@@ -27,20 +27,26 @@ ALLOWED_HOSTS=esg-portal.onrender.com
 
 ### Build Command
 ```bash
-cd backend && pip install -r requirements.txt && python manage.py migrate && python manage.py populate_profiling_questions && python manage.py collectstatic --noinput
+cd backend && pip install -r requirements.txt && python manage.py migrate && python manage.py loaddata fixtures/data_elements_fixture.json && python manage.py populate_profiling_questions && python manage.py collectstatic --noinput
 ```
 
 ### Post-Deployment Setup
-After deployment, run this command to ensure profiling questions are populated:
+After deployment, run these commands to ensure complete data population:
 
 ```bash
+# Load 80 data elements from fixtures
+python manage.py loaddata fixtures/data_elements_fixture.json
+
+# Populate 22 profiling questions
 python manage.py populate_profiling_questions
 ```
 
-This command will:
-- Populate all 22 profiling questions needed for the wizard
-- Skip questions where corresponding data elements don't exist
-- Can be run multiple times safely (idempotent)
+This setup will:
+- **Load 80 ESG framework data elements** from JSON fixtures (production-safe)
+- **Populate 22 profiling questions** needed for the wizard
+- **Skip missing dependencies** gracefully with error messages
+- **Work reliably** in production without Excel dependencies
+- **Can be run multiple times** safely (idempotent)
 
 ## Fixes Applied
 

@@ -531,16 +531,9 @@ const Meter = () => {
 
   if (loading) {
     return (
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <i className="fas fa-cog fa-spin text-blue-600 text-2xl"></i>
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Setting Up Your Meters</h3>
-            <p className="text-gray-600">Auto-creating meters based on your data requirements...</p>
-          </div>
-        </div>
+      <div className="flex justify-center items-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+        <span className="ml-3 text-gray-600">Loading meters...</span>
       </div>
     );
   }
@@ -552,7 +545,7 @@ const Meter = () => {
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 sm:p-6 mb-8">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <i className="fas fa-magic text-blue-600"></i>
+              <i className="fas fa-cog fa-spin text-blue-600"></i>
             </div>
             <div>
               <h3 className="text-base sm:text-lg font-semibold text-blue-900">Meters Auto-Created</h3>

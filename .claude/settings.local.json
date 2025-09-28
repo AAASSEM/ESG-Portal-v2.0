@@ -7,7 +7,8 @@
       "Bash(python3 manage.py shell:*)",
       "Bash(python3 manage.py migrate:*)",
       "Bash(cp:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Read(//mnt/c/Users/20100/thefinal/**)"
     ],
     "deny": [],
     "ask": [],

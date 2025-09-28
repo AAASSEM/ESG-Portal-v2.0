@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth, makeAuthenticatedRequest } from '../context/AuthContext';
@@ -21,7 +21,6 @@ const Data = () => {
   const [loading, setLoading] = useState(true);
   const [months, setMonths] = useState([]);
   const [dataEntries, setDataEntries] = useState([]);
-  const [filteredEntries, setFilteredEntries] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadResults, setUploadResults] = useState(null);
   const [showAssignModal, setShowAssignModal] = useState(false);
@@ -296,15 +295,18 @@ const Data = () => {
       
       setLoading(true);
       try {
-        // Load available months for current year
-        const availableMonths = await fetchAvailableMonths(selectedYear);
+        // Load all data in parallel for faster loading
+        const [availableMonths, entries, annualProgress, monthlyProgress] = await Promise.all([
+          fetchAvailableMonths(selectedYear),
+          fetchDataEntries(selectedYear, selectedMonth),
+          fetchProgress(selectedYear),
+          fetchProgress(selectedYear, selectedMonth)
+        ]);
+
+        // Generate months data
         const currentDate = new Date();
         const monthsData = await generateMonthsData(availableMonths, selectedYear, currentDate.getMonth() + 1, selectedMonth);
         setMonths(monthsData);
-
-        // Load progress data
-        const annualProgress = await fetchProgress(selectedYear);
-        const monthlyProgress = await fetchProgress(selectedYear, selectedMonth);
         
         setProgressData({
           annual: { 
@@ -326,14 +328,11 @@ const Data = () => {
           }
         });
 
-        // Load data entries for current month - will include new meters automatically
-        // console.log('Loading data entries for company:', companyId, 'year:', selectedYear, 'month:', selectedMonth);
-        const entries = await fetchDataEntries(selectedYear, selectedMonth);
+        // Process entries data (already fetched in parallel)
         // console.log('Raw entries from API:', entries);
-        
         let transformedEntries = [];
-        
-        // Process entries data
+
+        // Transform entries data
         transformedEntries = entries.map(entry => ({
           id: entry.submission.id,
           name: entry.element_name,
@@ -378,37 +377,70 @@ const Data = () => {
     }
   }, [companyId, user?.role]);
 
-  // Update filtered entries when search, filter, grouping, or assignment changes
-  useEffect(() => {
+  // Role-based functionality controls - moved before functions to avoid hoisting issues
+  const canFullAccess = ['super_user', 'admin'].includes(user?.role); // Full access + approval rights
+  const canReviewAndLimitedApproval = ['site_manager'].includes(user?.role); // Review + limited approval
+  const canEditAssignedTasks = ['uploader'].includes(user?.role); // Edit assigned tasks only
+  const isViewOnly = ['viewer'].includes(user?.role); // View only
+  const isMeterDataOnly = ['meter_manager'].includes(user?.role); // Limited access to view meter-related data only
+
+  // Filter and search function - moved before useMemo to avoid hoisting issues
+  const applyFiltersAndSearch = (entries) => {
+    let filtered = [...entries];
+
+    // Apply role-based filtering first - meter managers only see metered tasks
+    if (isMeterDataOnly) {
+      filtered = filtered.filter(entry => entry.meter_id !== null);
+    }
+
+    // Apply search filter
+    if (searchTerm.trim()) {
+      filtered = filtered.filter(entry =>
+        entry.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        entry.meter.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        entry.category.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Apply view filter
+    if (viewFilter === 'Metered') {
+      filtered = filtered.filter(entry => entry.meter_id !== null);
+    } else if (viewFilter === 'Non-metered') {
+      filtered = filtered.filter(entry => entry.meter_id === null);
+    } else if (viewFilter === 'Missing') {
+      filtered = filtered.filter(entry => entry.status === 'missing');
+    } else if (viewFilter === 'Partial') {
+      filtered = filtered.filter(entry => entry.status === 'partial');
+    } else if (viewFilter === 'Complete') {
+      filtered = filtered.filter(entry => entry.status === 'complete');
+    }
+    // 'All' shows everything
+
+    return filtered;
+  };
+
+  // Optimized filtering with useMemo for better performance
+  const filteredEntries = useMemo(() => {
     let filtered = applyFiltersAndSearch(dataEntries);
-    
+
     // Role-based assignment filtering for meter managers and uploaders
     if (['meter_manager', 'uploader'].includes(user?.role) && assignments && Object.keys(assignments).length > 0) {
-      console.log('🔍 Data.js - Applying assignment filtering for', user?.role);
-      console.log('🔍 Data.js - Available assignments:', assignments);
-      console.log('🔍 Data.js - User ID:', user?.id);
-
       const userAssignedTasks = [];
 
       // Step 1: Check category assignments
       Object.entries(assignments.category_assignments || {}).forEach(([category, assignedUserObj]) => {
-        console.log(`🔍 Data.js - Checking category: ${category} -> ${assignedUserObj?.user_id}`);
         if (assignedUserObj?.user_id === user.id) {
-          console.log(`✅ Data.js - Category ${category} assigned to user ${user.id}`);
           // Add ALL tasks from this assigned category
           const categoryTasks = filtered.filter(task => {
             return task.element_category === category;
           });
           userAssignedTasks.push(...categoryTasks);
-          console.log(`✅ Data.js - Added ${categoryTasks.length} tasks from category ${category}`);
         }
       });
 
       // Step 2: Check individual element assignments
       Object.entries(assignments.element_assignments || {}).forEach(([elementId, assignedUserObj]) => {
-        console.log(`🔍 Data.js - Checking element: ${elementId} -> ${assignedUserObj?.user_id}`);
         if (assignedUserObj?.user_id === user.id) {
-          console.log(`✅ Data.js - Element ${elementId} assigned to user ${user.id}`);
           // Add this specific assigned element's tasks
           const elementTasks = filtered.filter(task => {
             return task.element_id == elementId;
@@ -418,24 +450,22 @@ const Data = () => {
           elementTasks.forEach(task => {
             if (!userAssignedTasks.some(existing => existing.id === task.id)) {
               userAssignedTasks.push(task);
-              console.log(`✅ Data.js - Added task: ${task.name}`);
             }
           });
         }
       });
 
-      console.log(`🔍 Data.js - Final assigned tasks: ${userAssignedTasks.length}`);
       filtered = userAssignedTasks;
     }
-    
+
     // Filter by assignment status
     if (assignmentFilter === 'assigned') {
       filtered = filtered.filter(entry => entry.assignedTo);
     } else if (assignmentFilter === 'unassigned') {
       filtered = filtered.filter(entry => !entry.assignedTo);
     }
-    
-    setFilteredEntries(filtered);
+
+    return filtered;
   }, [searchTerm, viewFilter, groupBy, dataEntries, assignmentFilter, assignments, user?.role, user?.id]);
 
   // Removed excessive window focus refresh to improve performance
@@ -831,40 +861,6 @@ const Data = () => {
     return result;
   };
 
-  // Filter and search function
-  const applyFiltersAndSearch = (entries) => {
-    let filtered = [...entries];
-
-    // Apply role-based filtering first - meter managers only see metered tasks
-    if (isMeterDataOnly) {
-      filtered = filtered.filter(entry => entry.meter_id !== null);
-    }
-
-    // Apply search filter
-    if (searchTerm.trim()) {
-      filtered = filtered.filter(entry =>
-        entry.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        entry.meter.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        entry.category.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    // Apply view filter
-    if (viewFilter === 'Metered') {
-      filtered = filtered.filter(entry => entry.meter_id !== null);
-    } else if (viewFilter === 'Non-metered') {
-      filtered = filtered.filter(entry => entry.meter_id === null);
-    } else if (viewFilter === 'Missing') {
-      filtered = filtered.filter(entry => entry.status === 'missing');
-    } else if (viewFilter === 'Partial') {
-      filtered = filtered.filter(entry => entry.status === 'partial');
-    } else if (viewFilter === 'Complete') {
-      filtered = filtered.filter(entry => entry.status === 'complete');
-    }
-    // 'All' shows everything
-
-    return filtered;
-  };
 
   // Group data function
   const groupData = (entries) => {
@@ -1118,12 +1114,6 @@ const Data = () => {
   }
 
   // Role-based functionality controls for Data Collection - CORRECTED
-  const canFullAccess = ['super_user', 'admin'].includes(user?.role); // Full access + approval rights
-  const canReviewAndLimitedApproval = ['site_manager'].includes(user?.role); // Review + limited approval
-  const canEditAssignedTasks = ['uploader'].includes(user?.role); // Edit assigned tasks only
-  const isViewOnly = ['viewer'].includes(user?.role); // View only
-  const isMeterDataOnly = ['meter_manager'].includes(user?.role); // Limited access to view meter-related data only
-
   // Task Assignment Permissions (same as List.js):
   const canAssignToAnyone = ['super_user'].includes(user?.role); // System-wide assignment
   const canAssignInCompany = ['admin'].includes(user?.role); // Company-wide, all sites
@@ -1258,23 +1248,9 @@ const Data = () => {
 
   if (loading) {
     return (
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="ml-3 text-gray-600">Loading data collection interface...</span>
-        </div>
-      </div>
-    );
-  }
-
-  // Show loading while component is fetching data
-  if (loading) {
-    return (
-      <div className="max-w-6xl mx-auto px-4">
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="ml-3 text-sm sm:text-base text-gray-600">Loading data entries...</span>
-        </div>
+      <div className="flex justify-center items-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+        <span className="ml-3 text-gray-600">Loading data entries...</span>
       </div>
     );
   }
@@ -1330,18 +1306,16 @@ const Data = () => {
                     (() => {
                       const meteredEntries = filteredEntries.filter(entry => entry.meter_id !== null);
                       const actualDataCompleted = meteredEntries.filter(entry => entry.value !== null && entry.value !== '').length;
-                      const monthlyTotal = meteredEntries.length;
-                      const annualTotal = monthlyTotal * 12;
-                      const annualDataProgress = annualTotal > 0 ? (actualDataCompleted / annualTotal) * 100 : 0;
+                      // Use backend API values for annual progress
+                      const annualDataProgress = progressData.annual?.data_progress || 0;
                       return Math.round(annualDataProgress);
                     })()
                   ) : (
                     (() => {
                       const userVisibleEntries = filteredEntries;
                       const dataCompleted = userVisibleEntries.filter(entry => entry.value !== null && entry.value !== '').length;
-                      const monthlyTotal = userVisibleEntries.length;
-                      const annualTotal = monthlyTotal * 12;
-                      const annualDataProgress = annualTotal > 0 ? (dataCompleted / annualTotal) * 100 : 0;
+                      // Use backend API values for annual progress
+                      const annualDataProgress = progressData.annual?.data_progress || 0;
                       return Math.round(annualDataProgress);
                     })()
                   )}%
@@ -1353,17 +1327,15 @@ const Data = () => {
                     (() => {
                       const meteredEntries = filteredEntries.filter(entry => entry.meter_id !== null);
                       const actualDataCompleted = meteredEntries.filter(entry => entry.value !== null && entry.value !== '').length;
-                      const monthlyTotal = meteredEntries.length;
-                      const annualTotal = monthlyTotal * 12;
-                      return annualTotal > 0 ? (actualDataCompleted / annualTotal) * 100 : 0;
+                      // Use backend API values for annual progress
+                      return progressData.annual?.data_progress || 0;
                     })()
                   ) : (
                     (() => {
                       const userVisibleEntries = filteredEntries;
                       const dataCompleted = userVisibleEntries.filter(entry => entry.value !== null && entry.value !== '').length;
-                      const monthlyTotal = userVisibleEntries.length;
-                      const annualTotal = monthlyTotal * 12;
-                      return annualTotal > 0 ? (dataCompleted / annualTotal) * 100 : 0;
+                      // Use backend API values for annual progress
+                      return progressData.annual?.data_progress || 0;
                     })()
                   )}%` 
                 }}></div>
@@ -1378,7 +1350,7 @@ const Data = () => {
                       const meteredEntries = filteredEntries.filter(entry => entry.meter_id !== null);
                       const actualEvidenceCompleted = meteredEntries.filter(entry => entry.evidence_file).length;
                       const monthlyTotal = meteredEntries.length;
-                      const annualTotal = monthlyTotal * 12;
+                      const annualTotal = progressData.annual?.total_points || 0;
                       const annualEvidenceProgress = annualTotal > 0 ? (actualEvidenceCompleted / annualTotal) * 100 : 0;
                       return Math.round(annualEvidenceProgress);
                     })()
@@ -1387,9 +1359,9 @@ const Data = () => {
                       const userVisibleEntries = filteredEntries;
                       const evidenceCompleted = userVisibleEntries.filter(entry => entry.evidence_file).length;
                       const monthlyTotal = userVisibleEntries.length;
-                      const annualTotal = monthlyTotal * 12;
-                      const annualEvidenceProgress = annualTotal > 0 ? (evidenceCompleted / annualTotal) * 100 : 0;
-                      return Math.round(annualEvidenceProgress);
+                      const annualTotal = progressData.annual?.total_points || 0;
+                      // Use backend API values for annual evidence progress
+                      return Math.round(progressData.annual?.evidence_progress || 0);
                     })()
                   )}%
                 </span>
@@ -1401,7 +1373,7 @@ const Data = () => {
                       const meteredEntries = filteredEntries.filter(entry => entry.meter_id !== null);
                       const actualEvidenceCompleted = meteredEntries.filter(entry => entry.evidence_file).length;
                       const monthlyTotal = meteredEntries.length;
-                      const annualTotal = monthlyTotal * 12;
+                      const annualTotal = progressData.annual?.total_points || 0;
                       return annualTotal > 0 ? (actualEvidenceCompleted / annualTotal) * 100 : 0;
                     })()
                   ) : (
@@ -1409,8 +1381,9 @@ const Data = () => {
                       const userVisibleEntries = filteredEntries;
                       const evidenceCompleted = userVisibleEntries.filter(entry => entry.evidence_file).length;
                       const monthlyTotal = userVisibleEntries.length;
-                      const annualTotal = monthlyTotal * 12;
-                      return annualTotal > 0 ? (evidenceCompleted / annualTotal) * 100 : 0;
+                      const annualTotal = progressData.annual?.total_points || 0;
+                      // Use backend API values for annual evidence progress
+                      return progressData.annual?.evidence_progress || 0;
                     })()
                   )}%` 
                 }}></div>
@@ -1420,24 +1393,19 @@ const Data = () => {
             <div className="pt-4 border-t border-gray-200 text-center">
               <div className="text-2xl font-bold text-gray-900">
                 {isMeterDataOnly ? (
-                  // For meter managers: show actual completed, but annual total
+                  // For meter managers: show cumulative completed across all months, with annual total
                   (() => {
-                    const meteredEntries = filteredEntries.filter(entry => entry.meter_id !== null);
-                    const actualCompleted = meteredEntries.filter(entry => entry.value !== null && entry.value !== '').length + 
-                                           meteredEntries.filter(entry => entry.evidence_file).length;
-                    const monthlyTotal = meteredEntries.length * 2;
-                    const annualTotal = monthlyTotal * 12;
+                    // Use backend API values for both completed and total (cumulative across all months)
+                    const actualCompleted = (progressData.annual?.data_complete || 0) + (progressData.annual?.evidence_complete || 0);
+                    const annualTotal = progressData.annual?.total_points || 0;
                     return `${actualCompleted} / ${annualTotal}`;
                   })()
                 ) : (
-                  // For other users: show filtered tasks only
+                  // For other users: show cumulative completed across all months, with annual total
                   (() => {
-                    const userVisibleEntries = filteredEntries;
-                    const dataCompleted = userVisibleEntries.filter(entry => entry.value !== null && entry.value !== '').length;
-                    const evidenceCompleted = userVisibleEntries.filter(entry => entry.evidence_file).length;
-                    const totalCompleted = dataCompleted + evidenceCompleted;
-                    const monthlyTotal = userVisibleEntries.length * 2; // Each task has data + evidence
-                    const annualTotal = monthlyTotal * 12;
+                    // Use backend API values for both completed and total (cumulative across all months)
+                    const totalCompleted = (progressData.annual?.data_complete || 0) + (progressData.annual?.evidence_complete || 0);
+                    const annualTotal = progressData.annual?.total_points || 0;
                     return `${totalCompleted} / ${annualTotal}`;
                   })()
                 )}
@@ -1550,8 +1518,9 @@ const Data = () => {
                     const meteredEntries = filteredEntries.filter(entry => entry.meter_id !== null);
                     const meteredCompleted = meteredEntries.filter(entry => entry.value !== null && entry.value !== '').length + 
                                             meteredEntries.filter(entry => entry.evidence_file).length;
-                    const meteredTotal = meteredEntries.length * 2;
-                    return `${meteredCompleted} / ${meteredTotal}`;
+                    // Use backend API values for monthly total
+                    const monthlyTotal = progressData.monthly?.total_points || 0;
+                    return `${meteredCompleted} / ${monthlyTotal}`;
                   })()
                 ) : (
                   // For other users: show filtered tasks
@@ -1560,8 +1529,9 @@ const Data = () => {
                     const dataCompleted = userVisibleEntries.filter(entry => entry.value !== null && entry.value !== '').length;
                     const evidenceCompleted = userVisibleEntries.filter(entry => entry.evidence_file).length;
                     const totalCompleted = dataCompleted + evidenceCompleted;
-                    const totalTasks = userVisibleEntries.length * 2; // Each entry needs data + evidence
-                    return `${totalCompleted} / ${totalTasks}`;
+                    // Use backend API values for monthly total
+                    const monthlyTotal = progressData.monthly?.total_points || 0;
+                    return `${totalCompleted} / ${monthlyTotal}`;
                   })()
                 )}
               </div>
@@ -1575,8 +1545,9 @@ const Data = () => {
                     const meteredEntries = filteredEntries.filter(entry => entry.meter_id !== null);
                     const meteredCompleted = meteredEntries.filter(entry => entry.value !== null && entry.value !== '').length + 
                                             meteredEntries.filter(entry => entry.evidence_file).length;
-                    const meteredTotal = meteredEntries.length * 2;
-                    return `${meteredTotal - meteredCompleted} Tasks Remaining`;
+                    // Use backend API values for monthly total
+                    const monthlyTotal = progressData.monthly?.total_points || 0;
+                    return `${monthlyTotal - meteredCompleted} Tasks Remaining`;
                   })()
                 ) : (
                   (() => {
@@ -1584,8 +1555,9 @@ const Data = () => {
                     const dataCompleted = userVisibleEntries.filter(entry => entry.value !== null && entry.value !== '').length;
                     const evidenceCompleted = userVisibleEntries.filter(entry => entry.evidence_file).length;
                     const totalCompleted = dataCompleted + evidenceCompleted;
-                    const totalTasks = userVisibleEntries.length * 2; // Each entry needs data + evidence
-                    const remaining = Math.max(0, totalTasks - totalCompleted);
+                    // Use backend API values for monthly total
+                    const monthlyTotal = progressData.monthly?.total_points || 0;
+                    const remaining = Math.max(0, monthlyTotal - totalCompleted);
                     return `${remaining} Tasks Remaining`;
                   })()
                 )}

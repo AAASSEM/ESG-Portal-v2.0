@@ -1,15 +1,41 @@
 Uncaught runtime errors:
 ×
 ERROR
-Cannot access 'fetchProfilingQuestions' before initialization
-ReferenceError: Cannot access 'fetchProfilingQuestions' before initialization
-    at fetchData (http://localhost:3001/main.c9862ddc8d581f89be4d.hot-update.js:83:7)
-    at http://localhost:3001/main.c9862ddc8d581f89be4d.hot-update.js:90:7
-    at commitHookEffectListMount (http://localhost:3001/static/js/bundle.js:34143:30)
-    at commitPassiveMountOnFiber (http://localhost:3001/static/js/bundle.js:35636:17)
-    at commitPassiveMountEffects_complete (http://localhost:3001/static/js/bundle.js:35608:13)
-    at commitPassiveMountEffects_begin (http://localhost:3001/static/js/bundle.js:35598:11)
-    at commitPassiveMountEffects (http://localhost:3001/static/js/bundle.js:35588:7)
-    at flushPassiveEffectsImpl (http://localhost:3001/static/js/bundle.js:37471:7)
-    at flushPassiveEffects (http://localhost:3001/static/js/bundle.js:37424:18)
-    at commitRootImpl (http://localhost:3001/static/js/bundle.js:37383:9)
+Cannot access 'isMeterDataOnly' before initialization
+ReferenceError: Cannot access 'isMeterDataOnly' before initialization
+    at applyFiltersAndSearch (http://localhost:3001/static/js/bundle.js:59196:5)
+    at http://localhost:3001/static/js/bundle.js:59224:20
+    at mountMemo (http://localhost:3001/static/js/bundle.js:28328:23)
+    at Object.useMemo (http://localhost:3001/static/js/bundle.js:28713:20)
+    at useMemo (http://localhost:3001/static/js/bundle.js:46304:25)
+    at Data (http://localhost:3001/static/js/bundle.js:59223:73)
+    at renderWithHooks (http://localhost:3001/static/js/bundle.js:27556:22)
+    at mountIndeterminateComponent (http://localhost:3001/static/js/bundle.js:31528:17)
+    at beginWork (http://localhost:3001/static/js/bundle.js:32831:20)
+    at HTMLUnknownElement.callCallback (http://localhost:3001/static/js/bundle.js:17812:18)
+ERROR
+Cannot access 'isMeterDataOnly' before initialization
+ReferenceError: Cannot access 'isMeterDataOnly' before initialization
+    at applyFiltersAndSearch (http://localhost:3001/static/js/bundle.js:59196:5)
+    at http://localhost:3001/static/js/bundle.js:59224:20
+    at mountMemo (http://localhost:3001/static/js/bundle.js:28328:23)
+    at Object.useMemo (http://localhost:3001/static/js/bundle.js:28713:20)
+    at useMemo (http://localhost:3001/static/js/bundle.js:46304:25)
+    at Data (http://localhost:3001/static/js/bundle.js:59223:73)
+    at renderWithHooks (http://localhost:3001/static/js/bundle.js:27556:22)
+    at mountIndeterminateComponent (http://localhost:3001/static/js/bundle.js:31528:17)
+    at beginWork (http://localhost:3001/static/js/bundle.js:32831:20)
+    at HTMLUnknownElement.callCallback (http://localhost:3001/static/js/bundle.js:17812:18)
+ERROR
+Cannot access 'isMeterDataOnly' before initialization
+ReferenceError: Cannot access 'isMeterDataOnly' before initialization
+    at applyFiltersAndSearch (http://localhost:3001/static/js/bundle.js:59196:5)
+    at http://localhost:3001/static/js/bundle.js:59224:20
+    at mountMemo (http://localhost:3001/static/js/bundle.js:28328:23)
+    at Object.useMemo (http://localhost:3001/static/js/bundle.js:28713:20)
+    at useMemo (http://localhost:3001/static/js/bundle.js:46304:25)
+    at Data (http://localhost:3001/static/js/bundle.js:59223:73)
+    at renderWithHooks (http://localhost:3001/static/js/bundle.js:27556:22)
+    at mountIndeterminateComponent (http://localhost:3001/static/js/bundle.js:31528:17)
+    at beginWork (http://localhost:3001/static/js/bundle.js:32831:20)
+    at beginWork$1 (http://localhost:3001/static/js/bundle.js:37790:18)

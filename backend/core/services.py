@@ -422,23 +422,129 @@ class DataCollectionService:
         return tasks
     
     @staticmethod
+    def calculate_annual_task_totals(company, year, user=None):
+        """Calculate correct annual task totals accounting for cadence types"""
+        from .models import CompanyChecklist, Meter
+
+        # Get all checklist items for this company
+        checklist_items = CompanyChecklist.objects.filter(company=company)
+
+        # Separate by cadence type
+        monthly_daily_items = checklist_items.filter(cadence__in=['monthly', 'daily'])
+        annual_items = checklist_items.filter(cadence='annual')
+
+        total_annual_tasks = 0
+
+        # Process monthly/daily items (appear 12 times per year)
+        for item in monthly_daily_items:
+            if item.element.is_metered:
+                # Count active meters for this element type
+                active_meters = Meter.objects.filter(
+                    company=company,
+                    type=item.element.name,
+                    status='active'
+                )
+                # Each meter × 12 months × 2 (data + evidence)
+                total_annual_tasks += active_meters.count() * 12 * 2
+            else:
+                # Non-metered: 12 months × 2 (data + evidence)
+                total_annual_tasks += 12 * 2
+
+        # Process annual items (appear once per year in December)
+        for item in annual_items:
+            if item.element.is_metered:
+                # Count active meters for this element type
+                active_meters = Meter.objects.filter(
+                    company=company,
+                    type=item.element.name,
+                    status='active'
+                )
+                # Each meter × 1 time × 2 (data + evidence)
+                total_annual_tasks += active_meters.count() * 1 * 2
+            else:
+                # Non-metered: 1 time × 2 (data + evidence)
+                total_annual_tasks += 1 * 2
+
+        return total_annual_tasks
+
+    @staticmethod
+    def calculate_monthly_task_totals(company, year, month, user=None):
+        """Calculate correct monthly task totals - annual tasks only in December"""
+        from .models import CompanyChecklist, Meter
+
+        # Get checklist items appropriate for this month - use same logic as get_data_collection_tasks
+        checklist_items = CompanyChecklist.objects.filter(company=company)
+
+        # Monthly/daily tasks that appear every month
+        monthly_cadences = ['monthly', 'daily']
+        monthly_items = checklist_items.filter(cadence__in=monthly_cadences)
+
+        # Annual tasks only appear in December (month 12)
+        annual_month = 12  # December for annual reporting
+        if month == annual_month:
+            allowed_cadences = monthly_cadences + ['annual']
+            annual_items = checklist_items.filter(cadence='annual')
+        else:
+            allowed_cadences = monthly_cadences
+            annual_items = checklist_items.none()  # Empty queryset for non-December months
+
+        total_monthly_tasks = 0
+
+        # Process monthly/daily items (appear every month)
+        for item in monthly_items:
+            if item.element.is_metered:
+                active_meters = Meter.objects.filter(
+                    company=company,
+                    type=item.element.name,
+                    status='active'
+                )
+                # Each meter × 1 month × 2 (data + evidence)
+                total_monthly_tasks += active_meters.count() * 1 * 2
+            else:
+                # Non-metered: 1 month × 2 (data + evidence)
+                total_monthly_tasks += 1 * 2
+
+        # Process annual items (only in December)
+        for item in annual_items:
+            if item.element.is_metered:
+                active_meters = Meter.objects.filter(
+                    company=company,
+                    type=item.element.name,
+                    status='active'
+                )
+                # Each meter × 1 time × 2 (data + evidence)
+                total_monthly_tasks += active_meters.count() * 1 * 2
+            else:
+                # Non-metered: 1 time × 2 (data + evidence)
+                total_monthly_tasks += 1 * 2
+
+        return total_monthly_tasks
+
+    @staticmethod
     def calculate_progress(company, year, month=None, user=None):
         """Calculate data collection progress - counts data and evidence as separate tasks"""
         filters = {'company': company, 'reporting_year': year}
         
+        # Import Q at the top level for both branches
+        from django.db.models import Q
+
         if month:
             month_name = datetime(year, month, 1).strftime('%b')
-            filters['reporting_period'] = month_name
+            # Create tasks for this specific month
+            tasks = DataCollectionService.get_data_collection_tasks(company, year, month, user=user)
+
+            # For monthly view: get submissions from current month only
+            submissions = CompanyDataSubmission.objects.filter(
+                company=company, reporting_year=year, reporting_period=month_name
+            )
         else:
             # For yearly progress, ensure all tasks are created for all 12 months
             # Create submissions for the FULL year (Jan-Dec)
             for month_num in range(1, 13):
                 tasks = DataCollectionService.get_data_collection_tasks(company, year, month_num, user=user)
-        
-        # Remove user filtering to allow shared data visibility
-        # All users can see data entered by any user for the same company
-        
-        submissions = CompanyDataSubmission.objects.filter(**filters)
+
+            # For yearly view: get ALL submissions
+            submissions = CompanyDataSubmission.objects.filter(**filters)
         
         # Filter out submissions from inactive meters
         # Include submissions without meters (non-metered tasks) and submissions from active meters only
@@ -467,8 +573,13 @@ class DataCollectionService:
         data_complete = active_period_submissions.exclude(value='').count()
         evidence_complete = active_period_submissions.exclude(evidence_file='').count()
         
-        # Total tasks = active submissions × 2 (data + evidence for each submission)
-        total_active_tasks = total_active_submissions * 2
+        # Total tasks calculation
+        if month:
+            # For monthly view: calculate correct totals including annual tasks
+            total_active_tasks = DataCollectionService.calculate_monthly_task_totals(company, year, month, user)
+        else:
+            # For yearly view: calculate correct annual totals based on cadence
+            total_active_tasks = DataCollectionService.calculate_annual_task_totals(company, year, user)
         
         # Inactive period tasks (shown as incomplete/orange)
         total_inactive_tasks = total_inactive_submissions * 2
@@ -484,7 +595,7 @@ class DataCollectionService:
         data_progress = (data_complete / total_active_submissions) * 100 if total_active_submissions > 0 else 0
         evidence_progress = (evidence_complete / total_active_submissions) * 100 if total_active_submissions > 0 else 0
         
-        return {
+        result = {
             'data_progress': data_progress,
             'evidence_progress': evidence_progress,
             'overall_progress': overall_progress,
@@ -497,6 +608,8 @@ class DataCollectionService:
             'inactive_period_points': total_inactive_tasks,  # New field for inactive period
             'inactive_period_submissions': total_inactive_submissions
         }
+
+        return result
 
 
 class DashboardService:

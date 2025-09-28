@@ -220,11 +220,13 @@ const List = () => {
       setProfilingQuestions([]);
       // Don't reset checklistExists here to prevent flickering
       
-      // Fetch profiling questions and existing answers
-      await fetchProfilingQuestions();
-      await fetchExistingAnswers();
-      await checkChecklistExists();
-      await checkWizardCompletion();
+      // Fetch all data in parallel for faster loading
+      await Promise.all([
+        fetchProfilingQuestions(),
+        fetchExistingAnswers(),
+        checkChecklistExists(),
+        checkWizardCompletion()
+      ]);
       setLoading(false);
     };
     

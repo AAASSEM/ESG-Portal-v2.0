@@ -271,6 +271,15 @@ const Rame = () => {
   const canEditFrameworks = ['super_user', 'admin'].includes(user?.role); // Full edit access
   const isViewOnly = ['site_manager', 'viewer'].includes(user?.role); // View only
 
+  if (loadingFrameworks) {
+    return (
+      <div className="flex justify-center items-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+        <span className="ml-3 text-gray-600">Loading frameworks...</span>
+      </div>
+    );
+  }
+
   return (
      <div className="max-w-6xl mx-auto">
 

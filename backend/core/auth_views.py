@@ -436,10 +436,15 @@ class ResetPasswordView(APIView):
             if current_password == 'temporary_setup_password':
                 success_message = 'Account setup completed successfully'
                 print(f"✅ Account setup completed for user: {request.user.username}")
+
+                # Refresh user session with complete data after account setup
+                from django.contrib.auth import login
+                login(request, request.user)
+                print(f"🔄 User session refreshed with complete data")
             else:
                 success_message = 'Password reset successfully'
                 print(f"✅ Password reset completed for user: {request.user.username}")
-            
+
             return Response({
                 'message': success_message,
                 'success': True
@@ -897,16 +902,25 @@ class MagicLinkAuthView(APIView):
                 user_profile = user.userprofile
                 user_role = user_profile.role
                 user_company = user_profile.company
+
+                # Safety check: If profile exists but has no company, check User.company field
+                if not user_company and hasattr(user, 'company') and user.company:
+                    user_profile.company = user.company
+                    user_profile.save()
+                    user_company = user.company
+                    print(f"✅ Restored company assignment from User.company: {user.company.name}")
             except UserProfile.DoesNotExist:
-                # Create minimal profile if missing
+                # Create minimal profile if missing - preserve company from User.company field
+                preserved_company = getattr(user, 'company', None)
                 user_profile = UserProfile.objects.create(
                     user=user,
                     role='viewer',
-                    email=user.email
+                    email=user.email,
+                    company=preserved_company  # Preserve company from invitation
                 )
                 user_role = 'viewer'
-                user_company = None
-                print(f"⚠️ Created minimal user profile for: {user.email}")
+                user_company = preserved_company
+                print(f"⚠️ Created minimal user profile for: {user.email} with company: {preserved_company.name if preserved_company else 'None'}")
             
             # Determine redirect destination based on token type and user role
             if token_obj.token_type == 'email_verification':

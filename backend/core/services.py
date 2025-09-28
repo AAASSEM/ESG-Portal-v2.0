@@ -371,17 +371,58 @@ class DataCollectionService:
                         reporting_year=year,
                         reporting_period=month_name
                     ).first()
-                    
+
+                    # Check for ElementAssignment to determine who should be assigned
+                    from .models import ElementAssignment
+                    element_assignment = ElementAssignment.objects.filter(
+                        checklist_item=item,
+                        company=company,
+                        assignment_level='element'
+                    ).first()
+
+                    # Also check for category-level assignment
+                    category_assignment = None
+                    if not element_assignment:
+                        category_assignment = ElementAssignment.objects.filter(
+                            category=item.element.category,
+                            company=company,
+                            assignment_level='category'
+                        ).first()
+
+                    # Determine assignment details
+                    assigned_to = None
+                    assigned_by = None
+                    assigned_at = None
+
+                    if element_assignment:
+                        assigned_to = element_assignment.assigned_to
+                        assigned_by = element_assignment.assigned_by
+                        assigned_at = element_assignment.assigned_at
+                    elif category_assignment:
+                        assigned_to = category_assignment.assigned_to
+                        assigned_by = category_assignment.assigned_by
+                        assigned_at = category_assignment.assigned_at
+
                     if not submission:
-                        # Create new submission record with current user
+                        # Create new submission record with assignment information
                         submission = CompanyDataSubmission.objects.create(
                             user=user,
                             company=company,
                             element=item.element,
                             meter=meter,
                             reporting_year=year,
-                            reporting_period=month_name
+                            reporting_period=month_name,
+                            assigned_to=assigned_to,
+                            assigned_by=assigned_by,
+                            assigned_at=assigned_at
                         )
+                    else:
+                        # Update existing submission with assignment information if not already assigned
+                        if not submission.assigned_to and assigned_to:
+                            submission.assigned_to = assigned_to
+                            submission.assigned_by = assigned_by
+                            submission.assigned_at = assigned_at
+                            submission.save()
                     
                     tasks.append({
                         'type': 'metered',
@@ -399,17 +440,58 @@ class DataCollectionService:
                     reporting_year=year,
                     reporting_period=month_name
                 ).first()
-                
+
+                # Check for ElementAssignment to determine who should be assigned
+                from .models import ElementAssignment
+                element_assignment = ElementAssignment.objects.filter(
+                    checklist_item=item,
+                    company=company,
+                    assignment_level='element'
+                ).first()
+
+                # Also check for category-level assignment
+                category_assignment = None
+                if not element_assignment:
+                    category_assignment = ElementAssignment.objects.filter(
+                        category=item.element.category,
+                        company=company,
+                        assignment_level='category'
+                    ).first()
+
+                # Determine assignment details
+                assigned_to = None
+                assigned_by = None
+                assigned_at = None
+
+                if element_assignment:
+                    assigned_to = element_assignment.assigned_to
+                    assigned_by = element_assignment.assigned_by
+                    assigned_at = element_assignment.assigned_at
+                elif category_assignment:
+                    assigned_to = category_assignment.assigned_to
+                    assigned_by = category_assignment.assigned_by
+                    assigned_at = category_assignment.assigned_at
+
                 if not submission:
-                    # Create new submission record with current user
+                    # Create new submission record with assignment information
                     submission = CompanyDataSubmission.objects.create(
                         user=user,
                         company=company,
                         element=item.element,
                         meter=None,
                         reporting_year=year,
-                        reporting_period=month_name
+                        reporting_period=month_name,
+                        assigned_to=assigned_to,
+                        assigned_by=assigned_by,
+                        assigned_at=assigned_at
                     )
+                else:
+                    # Update existing submission with assignment information if not already assigned
+                    if not submission.assigned_to and assigned_to:
+                        submission.assigned_to = assigned_to
+                        submission.assigned_by = assigned_by
+                        submission.assigned_at = assigned_at
+                        submission.save()
                 
                 tasks.append({
                     'type': 'non_metered',

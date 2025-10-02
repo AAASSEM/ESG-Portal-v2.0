@@ -1587,37 +1587,41 @@ const Data = () => {
       {/* Data Entry Interface */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
         <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-3">
+          <div className="flex flex-col space-y-4 md:space-y-0 md:flex-row md:items-center md:justify-between mb-4">
+            <div className="flex flex-col space-y-2 md:space-y-0 md:flex-row md:items-center md:space-x-3">
               <h3 className="text-lg font-semibold text-gray-900">Data Entry Interface</h3>
-              {isViewOnly && (
-                <div className="px-3 py-1 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium">
-                  <i className="fas fa-eye mr-1"></i>View Only
-                </div>
-              )}
-              {canEditAssignedTasks && (
-                <div className="px-3 py-1 bg-yellow-50 text-yellow-700 rounded-lg text-sm font-medium">
-                  <i className="fas fa-tasks mr-1"></i>Assigned Tasks Only
-                </div>
-              )}
-              {canReviewAndLimitedApproval && (
-                <div className="px-3 py-1 bg-orange-50 text-orange-700 rounded-lg text-sm font-medium">
-                  <i className="fas fa-clipboard-check mr-1"></i>Review Mode
-                </div>
-              )}
-              {isMeterDataOnly && (
-                <div className="px-3 py-1 bg-purple-50 text-purple-700 rounded-lg text-sm font-medium">
-                  <i className="fas fa-gauge mr-1"></i>Meter Data Only
-                </div>
-              )}
+              <div className="flex flex-wrap gap-2">
+                {isViewOnly && (
+                  <div className="px-2 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium">
+                    <i className="fas fa-eye mr-1"></i>View Only
+                  </div>
+                )}
+                {canEditAssignedTasks && (
+                  <div className="px-2 py-1 bg-yellow-50 text-yellow-700 rounded-lg text-xs font-medium">
+                    <i className="fas fa-tasks mr-1"></i>Assigned Tasks Only
+                  </div>
+                )}
+                {canReviewAndLimitedApproval && (
+                  <div className="px-2 py-1 bg-orange-50 text-orange-700 rounded-lg text-xs font-medium">
+                    <i className="fas fa-clipboard-check mr-1"></i>Review Mode
+                  </div>
+                )}
+                {isMeterDataOnly && (
+                  <div className="px-2 py-1 bg-purple-50 text-purple-700 rounded-lg text-xs font-medium">
+                    <i className="fas fa-gauge mr-1"></i>Meter Data Only
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="flex space-x-3">
-              <button 
-                className="bg-orange-100 text-orange-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-orange-200"
+            <div className="flex flex-wrap gap-2">
+              <button
+                className="bg-orange-100 text-orange-700 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium hover:bg-orange-200"
                 onClick={refreshDataEntries}
                 title="Refresh data to check for new meters or tasks"
               >
-                <i className="fas fa-sync-alt mr-2"></i>Refresh
+                <i className="fas fa-sync-alt mr-1 sm:mr-2"></i>
+                <span className="hidden sm:inline">Refresh</span>
+                <span className="sm:hidden">Refresh</span>
               </button>
               {(canFullAccess || canEditAssignedTasks) && (
                 <div className="relative">
@@ -1629,65 +1633,79 @@ const Data = () => {
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                     id="multiple-file-upload"
                   />
-                  <button 
-                    className={`bg-blue-100 text-blue-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-200 ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  <button
+                    className={`bg-blue-100 text-blue-700 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-200 ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
                     disabled={isUploading}
                   >
-                    <i className={`fas ${isUploading ? 'fa-spinner fa-spin' : 'fa-upload'} mr-2`}></i>
-                    {isUploading ? 'Uploading...' : 'Upload Multiple Files'}
+                    <i className={`fas ${isUploading ? 'fa-spinner fa-spin' : 'fa-upload'} mr-1 sm:mr-2`}></i>
+                    <span className="hidden sm:inline">{isUploading ? 'Uploading...' : 'Upload Multiple Files'}</span>
+                    <span className="sm:hidden">{isUploading ? 'Uploading...' : 'Upload'}</span>
                   </button>
                 </div>
               )}
               {(isViewOnly || canReviewAndLimitedApproval || isMeterDataOnly) && (
-                <button 
-                  className="bg-green-100 text-green-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-200"
+                <button
+                  className="bg-green-100 text-green-700 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-200"
                   onClick={() => {/* Handle export functionality */}}
                 >
-                  <i className="fas fa-download mr-2"></i>Export Data
+                  <i className="fas fa-download mr-1 sm:mr-2"></i>
+                  <span className="hidden sm:inline">Export Data</span>
+                  <span className="sm:hidden">Export</span>
                 </button>
               )}
             </div>
           </div>
           
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <label className="text-sm font-medium text-gray-700">View by:</label>
-              <button
-                onClick={() => setShowViewFilterModal(true)}
-                className="flex items-center space-x-2 px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
-              >
-                <i className="fas fa-filter"></i>
-                <span>{viewFilter || 'All Items'}</span>
-                <i className="fas fa-chevron-down ml-1"></i>
-              </button>
+          <div className="flex flex-col space-y-3 lg:flex-row lg:items-center lg:space-y-0 lg:space-x-4">
+            {/* Filter Controls */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:flex lg:items-center lg:space-x-4">
+              <div className="flex items-center space-x-2">
+                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">View by:</label>
+                <button
+                  onClick={() => setShowViewFilterModal(true)}
+                  className="flex items-center justify-between w-full sm:w-auto space-x-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
+                >
+                  <div className="flex items-center space-x-2">
+                    <i className="fas fa-filter"></i>
+                    <span className="truncate">{viewFilter || 'All Items'}</span>
+                  </div>
+                  <i className="fas fa-chevron-down"></i>
+                </button>
+              </div>
+              <div className="flex items-center space-x-2">
+                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Group by:</label>
+                <button
+                  onClick={() => setShowGroupByModal(true)}
+                  className="flex items-center justify-between w-full sm:w-auto space-x-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
+                >
+                  <div className="flex items-center space-x-2">
+                    <i className="fas fa-layer-group"></i>
+                    <span className="truncate">{groupBy}</span>
+                  </div>
+                  <i className="fas fa-chevron-down"></i>
+                </button>
+              </div>
+              <div className="flex items-center space-x-2">
+                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Assignment:</label>
+                <button
+                  onClick={() => setShowAssignmentFilterModal(true)}
+                  className="flex items-center justify-between w-full sm:w-auto space-x-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
+                >
+                  <div className="flex items-center space-x-2">
+                    <i className="fas fa-tasks"></i>
+                    <span className="truncate">{assignmentFilter === 'all' ? 'All Tasks' : assignmentFilter === 'assigned' ? 'Assigned' : 'Unassigned'}</span>
+                  </div>
+                  <i className="fas fa-chevron-down"></i>
+                </button>
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <label className="text-sm font-medium text-gray-700">Group by:</label>
-              <button
-                onClick={() => setShowGroupByModal(true)}
-                className="flex items-center space-x-2 px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
-              >
-                <i className="fas fa-layer-group"></i>
-                <span>{groupBy}</span>
-                <i className="fas fa-chevron-down ml-1"></i>
-              </button>
-            </div>
-            <div className="flex items-center space-x-2">
-              <label className="text-sm font-medium text-gray-700">Assignment:</label>
-              <button
-                onClick={() => setShowAssignmentFilterModal(true)}
-                className="flex items-center space-x-2 px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
-              >
-                <i className="fas fa-tasks"></i>
-                <span>{assignmentFilter === 'all' ? 'All Tasks' : assignmentFilter === 'assigned' ? 'Assigned' : 'Unassigned'}</span>
-                <i className="fas fa-chevron-down ml-1"></i>
-              </button>
-            </div>
-            <div className="flex-1">
-              <input 
-                type="text" 
-                placeholder="Search data elements..." 
-                className="w-full border border-gray-300 rounded-lg px-3 py-1 text-sm"
+
+            {/* Search Bar */}
+            <div className="flex-1 lg:max-w-md">
+              <input
+                type="text"
+                placeholder="Search data elements..."
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -1742,77 +1760,81 @@ const Data = () => {
                           'bg-gray-50 border border-gray-200'
                         }`}>
                           {/* Card Header */}
-                          <div className="flex items-center justify-between p-4 border-b border-gray-100">
-                            <div className="flex items-center space-x-3">
-                              <div className={getEntryStatusColor(entry.status)}></div>
-                              <div>
-                                <h4 className="font-semibold text-gray-900">{entry.name}</h4>
-                                <div className="flex items-center space-x-2 mt-1">
-                                  {entry.meter_id && (
-                                    <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-800">
-                                      <i className="fas fa-gauge mr-1"></i>
-                                      {entry.meter.split(' (')[0]} ({entry.meter_type})
+                          <div className="p-4 border-b border-gray-100">
+                            <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-3 md:space-y-0">
+                              <div className="flex items-center space-x-3">
+                                <div className={getEntryStatusColor(entry.status)}></div>
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="font-semibold text-gray-900 truncate">{entry.name}</h4>
+                                  <div className="flex flex-wrap items-center gap-2 mt-1">
+                                    {entry.meter_id && (
+                                      <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-800">
+                                        <i className="fas fa-gauge mr-1"></i>
+                                        {entry.meter.split(' (')[0]} ({entry.meter_type})
+                                      </span>
+                                    )}
+                                    <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700">
+                                      {entry.frequency}
                                     </span>
-                                  )}
-                                  <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700">
-                                    {entry.frequency}
-                                  </span>
-                                  {entry.meter_location && (
-                                    <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-purple-100 text-purple-800">
-                                      {entry.meter_location}
-                                    </span>
-                                  )}
+                                    {entry.meter_location && (
+                                      <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-purple-100 text-purple-800">
+                                        {entry.meter_location}
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                            <div className="flex items-center space-x-3">
-                              {/* Task Assignment Section */}
-                              {(canAssignToAnyone || canAssignInCompany || canAssignToUploadersAtOwnSites) && (
-                                <div className="flex items-center space-x-2 text-xs">
-                                  <span className="text-gray-500">
-                                    {entry.assignedTo ? `Assigned: ${entry.assignedTo}` : 'Unassigned'}
-                                  </span>
-                                  <button 
-                                    className="px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs font-medium hover:bg-blue-100"
-                                    onClick={() => handleOpenAssignModal(entry)}
-                                  >
-                                    <i className="fas fa-user-plus mr-1"></i>
-                                    {entry.assignedTo ? 'Reassign' : 'Assign'}
-                                  </button>
-                                </div>
-                              )}
-                              
-                              {/* Status Indicator */}
-                              <div className="flex items-center space-x-2">
-                                {savingEntries[entry.id] ? (
-                                  <div className="flex items-center text-sm text-blue-600">
-                                    <i className="fas fa-spinner fa-spin mr-2"></i>
-                                    <span className="text-xs">Auto-saving...</span>
-                                  </div>
-                                ) : entry.status === 'complete' ? (
-                                  <div className="flex items-center text-sm text-green-600">
-                                    <i className="fas fa-check mr-1"></i>
-                                    <span className="text-xs">Complete</span>
-                                  </div>
-                                ) : entry.status === 'partial' ? (
-                                  <div className="flex items-center text-sm text-orange-600">
-                                    <i className="fas fa-clock mr-1"></i>
-                                    <span className="text-xs">Partial</span>
-                                  </div>
-                                ) : (
-                                  <div className="flex items-center text-sm text-gray-500">
-                                    <i className="fas fa-circle mr-1"></i>
-                                    <span className="text-xs">Missing</span>
+
+                              {/* Assignment and Status Section */}
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                                {/* Task Assignment Section */}
+                                {(canAssignToAnyone || canAssignInCompany || canAssignToUploadersAtOwnSites) && (
+                                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                                    <span className="text-xs text-gray-500">
+                                      {entry.assignedTo ? `Assigned: ${entry.assignedTo}` : 'Unassigned'}
+                                    </span>
+                                    <button
+                                      className="px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs font-medium hover:bg-blue-100 self-start sm:self-auto"
+                                      onClick={() => handleOpenAssignModal(entry)}
+                                    >
+                                      <i className="fas fa-user-plus mr-1"></i>
+                                      {entry.assignedTo ? 'Reassign' : 'Assign'}
+                                    </button>
                                   </div>
                                 )}
+
+                                {/* Status Indicator */}
+                                <div className="flex items-center">
+                                  {savingEntries[entry.id] ? (
+                                    <div className="flex items-center text-sm text-blue-600">
+                                      <i className="fas fa-spinner fa-spin mr-2"></i>
+                                      <span className="text-xs">Auto-saving...</span>
+                                    </div>
+                                  ) : entry.status === 'complete' ? (
+                                    <div className="flex items-center text-sm text-green-600">
+                                      <i className="fas fa-check mr-1"></i>
+                                      <span className="text-xs">Complete</span>
+                                    </div>
+                                  ) : entry.status === 'partial' ? (
+                                    <div className="flex items-center text-sm text-orange-600">
+                                      <i className="fas fa-clock mr-1"></i>
+                                      <span className="text-xs">Partial</span>
+                                    </div>
+                                  ) : (
+                                    <div className="flex items-center text-sm text-gray-500">
+                                      <i className="fas fa-circle mr-1"></i>
+                                      <span className="text-xs">Missing</span>
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </div>
 
                           {/* Card Content */}
-                          <div className="flex">
-                            {/* Left Side: Data Input (50%) */}
-                            <div className="flex-1 p-4 pr-2" style={{width: '50%'}}>
+                          <div className="flex flex-col md:flex-row">
+                            {/* Left Side: Data Input */}
+                            <div className="flex-1 p-4 md:pr-2">
                               <div className="space-y-3">
                                 <div className="flex items-center space-x-2 mb-2">
                                   <i className="fas fa-chart-line text-blue-500 text-sm"></i>
@@ -1848,9 +1870,12 @@ const Data = () => {
                               </div>
                             </div>
 
-                            {/* Right Side: Evidence Upload (50%) */}
-                            <div className="w-px bg-gray-200"></div>
-                            <div className="p-4 pl-2" style={{width: '50%'}}>
+                            {/* Mobile Divider */}
+                            <div className="h-px bg-gray-200 md:hidden my-2 mx-4"></div>
+                            {/* Desktop Divider */}
+                            <div className="hidden md:block w-px bg-gray-200"></div>
+                            {/* Right Side: Evidence Upload */}
+                            <div className="flex-1 p-4 md:pl-2">
                               <div className="space-y-3">
                                 <div className="flex items-center justify-between mb-2">
                                   <div className="flex items-center space-x-2">

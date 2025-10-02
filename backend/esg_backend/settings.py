@@ -168,7 +168,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     BASE_DIR / "static",
-    BASE_DIR.parent / 'frontend' / 'build-good' / 'static',  # React build static files
+    BASE_DIR.parent / 'frontend' / 'build' / 'static',  # React build static files
 ]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 

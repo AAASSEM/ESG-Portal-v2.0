@@ -133,7 +133,24 @@ class CompanyChecklistSerializer(serializers.ModelSerializer):
         ]
     
     def get_frameworks_list(self, obj):
-        return [framework.name for framework in obj.frameworks.all()]
+        if obj.element and obj.element.frameworks:
+            # Parse the frameworks string (e.g., "E, D, G" or "E,D,G")
+            frameworks_str = obj.element.frameworks
+            # Split by comma and clean up
+            framework_codes = [code.strip() for code in frameworks_str.split(',') if code.strip()]
+            # Map codes to full names with colors
+            framework_mapping = {
+                'E': 'ESG',
+                'D': 'DST',
+                'G': 'Green Key',
+                'ESG': 'ESG',
+                'DST': 'DST',
+                'Green Key': 'Green Key',
+                'TCFD': 'TCFD',
+                'SASB': 'SASB'
+            }
+            return [framework_mapping.get(code, code) for code in framework_codes]
+        return []
 
 
 class ProgressSerializer(serializers.Serializer):

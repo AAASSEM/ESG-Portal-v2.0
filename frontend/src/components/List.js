@@ -306,7 +306,7 @@ const List = () => {
             description: item.element_description,
             unit: item.element_unit,
             cadence: item.cadence,
-            frameworks: item.frameworks_list,
+            frameworks: item.frameworks_list || [],
             category: item.category || (item.is_metered ? 'Environmental' : 'Social'),
             isMetered: item.is_metered
           }));
@@ -537,7 +537,7 @@ const List = () => {
             description: item.element_description,
             unit: item.element_unit,
             cadence: item.cadence,
-            frameworks: item.frameworks_list,
+            frameworks: item.frameworks_list || [],
             category: item.category || (item.is_metered ? 'Environmental' : 'Social'),
             isMetered: item.is_metered
           }));
@@ -728,18 +728,24 @@ const List = () => {
                               <i className="fas fa-tags text-gray-600"></i>
                               <span>Frameworks:</span>
                               <div className="flex flex-wrap items-center gap-1">
-                                {item.frameworks.map((framework, idx) => (
-                                  <span key={idx} className={`px-1 sm:px-2 py-0.5 sm:py-1 rounded text-xs font-bold ${
-                                    framework === 'DST' ? 'bg-blue-200 text-blue-900' :
-                                    framework === 'ESG' ? 'bg-green-200 text-green-900' :
-                                    framework === 'Green Key' ? 'bg-teal-200 text-teal-900' :
-                                    framework === 'TCFD' ? 'bg-orange-200 text-orange-900' :
-                                    framework === 'SASB' ? 'bg-purple-200 text-purple-900' :
-                                    'bg-gray-200 text-gray-900'
-                                  }`}>
-                                    {framework}
-                                  </span>
-                                ))}
+                                {(item.frameworks && item.frameworks.length > 0) ?
+                                  item.frameworks.map((framework, idx) => (
+                                    <span key={idx} className={`px-1 sm:px-2 py-0.5 sm:py-1 rounded text-xs font-bold ${
+                                      framework === 'DST' ? 'bg-blue-200 text-blue-900' :
+                                      framework === 'ESG' ? 'bg-teal-200 text-teal-900' :
+                                      framework === 'Green Key' ? 'bg-green-200 text-green-900' :
+                                      framework === 'TCFD' ? 'bg-orange-200 text-orange-900' :
+                                      framework === 'SASB' ? 'bg-purple-200 text-purple-900' :
+                                      'bg-gray-200 text-gray-900'
+                                    }`}>
+                                      {framework}
+                                    </span>
+                                  )) : (
+                                    <span className="px-2 py-1 bg-gray-200 text-gray-600 rounded text-xs">
+                                      No frameworks assigned
+                                    </span>
+                                  )
+                                }
                               </div>
                             </div>
                           </div>

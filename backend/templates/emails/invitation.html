@@ -51,6 +51,14 @@
             border-left: 4px solid #ffc107;
             margin: 20px 0;
         }
+        .link-text {
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+            background: #f1f5f9;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
@@ -82,6 +90,11 @@
                 🔗 Access My Account (Magic Link)
             </a>
         </div>
+
+        <p style="color: #6b7280; font-size: 14px;">
+            If the button doesn't work, you can also copy and paste this link into your browser:
+        </p>
+        <div class="link-text">{{ invitation_url }}</div>
 
         <p><strong>What happens next:</strong></p>
         <ol>

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Page</title>
+</head>
+<body>
+    <h1>Static HTML Test</h1>
+    <p>If you can see this, the server is serving files.</p>
+    <p>Time: <span id="time"></span></p>
+    <script>
+        document.getElementById('time').textContent = new Date().toISOString();
+        console.log('Test HTML JavaScript is running!');
+    </script>
+</body>
+</html>

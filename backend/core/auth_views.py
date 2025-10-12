@@ -220,6 +220,8 @@ class LoginView(APIView):
                 user.save()
             
             login(request, user)
+            request.session.save()  # Explicitly save session
+            request.session.set_expiry(31536000)  # 1 year (nearly forever)
             
             # Get user role and check password reset requirement
             try:
@@ -613,6 +615,8 @@ class EmailCodeVerificationView(APIView):
                 # Log the user in using Django sessions (same as login)
                 from django.contrib.auth import login
                 login(request, user)
+                request.session.save()  # Explicitly save session
+                request.session.set_expiry(31536000)  # 1 year
                 
                 # Get user profile info
                 profile_data = {}
@@ -879,6 +883,8 @@ class MagicLinkAuthView(APIView):
             
             # Log the user in using Django's session authentication
             login(request, user)
+            request.session.save()  # Explicitly save session
+            request.session.set_expiry(31536000)  # 1 year
             print(f"✅ User logged in via magic link: {user.email}")
             
             # Mark email as verified (for both signup and invitation)

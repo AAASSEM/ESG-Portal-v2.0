@@ -1,274 +1,47 @@
-
-this from another model , but that how it should work 
-
-
-How Questions Are Populated in the Database
-
-  The system uses a dual approach for populating profiling questions: Legacy System for basic questions and New Framework System for dynamic
-  questions.
-
-  1. Legacy Question Population (populate_initial_data.py)
-
-  Management Command Approach:
-
-  python manage.py populate_initial_data
-
-  Hardcoded Questions (lines 279-314):
-
-  def create_profiling_questions(self):
-      """Create profiling wizard questions"""
-      questions = [
-          {
-              'question_id': 'has_backup_generators',
-              'text': 'Do you have backup generators on-site?',
-              'activates_element_id': 'generator_fuel',
-              'order': 1
-          },
-          {
-              'question_id': 'has_company_vehicles',
-              'text': 'Do you own or operate company vehicles for operations?',
-              'activates_element_id': 'vehicle_fuel',
-              'order': 2
-          },
-          {
-              'question_id': 'uses_lpg',
-              'text': 'Do you use LPG (liquid petroleum gas) in your operations?',
-              'activates_element_id': 'lpg_usage',
-              'order': 3
-          },
-          {
-              'question_id': 'has_renewable_energy',
-              'text': 'Do you use solar panels or other renewable energy sources?',
-              'activates_element_id': 'renewable_energy',
-              'order': 4
-          }
-      ]
-
-      for question_data in questions:
-          ProfilingQuestion.objects.get_or_create(
-              question_id=question_data['question_id'],
-              defaults=question_data
-          )
-
-  Related Data Elements Created (lines 187-234):
-
-  # Conditional data elements that questions activate
-  conditional_elements = [
-      {
-          'element_id': 'generator_fuel',
-          'name': 'Generator Fuel Consumption',
-          'description': 'Fuel for backup generators',
-          'unit': 'liters',
-          'is_metered': True,
-          'frameworks': [('DST', 'monthly'), ('ESG', 'monthly')]
-      },
-      {
-          'element_id': 'vehicle_fuel',
-          'name': 'Vehicle Fuel Consumption',
-          'description': 'Company vehicle fuel',
-          'unit': 'liters',
-          'is_metered': True,
-          'frameworks': [('DST', 'monthly'), ('ESG', 'monthly')]
-      },
-      # ... more elements
-  ]
-
-  2. New Framework System (load_initial_data.py)
-
-  JSON Fixture-Based Population:
-
-  python manage.py load_initial_data
-
-  Framework Loading (lines 34-39):
-
-  # Load from fixtures/frameworks.json
-  call_command('loaddata', 'fixtures/frameworks.json')
-
-  # Load from fixtures/framework_elements.json  
-  call_command('loaddata', 'fixtures/framework_elements.json')
-
-  # Auto-assign mandatory frameworks to companies
-  call_command('assign_mandatory_frameworks')
-
-  Framework Elements Fixture (fixtures/framework_elements.json):
-
-  {
-    "model": "core.frameworkelement",
-    "pk": "UAE-CLIMATE-E-001",
-    "fields": {
-      "framework_id": "UAE-CLIMATE-LAW-2024",
-      "element_id": "UAE-CLIMATE-E-001",
-      "name": "Direct greenhouse gas emissions (Scope 1)",
-      "description": "Total direct GHG emissions from sources owned/controlled by organization",
-      "type": "conditional",
-      "condition_logic": "has_direct_emissions == true",
-      "cadence": "annually",
-      "category": "Environmental"
-    }
-  }
-
-  3. Dynamic Question Generation
-
-  Runtime Question Creation (services.py:648-724):
-
-  class FrameworkProcessor:
-      """Processes framework elements and evaluates conditional logic"""
-
-      def get_applicable_elements(self, framework_id=None, sector=None):
-          """Get all applicable framework elements for this company"""
-          queryset = FrameworkElement.objects.all()
-          applicable_elements = []
-
-          for element in queryset:
-              if self._is_element_applicable(element):
-                  applicable_elements.append(element)
-
-          return applicable_elements
-
-      def _is_element_applicable(self, element):
-          """Evaluate if an element is applicable based on conditional logic"""
-          # Must-have elements are always applicable
-          if element.type == 'must-have':
-              return True
-
-          # Evaluate conditional logic
-          if not element.condition_logic:
-              return True
-
-          return self._evaluate_condition(element.condition_logic)
-
-  Smart Question Generation (views.py:1239-1245):
-
-  # Get or create ProfilingQuestion dynamically during answer saving
-  question, created = ProfilingQuestion.objects.get_or_create(
-      question_id=element_id,
-      defaults={
-          'text': element_id,  # Simple text from element ID
-          'activates_element': dummy_element
-      }
-  )
-
-  4. Question Retrieval System
-
-  Company-Specific Questions (services.py:134-149):
-
-  @staticmethod
-  def get_profiling_questions(company):
-      """Get all profiling questions relevant to company's frameworks"""
-      # Get company's assigned frameworks
-      company_frameworks = company.companyframework_set.all().values_list('framework_id', flat=True)
-
-      # Get conditional elements required by company's frameworks
-      conditional_elements = DataElement.objects.filter(
-          type='conditional',
-          dataelementframeworkmapping__framework_id__in=company_frameworks
-      ).distinct()
-
-      # Get profiling questions for these elements
-      questions = ProfilingQuestion.objects.filter(
-          activates_element__in=conditional_elements
-      ).order_by('order')
-
-      return questions
-
-  API Endpoint (views.py:1149-1164):
-
-  def for_company(self, request):
-      """Get profiling questions for a specific company"""
-      company_id = request.query_params.get('company_id')
-      company = get_user_company(request.user, company_id)
-
-      questions = ProfilingService.get_profiling_questions(company)
-      serializer = self.get_serializer(questions, many=True)
-      return Response(serializer.data)
-
-  5. Population Methods Comparison
-
-  Legacy System (ProfilingQuestion):
-
-  # Hardcoded questions in management command
-  QUESTIONS = [
-      'has_backup_generators',
-      'has_company_vehicles',
-      'uses_lpg',
-      'has_renewable_energy'
-  ]
-
-  # Links to specific DataElement records
-  activates_element_id = 'generator_fuel'
-
-  New System (FrameworkElement):
-
-  // Dynamic questions from framework elements
-  {
-    "element_id": "UAE-CLIMATE-E-005",
-    "condition_logic": "facility_type == 'manufacturing'",
-    "type": "conditional"
-  }
-
-  6. Database Population Workflow
-
-  Initial Setup:
-
-  1. Run Migrations: python manage.py migrate
-  2. Load Framework Data: python manage.py load_initial_data
-  3. Create Companies: Via admin/API
-  4. Auto-Assign Frameworks: Mandatory frameworks automatically assigned
-
-  Question Generation Flow:
-
-  1. Company Created → Gets mandatory frameworks
-  2. Framework Assigned → Contains FrameworkElements
-  3. User Access Profiling → Questions filtered by company's frameworks
-  4. Conditional Logic → Only applicable questions shown
-  5. Answer Saved → ProfilingQuestion created if needed
-
-  Data Sources:
-
-  populate_initial_data.py (Legacy)
-  ├── 4 hardcoded questions
-  ├── Links to DataElement
-  └── Basic conditional logic
-
-  fixtures/framework_elements.json (New)  
-  ├── 100+ dynamic elements
-  ├── Complex condition_logic
-  ├── Framework-specific
-  └── Sector-specific
-
-  7. Question Types
-
-  Static Questions (Legacy):
-
-  - Source: Management command
-  - Count: ~4 basic questions
-  - Logic: Simple yes/no → activate element
-  - Maintenance: Code changes required
-
-  Dynamic Questions (New):
-
-  - Source: JSON fixtures + framework assignment
-  - Count: Unlimited based on frameworks
-  - Logic: Complex conditional evaluation
-  - Maintenance: JSON file updates
-
-  8. Population Commands
-
-  Available Commands:
-
-  # Legacy system
-  python manage.py populate_initial_data
-
-  # New system  
-  python manage.py load_initial_data
-  python manage.py load_frameworks
-  python manage.py assign_mandatory_frameworks
-
-  # Force reload
-  python manage.py load_initial_data --force
-
-  Summary:
-
-  The system evolved from hardcoded questions in management commands to dynamic framework-based questions loaded from JSON fixtures. Questions     
-  are now company-specific, framework-driven, and support complex conditional logic for applicability. The new system generates questions
-  on-demand based on assigned frameworks and evaluates conditional logic to show only relevant questions to each company.
+ Update settings.py - Set Sessions to Last Very Long
+Add this session configuration to your settings.py:
+python# Session Configuration - Add after DATABASE configuration
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Store in database
+SESSION_SAVE_EVERY_REQUEST = True  # Keep session alive with activity
+SESSION_COOKIE_NAME = 'sessionid'
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+
+# Different settings for production vs development
+if not DEBUG:
+    # Production settings - VERY LONG SESSION
+    SESSION_COOKIE_SECURE = True  # HTTPS only
+    SESSION_COOKIE_AGE = 31536000  # 1 YEAR (365 days) - nearly "forever"
+    SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # Keep session even after browser closes
+    SESSION_COOKIE_DOMAIN = None  # Auto-detect
+else:
+    # Development settings
+    SESSION_COOKIE_SECURE = False
+    SESSION_COOKIE_AGE = 31536000  # 1 year
+    SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+3. Update Login View - Set Session Expiry
+In your auth_views.py, find the login(request, user) line and update it:
+pythonlogin(request, user)
+request.session.save()  # Explicitly save session
+request.session.set_expiry(31536000)  # 1 year in seconds (365 days)
+The complete section should look like:
+pythonlogin(request, user)
+request.session.save()  # Explicitly save session  
+request.session.set_expiry(31536000)  # 1 year (nearly forever)
+
+# Get user role and check password reset requirement
+try:
+    user_profile = user.userprofile
+    user_role = user_profile.role
+    must_reset_password = user_profile.must_reset_password
+4. Also Update MagicLinkAuthView
+In your MagicLinkAuthView.get() method, after login(request, user) line (around line 735):
+pythonlogin(request, user)
+request.session.save()  # Explicitly save session
+request.session.set_expiry(31536000)  # 1 year
+print(f"✅ User logged in via magic link: {user.email}")
+5. Update EmailCodeVerificationView
+After the login(request, user) line (around line 550):
+pythonlogin(request, user)
+request.session.save()  # Explicitly save session
+request.session.set_expiry(31536000)  # 1 year

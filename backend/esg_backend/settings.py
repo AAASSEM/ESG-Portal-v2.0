@@ -142,6 +142,26 @@ else:
     }
     print("✅ Using development SQLite database")
 
+# Session Configuration - Add after DATABASE configuration
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Store in database
+SESSION_SAVE_EVERY_REQUEST = True  # Keep session alive with activity
+SESSION_COOKIE_NAME = 'sessionid'
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+
+# Different settings for production vs development
+if not DEBUG:
+    # Production settings - VERY LONG SESSION
+    SESSION_COOKIE_SECURE = True  # HTTPS only
+    SESSION_COOKIE_AGE = 31536000  # 1 YEAR (365 days) - nearly "forever"
+    SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # Keep session even after browser closes
+    SESSION_COOKIE_DOMAIN = None  # Auto-detect
+else:
+    # Development settings
+    SESSION_COOKIE_SECURE = False
+    SESSION_COOKIE_AGE = 31536000  # 1 year
+    SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -279,11 +299,7 @@ else:
     CSRF_COOKIE_PATH = '/'
     CSRF_COOKIE_DOMAIN = None  # Auto-detect domain
     
-    # Session cookie settings for production
-    SESSION_COOKIE_SECURE = True
-    SESSION_COOKIE_HTTPONLY = True  # Sessions should be HTTP-only for security
-    SESSION_COOKIE_SAMESITE = 'Lax'
-    SESSION_COOKIE_AGE = 1209600  # 2 weeks
+    # Session settings are now configured earlier in the file.
 
 # CORS settings - Allow React frontend
 CORS_ALLOWED_ORIGINS = [

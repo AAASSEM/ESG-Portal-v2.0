@@ -1,47 +1,70 @@
- Update settings.py - Set Sessions to Last Very Long
-Add this session configuration to your settings.py:
-python# Session Configuration - Add after DATABASE configuration
-SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Store in database
-SESSION_SAVE_EVERY_REQUEST = True  # Keep session alive with activity
-SESSION_COOKIE_NAME = 'sessionid'
-SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = 'Lax'
+Add this debugging to your settings.py right after the session configuration:
+python# Session Configuration (your existing code)
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_SAVE_EVERY_REQUEST = True
+# ... rest of your session config ...
 
-# Different settings for production vs development
-if not DEBUG:
-    # Production settings - VERY LONG SESSION
-    SESSION_COOKIE_SECURE = True  # HTTPS only
-    SESSION_COOKIE_AGE = 31536000  # 1 YEAR (365 days) - nearly "forever"
-    SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # Keep session even after browser closes
-    SESSION_COOKIE_DOMAIN = None  # Auto-detect
-else:
-    # Development settings
-    SESSION_COOKIE_SECURE = False
-    SESSION_COOKIE_AGE = 31536000  # 1 year
-    SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-3. Update Login View - Set Session Expiry
-In your auth_views.py, find the login(request, user) line and update it:
-pythonlogin(request, user)
-request.session.save()  # Explicitly save session
-request.session.set_expiry(31536000)  # 1 year in seconds (365 days)
-The complete section should look like:
-pythonlogin(request, user)
-request.session.save()  # Explicitly save session  
-request.session.set_expiry(31536000)  # 1 year (nearly forever)
+# ADD THIS DEBUG CODE:
+print("=" * 60)
+print("🔍 SESSION CONFIGURATION DEBUG")
+print("=" * 60)
+print(f"SESSION_ENGINE: {SESSION_ENGINE}")
+print(f"SESSION_COOKIE_AGE: {SESSION_COOKIE_AGE if not DEBUG else SESSION_COOKIE_AGE}")
+print(f"SESSION_COOKIE_SECURE: {True if not DEBUG else False}")
+print(f"SESSION_SAVE_EVERY_REQUEST: {SESSION_SAVE_EVERY_REQUEST}")
+print(f"DATABASE: {DATABASES['default']['ENGINE']}")
+print("=" * 60)
+The Most Likely Problem
+Looking at your settings, I see you have this line:
+pythonSESSION_ENGINE = 'django.contrib.sessions.backends.db'
+But I'm wondering if there's a conflict or the migration didn't actually run. Let's verify:
+Update your build.sh to be more verbose:
+bash# Run migrations with verbose output
+echo "Running database migrations..."
+python3 manage.py migrate --verbosity=2
 
-# Get user role and check password reset requirement
-try:
-    user_profile = user.userprofile
-    user_role = user_profile.role
-    must_reset_password = user_profile.must_reset_password
-4. Also Update MagicLinkAuthView
-In your MagicLinkAuthView.get() method, after login(request, user) line (around line 735):
-pythonlogin(request, user)
-request.session.save()  # Explicitly save session
-request.session.set_expiry(31536000)  # 1 year
-print(f"✅ User logged in via magic link: {user.email}")
-5. Update EmailCodeVerificationView
-After the login(request, user) line (around line 550):
-pythonlogin(request, user)
-request.session.save()  # Explicitly save session
-request.session.set_expiry(31536000)  # 1 year
+# IMPORTANT: Ensure sessions table exists with explicit check
+echo "Checking if sessions app is migrated..."
+python3 manage.py migrate sessions --verbosity=2
+
+# Verify session table exists
+echo "Verifying session table..."
+python3 manage.py shell -c "from django.contrib.sessions.models import Session; print(f'Sessions table ready. Count: {Session.objects.count()}')"
+Critical Password Issue
+I also notice something else in your logs - when you try to login and it fails, it says "Invalid email/username or password". This could mean:
+
+The session was lost (most likely)
+OR the password hash is somehow getting corrupted
+
+Let's add more detailed logging to your LoginView:
+pythondef post(self, request):
+    # ... existing code ...
+    
+    if user is not None:
+        print(f"✅ User found: {user.username}")
+        print(f"   - Is active: {user.is_active}")
+        print(f"   - Password check: {user.check_password(password)}")
+        
+        # CRITICAL: Check if session backend is working
+        login(request, user)
+        request.session.save()
+        
+        # VERIFY session was saved
+        print(f"   - Session key after login: {request.session.session_key}")
+        print(f"   - Session age: {request.session.get_expiry_age()}")
+        
+        # Try to retrieve the session from database
+        from django.contrib.sessions.models import Session
+        try:
+            session_obj = Session.objects.get(session_key=request.session.session_key)
+            print(f"   ✅ Session saved to database successfully!")
+            print(f"   - Expires at: {session_obj.expire_date}")
+        except Session.DoesNotExist:
+            print(f"   ❌ WARNING: Session NOT found in database!")
+        
+        request.session.set_expiry(31536000)
+        # ... rest of code
+Immediate Action Plan
+
+Add the debug logging to LoginView
+Update build.sh with verbose migration checks

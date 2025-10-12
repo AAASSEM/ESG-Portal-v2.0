@@ -219,8 +219,27 @@ class LoginView(APIView):
                 user.is_active = True
                 user.save()
             
+            print(f"✅ User found: {user.username}")
+            print(f"   - Is active: {user.is_active}")
+            print(f"   - Password check: {user.check_password(password)}")
+        
+            # CRITICAL: Check if session backend is working
             login(request, user)
-            request.session.save()  # Explicitly save session
+            request.session.save()
+            
+            # VERIFY session was saved
+            print(f"   - Session key after login: {request.session.session_key}")
+            print(f"   - Session age: {request.session.get_expiry_age()}")
+            
+            # Try to retrieve the session from database
+            from django.contrib.sessions.models import Session
+            try:
+                session_obj = Session.objects.get(session_key=request.session.session_key)
+                print(f"   ✅ Session saved to database successfully!")
+                print(f"   - Expires at: {session_obj.expire_date}")
+            except Session.DoesNotExist:
+                print(f"   ❌ WARNING: Session NOT found in database!")
+            
             request.session.set_expiry(31536000)  # 1 year (nearly forever)
             
             # Get user role and check password reset requirement

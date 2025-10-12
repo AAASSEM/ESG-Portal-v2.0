@@ -162,6 +162,17 @@ else:
     SESSION_COOKIE_AGE = 31536000  # 1 year
     SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
+# ADD THIS DEBUG CODE:
+print("=" * 60)
+print("🔍 SESSION CONFIGURATION DEBUG")
+print("=" * 60)
+print(f"SESSION_ENGINE: {SESSION_ENGINE}")
+print(f"SESSION_COOKIE_AGE: {SESSION_COOKIE_AGE if not DEBUG else SESSION_COOKIE_AGE}")
+print(f"SESSION_COOKIE_SECURE: {True if not DEBUG else False}")
+print(f"SESSION_SAVE_EVERY_REQUEST: {SESSION_SAVE_EVERY_REQUEST}")
+print(f"DATABASE: {DATABASES['default']['ENGINE']}")
+print("=" * 60)
+
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {

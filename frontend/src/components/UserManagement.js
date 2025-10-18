@@ -1414,30 +1414,21 @@ const UserManagement = () => {
 
       {/* Navigation Buttons */}
       <div className="flex items-center justify-between bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-        <button 
+        <button
           className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-colors"
-          onClick={() => navigate('/data')}
+          onClick={() => navigate('/dashboard')}
         >
           <i className="fas fa-arrow-left mr-2"></i>Back
         </button>
-        <div className="flex items-center space-x-4">
-          <span className="text-sm text-gray-600">
-            <i className="fas fa-users mr-2"></i>
-            {users.length} user{users.length !== 1 ? 's' : ''} in your team
-            {filteredUsers.length !== users.length && (
-              <span className="ml-2 text-purple-600">({filteredUsers.length} shown)</span>
-            )}
-          </span>
-          <button 
-            className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-lg font-medium"
-            onClick={() => {
-              // Navigate to next section or dashboard
-              window.location.href = '/dashboard';
-            }}
-          >
-            Continue<i className="fas fa-arrow-right ml-2"></i>
-          </button>
-        </div>
+         <div className="flex items-center">
+           <span className="text-sm text-gray-600">
+             <i className="fas fa-users mr-2"></i>
+             {users.length} user{users.length !== 1 ? 's' : ''} in your team
+             {filteredUsers.length !== users.length && (
+               <span className="ml-2 text-purple-600">({filteredUsers.length} shown)</span>
+             )}
+           </span>
+         </div>
       </div>
 
       {/* Role Selection Modal */}

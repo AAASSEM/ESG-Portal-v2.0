@@ -139,42 +139,6 @@ const Rame = () => {
       color: 'green',
       features: ['13 criteria areas', 'Water & energy efficiency', 'Guest engagement programs'],
       bestFor: 'Hotels seeking eco-certification'
-    },
-    {
-      id: 'GRI',
-      name: 'GRI Standards',
-      description: 'Global Reporting Initiative - Comprehensive sustainability reporting standards',
-      icon: 'fas fa-globe',
-      color: 'blue',
-      features: ['Universal standards', 'Stakeholder engagement', 'Detailed disclosures'],
-      bestFor: 'Comprehensive sustainability reporting'
-    },
-    {
-      id: 'SASB',
-      name: 'SASB Standards',
-      description: 'Sustainability Accounting Standards Board - Industry-specific sustainability metrics',
-      icon: 'fas fa-chart-bar',
-      color: 'purple',
-      features: ['Industry-specific metrics', 'Investor-focused reporting', 'Materiality assessment'],
-      bestFor: 'Public companies, Investor relations'
-    },
-    {
-      id: 'TCFD',
-      name: 'TCFD',
-      description: 'Task Force on Climate-related Financial Disclosures - Climate risk reporting',
-      icon: 'fas fa-thermometer-half',
-      color: 'orange',
-      features: ['Climate risk assessment', 'Scenario planning', 'Financial impact disclosure'],
-      bestFor: 'Climate-focused reporting'
-    },
-    {
-      id: 'CDP',
-      name: 'CDP',
-      description: 'Carbon Disclosure Project - Environmental disclosure system for companies',
-      icon: 'fas fa-cloud',
-      color: 'teal',
-      features: ['Environmental disclosure', 'Climate scoring', 'Water & forest reporting'],
-      bestFor: 'Environmental transparency'
     }
   ];
 

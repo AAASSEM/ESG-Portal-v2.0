@@ -1695,13 +1695,34 @@ const Dashboard = () => {
         data={modalData.data}
       />
 
-      <DeadlineModal
-        isOpen={showDeadlineModal}
-        onClose={handleDeadlineModalClose}
-        onSelectType={handleDeadlineTypeSelect}
-      />
-    </div>
-  );
-};
+       <DeadlineModal
+         isOpen={showDeadlineModal}
+         onClose={handleDeadlineModalClose}
+         onSelectType={handleDeadlineTypeSelect}
+       />
+
+       {/* Action Footer */}
+       <div className="flex items-center justify-between bg-white rounded-xl p-6 shadow-sm border border-gray-200 mt-8 mb-8">
+         <div className="flex items-center space-x-4">
+           <button
+             className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
+             onClick={() => navigate('/data')}
+           >
+             <i className="fas fa-arrow-left mr-2"></i>Back
+           </button>
+         </div>
+         <div className="flex space-x-4">
+           <button
+             className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-lg font-medium"
+             onClick={() => navigate('/team')}
+           >
+             Save & Continue
+             <i className="fas fa-arrow-right ml-2"></i>
+           </button>
+         </div>
+       </div>
+     </div>
+   );
+ };
 
 export default Dashboard;

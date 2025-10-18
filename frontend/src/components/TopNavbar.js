@@ -162,11 +162,11 @@ const TopNavbar = () => {
     const baseNavItems = [
       { path: '/onboard', label: 'Company Info', icon: 'fa-solid fa-building' },
       { path: '/rame', label: 'Frameworks', icon: 'fa-solid fa-clipboard-list' },
-      { path: '/list', label: 'Profiling', icon: 'fa-solid fa-list-check' },
+      { path: '/list', label: 'Checklist', icon: 'fa-solid fa-list-check' },
       { path: '/meter', label: 'Meters', icon: 'fa-solid fa-tachometer-alt' },
       { path: '/data', label: 'Data Collection', icon: 'fa-solid fa-chart-line' },
-      { path: '/team', label: 'Team', icon: 'fa-solid fa-users' },
-      { path: '/dashboard', label: 'Dashboard', icon: 'fa-solid fa-chart-pie' }
+      { path: '/dashboard', label: 'Dashboard', icon: 'fa-solid fa-chart-pie' },
+      { path: '/team', label: 'Team', icon: 'fa-solid fa-users' }
     ];
 
     // Show all navigation items for all users - individual pages handle access control

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth, makeAuthenticatedRequest } from '../context/AuthContext';
 import { API_BASE_URL } from '../config';
@@ -30,14 +30,52 @@ const List = () => {
   const [assignments, setAssignments] = useState({ category_assignments: {}, element_assignments: {} });
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [backendChecklist, setBackendChecklist] = useState([]);
-  
+  const [selectedVoluntaryFrameworks, setSelectedVoluntaryFrameworks] = useState([]);
+
   // Get company ID from auth context
   const companyId = selectedCompany?.id;
-  
+
+  // Fetch selected voluntary frameworks
+  useEffect(() => {
+    if (!companyId) {
+      console.log('⏸️ No company selected, skipping voluntary framework fetch');
+      return;
+    }
+
+    const fetchSelectedVoluntaryFrameworks = async () => {
+      try {
+        console.log('🔍 Fetching selected voluntary frameworks for company:', companyId);
+
+        // Get all company frameworks
+        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/companies/${companyId}/frameworks/`);
+
+        if (response.ok) {
+          const frameworks = await response.json();
+          console.log('📋 Raw frameworks response:', frameworks);
+
+          // Filter for voluntary frameworks (type === 'voluntary')
+          const voluntaryIds = frameworks
+            .filter(fw => fw.type === 'voluntary')
+            .map(fw => fw.framework_id);
+
+          console.log('📋 Selected voluntary frameworks from DB:', voluntaryIds);
+          setSelectedVoluntaryFrameworks(voluntaryIds);
+        } else {
+          console.log('❌ Failed to fetch frameworks, status:', response.status);
+        }
+      } catch (error) {
+        console.error('❌ Error fetching voluntary frameworks:', error);
+      }
+    };
+
+    fetchSelectedVoluntaryFrameworks();
+  }, [companyId]);
+
   // Debug logging
   console.log('List component - selectedCompany:', selectedCompany);
   console.log('List component - companyId:', companyId);
   console.log('List component - user:', user);
+  console.log('List component - selectedVoluntaryFrameworks:', selectedVoluntaryFrameworks);
 
   // Modal helper function
   const showModal = (type, title, message) => {
@@ -211,6 +249,34 @@ const List = () => {
     return null;
   };
 
+  // Fetch selected voluntary frameworks (moved to a separate function for reuse)
+  const fetchSelectedVoluntaryFrameworks = async () => {
+    if (!companyId) return;
+
+    try {
+      console.log('🔍 Fetching selected voluntary frameworks for company:', companyId);
+
+      // Get all company frameworks
+      const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/companies/${companyId}/frameworks/`);
+
+      if (response.ok) {
+        const frameworks = await response.json();
+
+        // Filter for voluntary frameworks (type === 'voluntary')
+        const voluntaryIds = frameworks
+          .filter(fw => fw.type === 'voluntary')
+          .map(fw => fw.framework_id);
+
+        console.log('📋 Selected voluntary frameworks from DB:', voluntaryIds);
+        setSelectedVoluntaryFrameworks(voluntaryIds);
+      } else {
+        console.log('❌ Failed to fetch frameworks, status:', response.status);
+      }
+    } catch (error) {
+      console.error('❌ Error fetching voluntary frameworks:', error);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -219,17 +285,18 @@ const List = () => {
       setShowChecklist(false);
       setProfilingQuestions([]);
       // Don't reset checklistExists here to prevent flickering
-      
+
       // Fetch all data in parallel for faster loading
       await Promise.all([
         fetchProfilingQuestions(),
         fetchExistingAnswers(),
         checkChecklistExists(),
-        checkWizardCompletion()
+        checkWizardCompletion(),
+        fetchSelectedVoluntaryFrameworks()
       ]);
       setLoading(false);
     };
-    
+
     if (companyId) {
       fetchData();
     }
@@ -306,7 +373,7 @@ const List = () => {
             description: item.element_description,
             unit: item.element_unit,
             cadence: item.cadence,
-            frameworks: item.frameworks_list || [],
+            frameworks: filterFrameworks(item.frameworks_list || []),
             category: item.category || (item.is_metered ? 'Environmental' : 'Social'),
             isMetered: item.is_metered
           }));
@@ -324,6 +391,18 @@ const List = () => {
       setChecklistExists(false);
     }
     return false;
+  };
+
+  // Helper function to filter frameworks based on selection
+  const filterFrameworks = (frameworks) => {
+    return frameworks.filter(framework => {
+      if (framework === 'Green Key') {
+        // Only include Green Key if it was selected in the framework page
+        return selectedVoluntaryFrameworks.includes('GREEN_KEY');
+      }
+      // Include all other frameworks (DST, ESG, etc.)
+      return true;
+    });
   };
 
   // Check if wizard has been completed
@@ -355,36 +434,36 @@ const List = () => {
     }
   };
 
-  // Must-have data elements (always required)
-  const mustHaveElements = [
-    { id: 'electricity', name: 'Electricity Consumption', description: 'Total electricity from local providers', unit: 'kWh', cadence: 'Monthly', frameworks: ['DST', 'ESG', 'Green Key'], category: 'Environmental', is_metered: true, meter_type: 'Electricity' },
-    { id: 'water', name: 'Water Consumption', description: 'Total water usage', unit: 'mÂ³', cadence: 'Monthly', frameworks: ['DST', 'ESG', 'Green Key'], category: 'Environmental', is_metered: true, meter_type: 'Water' },
-    { id: 'waste_landfill', name: 'Waste to Landfill', description: 'Non-recycled waste disposal', unit: 'kg', cadence: 'Monthly', frameworks: ['DST', 'ESG', 'Green Key'], category: 'Environmental', is_metered: true, meter_type: 'Waste' },
-    { id: 'sustainability_policy', name: 'Sustainability Policy', description: 'Written sustainability policy', unit: 'Document', cadence: 'Annually', frameworks: ['DST', 'Green Key', 'ESG'], category: 'Social', is_metered: false },
-    { id: 'sustainability_personnel', name: 'Sustainability Personnel', description: 'Certified sustainability staff', unit: 'Count', cadence: 'Annually', frameworks: ['DST', 'Green Key'], category: 'Social', is_metered: false },
-    { id: 'employee_training', name: 'Employee Training Hours', description: 'Sustainability training per employee', unit: 'Hours', cadence: 'Annually', frameworks: ['DST', 'Green Key', 'ESG'], category: 'Social', is_metered: false },
-    { id: 'guest_education', name: 'Guest Education', description: 'Guest sustainability initiatives', unit: 'Count', cadence: 'Quarterly', frameworks: ['DST', 'Green Key'], category: 'Social', is_metered: false },
-    { id: 'community_initiatives', name: 'Community Initiatives', description: 'Local community programs', unit: 'Count, AED', cadence: 'Annually', frameworks: ['DST', 'Green Key', 'ESG'], category: 'Social', is_metered: false },
+  // Must-have data elements (always required) - frameworks filtered based on selection
+  const mustHaveElements = useMemo(() => [
+    { id: 'electricity', name: 'Electricity Consumption', description: 'Total electricity from local providers', unit: 'kWh', cadence: 'Monthly', frameworks: filterFrameworks(['DST', 'ESG', 'Green Key']), category: 'Environmental', is_metered: true, meter_type: 'Electricity' },
+    { id: 'water', name: 'Water Consumption', description: 'Total water usage', unit: 'mÂ³', cadence: 'Monthly', frameworks: filterFrameworks(['DST', 'ESG', 'Green Key']), category: 'Environmental', is_metered: true, meter_type: 'Water' },
+    { id: 'waste_landfill', name: 'Waste to Landfill', description: 'Non-recycled waste disposal', unit: 'kg', cadence: 'Monthly', frameworks: filterFrameworks(['DST', 'ESG', 'Green Key']), category: 'Environmental', is_metered: true, meter_type: 'Waste' },
+    { id: 'sustainability_policy', name: 'Sustainability Policy', description: 'Written sustainability policy', unit: 'Document', cadence: 'Annually', frameworks: filterFrameworks(['DST', 'Green Key', 'ESG']), category: 'Social', is_metered: false },
+    { id: 'sustainability_personnel', name: 'Sustainability Personnel', description: 'Certified sustainability staff', unit: 'Count', cadence: 'Annually', frameworks: filterFrameworks(['DST', 'Green Key']), category: 'Social', is_metered: false },
+    { id: 'employee_training', name: 'Employee Training Hours', description: 'Sustainability training per employee', unit: 'Hours', cadence: 'Annually', frameworks: filterFrameworks(['DST', 'Green Key', 'ESG']), category: 'Social', is_metered: false },
+    { id: 'guest_education', name: 'Guest Education', description: 'Guest sustainability initiatives', unit: 'Count', cadence: 'Quarterly', frameworks: filterFrameworks(['DST', 'Green Key']), category: 'Social', is_metered: false },
+    { id: 'community_initiatives', name: 'Community Initiatives', description: 'Local community programs', unit: 'Count, AED', cadence: 'Annually', frameworks: filterFrameworks(['DST', 'Green Key', 'ESG']), category: 'Social', is_metered: false },
     { id: 'government_compliance', name: 'Government Compliance', description: 'Energy regulation compliance', unit: 'Status', cadence: 'Annually', frameworks: ['DST', 'ESG'], category: 'Governance', is_metered: false },
-    { id: 'action_plan', name: 'Action Plan', description: 'Annual sustainability objectives', unit: 'Document', cadence: 'Annually', frameworks: ['DST', 'Green Key', 'ESG'], category: 'Governance', is_metered: false },
+    { id: 'action_plan', name: 'Action Plan', description: 'Annual sustainability objectives', unit: 'Document', cadence: 'Annually', frameworks: filterFrameworks(['DST', 'Green Key', 'ESG']), category: 'Governance', is_metered: false },
     { id: 'carbon_footprint', name: 'Carbon Footprint', description: 'Total GHG emissions', unit: 'tonnes CO2e', cadence: 'Annually', frameworks: ['ESG', 'DST'], category: 'Environmental', is_metered: false },
     { id: 'health_safety', name: 'Health & Safety Incidents', description: 'Workplace incidents', unit: 'Count', cadence: 'Monthly', frameworks: ['ESG'], category: 'Social', is_metered: false },
     { id: 'anti_corruption', name: 'Anti-corruption Policies', description: 'Anti-corruption measures', unit: 'Status', cadence: 'Annually', frameworks: ['ESG'], category: 'Governance', is_metered: false },
     { id: 'risk_management', name: 'Risk Management', description: 'ESG risk framework', unit: 'Status', cadence: 'Annually', frameworks: ['ESG'], category: 'Governance', is_metered: false }
-  ];
+  ], [selectedVoluntaryFrameworks]);
 
-  // Conditional data elements (activated by "Yes" answers)
-  const conditionalElements = {
+  // Conditional data elements (activated by "Yes" answers) - frameworks filtered based on selection
+  const conditionalElements = useMemo(() => ({
     'generator_fuel': { id: 'generator_fuel', name: 'Generator Fuel', description: 'Fuel for backup generators', unit: 'liters', cadence: 'Monthly', frameworks: ['DST', 'ESG'], category: 'Environmental', is_metered: true, meter_type: 'Generator' },
     'vehicle_fuel': { id: 'vehicle_fuel', name: 'Vehicle Fuel', description: 'Company vehicle fuel', unit: 'liters', cadence: 'Monthly', frameworks: ['DST', 'ESG'], category: 'Environmental', is_metered: true, meter_type: 'Vehicle' },
     'lpg_consumption': { id: 'lpg_consumption', name: 'LPG Usage', description: 'Liquid petroleum gas consumption', unit: 'kg', cadence: 'Monthly', frameworks: ['DST', 'ESG'], category: 'Environmental', is_metered: true, meter_type: 'LPG' },
-    'green_events': { id: 'green_events', name: 'Green Events', description: 'Sustainable event services', unit: 'Count', cadence: 'Quarterly', frameworks: ['DST', 'Green Key'], category: 'Social', is_metered: false },
-    'food_sourcing': { id: 'food_sourcing', name: 'Food Sourcing', description: 'Local/organic food purchases', unit: '%', cadence: 'Quarterly', frameworks: ['Green Key', 'ESG'], category: 'Environmental', is_metered: false },
-    'green_spaces': { id: 'green_spaces', name: 'Green Spaces', description: 'Sustainable landscaping', unit: 'mÂ²', cadence: 'Annually', frameworks: ['Green Key'], category: 'Environmental', is_metered: false },
-    'renewable_energy_usage': { id: 'renewable_energy_usage', name: 'Renewable Energy', description: 'Energy from renewable sources', unit: '%', cadence: 'Quarterly', frameworks: ['Green Key', 'ESG'], category: 'Environmental', is_metered: true, meter_type: 'Renewable Energy' },
-    'environmental_management_system': { id: 'environmental_management_system', name: 'Environmental Management System', description: 'EMS certification', unit: 'Status', cadence: 'Annually', frameworks: ['Green Key', 'ESG'], category: 'Governance', is_metered: false },
+    'green_events': { id: 'green_events', name: 'Green Events', description: 'Sustainable event services', unit: 'Count', cadence: 'Quarterly', frameworks: filterFrameworks(['DST', 'Green Key']), category: 'Social', is_metered: false },
+    'food_sourcing': { id: 'food_sourcing', name: 'Food Sourcing', description: 'Local/organic food purchases', unit: '%', cadence: 'Quarterly', frameworks: filterFrameworks(['Green Key', 'ESG']), category: 'Environmental', is_metered: false },
+    'green_spaces': { id: 'green_spaces', name: 'Green Spaces', description: 'Sustainable landscaping', unit: 'mÂ²', cadence: 'Annually', frameworks: filterFrameworks(['Green Key']), category: 'Environmental', is_metered: false },
+    'renewable_energy_usage': { id: 'renewable_energy_usage', name: 'Renewable Energy', description: 'Energy from renewable sources', unit: '%', cadence: 'Quarterly', frameworks: filterFrameworks(['Green Key', 'ESG']), category: 'Environmental', is_metered: true, meter_type: 'Renewable Energy' },
+    'environmental_management_system': { id: 'environmental_management_system', name: 'Environmental Management System', description: 'EMS certification', unit: 'Status', cadence: 'Annually', frameworks: filterFrameworks(['Green Key', 'ESG']), category: 'Governance', is_metered: false },
     'board_composition': { id: 'board_composition', name: 'Board Composition', description: 'Board diversity metrics', unit: '%', cadence: 'Annually', frameworks: ['ESG'], category: 'Governance', is_metered: false }
-  };
+  }), [selectedVoluntaryFrameworks]);
 
   const handleAnswerChange = async (questionId, answer) => {
     // Check if user has edit permission
@@ -562,17 +641,17 @@ const List = () => {
 
   const generateChecklist = () => {
     if (!allQuestionsAnswered) return [];
-    
-    // Start with must-have elements
+
+    // Start with must-have elements (already filtered)
     const checklist = [...mustHaveElements];
-    
-    // Add conditional elements based on "Yes" answers
+
+    // Add conditional elements based on "Yes" answers (already filtered)
     profilingQuestions.forEach(question => {
       if (answers[question.id] === true && conditionalElements[question.activatesElement]) {
         checklist.push(conditionalElements[question.activatesElement]);
       }
     });
-    
+
     // Sort by category
     return checklist.sort((a, b) => a.category.localeCompare(b.category));
   };
@@ -1118,7 +1197,7 @@ const List = () => {
         <div className="bg-green-50 border border-green-200 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-              <h3 className="text-base sm:text-lg font-semibold text-green-900">âœ… Checklist Ready!</h3>
+               <h3 className="text-base sm:text-lg font-semibold text-green-900">✓ Checklist Ready!</h3>
               <p className="text-sm sm:text-base text-green-700">Your personalized data checklist has been created and is ready to view.</p>
             </div>
             <button

@@ -1076,7 +1076,7 @@ const Data = () => {
   };
 
   const handleContinue = () => {
-    navigate('/team');
+    navigate('/dashboard');
   };
 
   // Check if user has permission to access data collection (moved after hooks)

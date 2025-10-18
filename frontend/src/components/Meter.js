@@ -1001,7 +1001,7 @@ const Meter = () => {
 
       {/* Meter Details Modal */}
       {selectedMeter && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-[100000]">
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[100000]">
           <div className="bg-white rounded-md p-5 border w-96 shadow-lg mx-4">
             <div className="mt-3">
               <div className="flex items-center justify-between mb-4">
@@ -1171,7 +1171,7 @@ const Meter = () => {
 
       {/* Alert/Confirm Modal */}
       {modal.show && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-[100000]">
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[100000]">
           <div className="bg-white rounded-md p-5 border w-96 shadow-lg mx-4">
             <div className="mt-3">
               <div className="flex items-center justify-between mb-4">
@@ -1319,7 +1319,7 @@ const MeterFormModal = ({ isOpen, title, meter, meterTypes, onSave, onClose }) =
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-[100000]">
+    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[100000]">
       <div className="bg-white rounded-md p-5 border w-full max-w-md shadow-lg mx-4">
         <div className="mt-3">
           <div className="flex items-center justify-between mb-6">
@@ -1491,7 +1491,7 @@ const TypeFilterModal = ({ isOpen, currentFilter, uniqueTypes, onApply, onClose 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-[100000]">
+    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[100000]">
       <div className="bg-white rounded-md p-3 border w-80 shadow-lg mx-4">
         <div className="mt-1">
           <div className="flex items-center justify-between mb-3">
@@ -1584,7 +1584,7 @@ const StatusFilterModal = ({ isOpen, currentFilter, onApply, onClose }) => {
   ];
 
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-[100000]">
+    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[100000]">
       <div className="bg-white rounded-md p-3 border w-80 shadow-lg mx-4">
         <div className="mt-1">
           <div className="flex items-center justify-between mb-3">

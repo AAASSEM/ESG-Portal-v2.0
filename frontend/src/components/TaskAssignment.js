@@ -215,7 +215,7 @@ const TaskAssignment = () => {
 
     const modalContent = (
       <div 
-        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100000]"
+        className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[100000]"
         style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, width: '100vw', height: '100vh' }}
       >
         <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
@@ -530,7 +530,7 @@ const TaskAssignment = () => {
       {/* Task Assignment Modal */}
       {showAssignModal && selectedTaskForAssignment && createPortal(
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100000]"
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[100000]"
           style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, width: '100vw', height: '100vh' }}
         >
           <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 max-h-96 overflow-y-auto">

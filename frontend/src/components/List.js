@@ -889,7 +889,7 @@ const List = () => {
         
         {/* User Selection Modal */}
         {showUserModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <div className="fixed inset-0 z-[10000000] flex items-center justify-center bg-black bg-opacity-75 p-4">
             <div className="bg-white rounded-xl p-4 sm:p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
               <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-4">
                 {selectedCategory ? `Assign ${selectedCategory} Category` : `Assign ${selectedElement?.name}`}
@@ -919,27 +919,33 @@ const List = () => {
                       >
                         <div className="font-medium text-sm sm:text-base text-gray-900">{user.full_name}</div>
                         <div className="text-xs sm:text-sm text-gray-500">{user.email}</div>
-                        <div className="text-xs text-gray-400 mt-1">
-                          Role: {user.role} | Active assignments: {user.assignment_count}
-                        </div>
+                         <div className="text-xs text-gray-400 mt-1">
+                           {selectedCategory ? `${selectedCategory} category: ${categoryStats[selectedCategory.toLowerCase()] || 0} elements` : `Role: ${user.role} | Active assignments: ${user.assignment_count}`}
+                         </div>
                       </button>
                     ))
                   )}
                 </div>
               )}
               
-              <div className="mt-4 flex justify-end">
-                <button
-                  onClick={() => {
-                    setShowUserModal(false);
-                    setSelectedCategory(null);
-                    setSelectedElement(null);
-                  }}
-                  className="px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base text-gray-600 hover:text-gray-800"
-                >
-                  Cancel
-                </button>
-              </div>
+               <div className="mt-4 flex justify-between">
+                 <button
+                   onClick={() => navigate('/team')}
+                   className="px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm sm:text-base"
+                 >
+                   <i className="fas fa-users mr-2"></i>Go to Team
+                 </button>
+                 <button
+                   onClick={() => {
+                     setShowUserModal(false);
+                     setSelectedCategory(null);
+                     setSelectedElement(null);
+                   }}
+                   className="px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base text-gray-600 hover:text-gray-800"
+                 >
+                   Cancel
+                 </button>
+               </div>
             </div>
           </div>
         )}

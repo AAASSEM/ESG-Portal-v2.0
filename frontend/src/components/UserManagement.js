@@ -299,7 +299,7 @@ const UserManagement = () => {
 
     const modalContent = (
       <div 
-        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999999]"
+        className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[9999999]"
         style={{ 
           position: 'fixed', 
           top: 0, 
@@ -383,7 +383,7 @@ const UserManagement = () => {
 
     const modalContent = (
       <div 
-        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999999]"
+        className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[9999999]"
         style={{ 
           position: 'fixed', 
           top: 0, 
@@ -467,7 +467,7 @@ const UserManagement = () => {
 
     const modalContent = (
       <div 
-        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999999]"
+        className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[9999999]"
         style={{ 
           position: 'fixed', 
           top: 0, 
@@ -592,7 +592,7 @@ const UserManagement = () => {
 
     const modalContent = (
       <div 
-        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[10000000]"
+        className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[10000000]"
         style={{ 
           position: 'fixed', 
           top: 0, 
@@ -803,7 +803,7 @@ const UserManagement = () => {
 
     return (
       <div 
-        className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-[9999999]"
+        className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[9999999]"
         style={{ 
           position: 'fixed', 
           top: 0, 
@@ -1018,7 +1018,7 @@ const UserManagement = () => {
 
     return (
       <div 
-        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100000]"
+        className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[100000]"
         style={{ 
           position: 'fixed', 
           top: 0, 
@@ -1110,7 +1110,7 @@ const UserManagement = () => {
 
     return (
       <div 
-        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[10000010]"
+        className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[10000010]"
         style={{ 
           position: 'fixed', 
           top: 0, 

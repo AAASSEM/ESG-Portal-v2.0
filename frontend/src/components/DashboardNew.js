@@ -16,7 +16,7 @@ const ExportModal = ({ isOpen, onClose, onConfirm, data }) => {
   
   const modalContent = (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-[100000] flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black bg-opacity-75 z-[100000] flex items-center justify-center p-4"
       style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, width: '100vw', height: '100vh' }}
       onClick={handleOverlayClick}
     >

@@ -488,8 +488,8 @@ class ElementAssignmentViewSet(viewsets.ModelViewSet):
                     'email': assignment.assigned_to.email
                 }
             else:
-                # Use element_id instead of checklist_item.id for frontend matching
-                element_assignments[assignment.checklist_item.element.element_id] = {
+                # Use checklist_item.id for frontend matching (matches item.id in frontend)
+                element_assignments[assignment.checklist_item.id] = {
                     'user_id': assignment.assigned_to.id,
                     'username': assignment.assigned_to.username,
                     'email': assignment.assigned_to.email

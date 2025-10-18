@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useAuth, makeAuthenticatedRequest } from '../context/AuthContext';
 import { API_BASE_URL } from '../config';
@@ -140,7 +141,7 @@ const List = () => {
   // Fetch available users for assignment
   const fetchAvailableUsers = async () => {
     if (!companyId) return;
-    
+
     setLoadingUsers(true);
     try {
       const response = await makeAuthenticatedRequest(
@@ -159,14 +160,14 @@ const List = () => {
   // Fetch existing assignments
   const fetchAssignments = async () => {
     if (!companyId) return;
-    
+
     try {
       const response = await makeAuthenticatedRequest(
         `${API_BASE_URL}/api/element-assignments/get_assignments/?company_id=${companyId}`
       );
       if (response.ok) {
         const data = await response.json();
-        setAssignments(data);
+        setAssignments({ ...data });
       }
     } catch (error) {
       console.error('Error fetching assignments:', error);
@@ -176,6 +177,23 @@ const List = () => {
   // Handle category assignment
   const handleCategoryAssignment = async (category, userId) => {
     try {
+      // Find the user object for optimistic update
+      const assignedUser = availableUsers.find(u => u.id === userId);
+      if (assignedUser) {
+        // Optimistically update the assignments state
+        const updatedAssignments = { ...assignments };
+        if (!updatedAssignments.category_assignments) {
+          updatedAssignments.category_assignments = {};
+        }
+        updatedAssignments.category_assignments[category] = {
+          id: assignedUser.id,
+          username: assignedUser.full_name,
+          email: assignedUser.email
+        };
+        console.log('Optimistically updating category assignments:', updatedAssignments);
+        setAssignments(updatedAssignments);
+      }
+
       const response = await makeAuthenticatedRequest(
         `${API_BASE_URL}/api/element-assignments/assign_category/`,
         {
@@ -187,28 +205,51 @@ const List = () => {
           })
         }
       );
-      
+
       if (response.ok) {
         const result = await response.json();
         showModal('success', 'Success', result.message);
-        fetchAssignments(); // Refresh assignments
+
+        // Wait a moment for the backend to process, then fetch to confirm
+        setTimeout(async () => {
+          await fetchAssignments();
+        }, 500);
+
         setShowUserModal(false);
         setSelectedCategory(null);
       } else {
         const error = await response.json();
         showModal('error', 'Error', error.error || 'Failed to assign category');
+        // Revert optimistic update on error
+        await fetchAssignments();
       }
     } catch (error) {
       console.error('Error assigning category:', error);
       showModal('error', 'Error', 'Failed to assign category');
+      // Revert optimistic update on error
+      await fetchAssignments();
     }
   };
 
   // Handle element assignment
   const handleElementAssignment = async (elementId, userId) => {
     try {
-      console.log('Assigning element - elementId:', elementId, 'userId:', userId);
-      console.log('Selected element object:', selectedElement);
+      // Find the user object for optimistic update
+      const assignedUser = availableUsers.find(u => u.id === userId);
+      if (assignedUser) {
+        // Optimistically update the assignments state
+        const updatedAssignments = { ...assignments };
+        if (!updatedAssignments.element_assignments) {
+          updatedAssignments.element_assignments = {};
+        }
+        updatedAssignments.element_assignments[elementId] = {
+          id: assignedUser.id,
+          username: assignedUser.full_name,
+          email: assignedUser.email
+        };
+        setAssignments(updatedAssignments);
+      }
+
       const response = await makeAuthenticatedRequest(
         `${API_BASE_URL}/api/element-assignments/assign_element/`,
         {
@@ -219,20 +260,33 @@ const List = () => {
           })
         }
       );
-      
+
       if (response.ok) {
         const result = await response.json();
-        showModal('success', 'Success', result.message);
-        fetchAssignments(); // Refresh assignments
-        setShowUserModal(false);
-        setSelectedElement(null);
+
+        if (result.success !== false && !result.error) {
+          showModal('success', 'Success', result.message || 'Element assigned successfully');
+
+          // Wait a moment for the backend to process, then fetch to confirm
+          setTimeout(async () => {
+            await fetchAssignments();
+          }, 500);
+
+          setShowUserModal(false);
+          setSelectedElement(null);
+        } else {
+          showModal('error', 'Error', result.error || 'Failed to assign element');
+          await fetchAssignments();
+        }
       } else {
         const error = await response.json();
         showModal('error', 'Error', error.error || 'Failed to assign element');
+        await fetchAssignments();
       }
     } catch (error) {
       console.error('Error assigning element:', error);
       showModal('error', 'Error', 'Failed to assign element');
+      await fetchAssignments();
     }
   };
 
@@ -843,14 +897,13 @@ const List = () => {
                           )}
                           
                           {hasPermission('elementAssignment', 'create') && canAssign && (
-                            <button
-                              onClick={() => {
-                                console.log('Assigning item:', item);
-                                setSelectedElement(item);
-                                setSelectedCategory(null);
-                                fetchAvailableUsers();
-                                setShowUserModal(true);
-                              }}
+                               <button
+                                 onClick={() => {
+                                   setSelectedElement(item);
+                                   setSelectedCategory(null);
+                                   fetchAvailableUsers();
+                                   setShowUserModal(true);
+                                 }}
                               className="px-3 py-1.5 bg-blue-600 text-white rounded text-xs sm:text-sm hover:bg-blue-700 whitespace-nowrap"
                             >
                               <i className="fas fa-user-edit mr-1"></i>
@@ -888,13 +941,22 @@ const List = () => {
         </div>
         
         {/* User Selection Modal */}
-        {showUserModal && (
-          <div className="fixed inset-0 z-[10000000] flex items-center justify-center bg-black bg-opacity-75 p-4">
-            <div className="bg-white rounded-xl p-4 sm:p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+        {showUserModal && createPortal(
+          <div
+            className="fixed inset-0 z-[10000000] flex items-center justify-center bg-black bg-opacity-75 p-4"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowUserModal(false);
+                setSelectedCategory(null);
+                setSelectedElement(null);
+              }
+            }}
+          >
+            <div className="bg-white rounded-xl p-4 sm:p-6 max-w-md w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
               <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-4">
                 {selectedCategory ? `Assign ${selectedCategory} Category` : `Assign ${selectedElement?.name}`}
               </h3>
-              
+
               {loadingUsers ? (
                 <div className="text-center py-4">
                   <i className="fas fa-spinner fa-spin text-2xl text-gray-400"></i>
@@ -919,35 +981,36 @@ const List = () => {
                       >
                         <div className="font-medium text-sm sm:text-base text-gray-900">{user.full_name}</div>
                         <div className="text-xs sm:text-sm text-gray-500">{user.email}</div>
-                         <div className="text-xs text-gray-400 mt-1">
-                           {selectedCategory ? `${selectedCategory} category: ${categoryStats[selectedCategory.toLowerCase()] || 0} elements` : `Role: ${user.role} | Active assignments: ${user.assignment_count}`}
-                         </div>
+                        <div className="text-xs text-gray-400 mt-1">
+                          {selectedCategory ? `${selectedCategory} category: ${categoryStats[selectedCategory.toLowerCase()] || 0} elements` : `Role: ${user.role} | Active assignments: ${user.assignment_count}`}
+                        </div>
                       </button>
                     ))
                   )}
                 </div>
               )}
-              
-               <div className="mt-4 flex justify-between">
-                 <button
-                   onClick={() => navigate('/team')}
-                   className="px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm sm:text-base"
-                 >
-                   <i className="fas fa-users mr-2"></i>Go to Team
-                 </button>
-                 <button
-                   onClick={() => {
-                     setShowUserModal(false);
-                     setSelectedCategory(null);
-                     setSelectedElement(null);
-                   }}
-                   className="px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base text-gray-600 hover:text-gray-800"
-                 >
-                   Cancel
-                 </button>
-               </div>
+
+                <div className="mt-4 flex justify-between">
+                  <button
+                    onClick={() => navigate('/team')}
+                    className="px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm sm:text-base"
+                  >
+                    <i className="fas fa-users mr-2"></i>Go to Team
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowUserModal(false);
+                      setSelectedCategory(null);
+                      setSelectedElement(null);
+                    }}
+                    className="px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base text-gray-600 hover:text-gray-800"
+                  >
+                    Cancel
+                  </button>
+                </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
       </div>
     );

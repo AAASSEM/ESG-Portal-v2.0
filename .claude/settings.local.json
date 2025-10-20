@@ -1,19 +1,7 @@
+
 {
-  "permissions": {
-    "allow": [
-      "Bash(curl:*)",
-      "Bash(npm run build:*)",
-      "Bash(CI=false npm run build)",
-      "Bash(python3 manage.py shell:*)",
-      "Bash(python3 manage.py migrate:*)",
-      "Bash(cp:*)",
-      "Bash(python3:*)",
-      "Read(//mnt/c/Users/20100/thefinal/**)"
-    ],
-    "deny": [],
-    "ask": [],
-    "additionalDirectories": [
-      "/mnt/c/Users/20100/vsim1.0/ESG-Portal-2cdd1033e890665bf459c56e83058767b16eaec4/backend"
-    ]
-  }
+    "env": {
+        "ANTHROPIC_AUTH_TOKEN": "1b93ba00cd0740949d6be236f58ee23c.mNVjcc29IDQaaMrj",
+        "ANTHROPIC_BASE_URL": "https://api.z.ai/api/anthropic"
+    }
 }

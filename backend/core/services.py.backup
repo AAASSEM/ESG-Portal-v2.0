@@ -5,7 +5,6 @@ from django.db import transaction
 from django.db.models import Count, Q
 from datetime import datetime
 from collections import defaultdict
-import time
 from .models import (
     Company, Framework, CompanyFramework, DataElement, 
     DataElementFrameworkMapping, ProfilingQuestion, 
@@ -272,99 +271,123 @@ class DataCollectionService:
     
     @staticmethod
     def get_data_collection_tasks(company, year, month, user=None):
-        """
-        Optimized version using bulk queries to eliminate N+1 problems.
-        Target: < 2 seconds instead of 8.7 seconds.
-        """
-        try:
-            print(f"🚀 DEBUG: Optimized get_data_collection_tasks called for company={company.name}, year={year}, month={month}")
-            month_name = datetime(year, month, 1).strftime('%b')
+        """Get all data collection tasks for a specific month - shared data visibility"""
+        month_name = datetime(year, month, 1).strftime('%b')
+        
+        # Get checklist items filtered by cadence appropriate for this month
+        # Only include tasks that should appear in this specific month
+        monthly_cadences = ['monthly', 'daily']  # Monthly tasks + daily reporting tasks
 
-            # Determine allowed cadences
-            monthly_cadences = ['monthly', 'daily']
-            annual_month = 12
-            allowed_cadences = monthly_cadences + ['annual'] if month == annual_month else monthly_cadences
-            print(f"🔍 DEBUG: Month={month}, Allowed cadences={allowed_cadences}")
+        # For annual tasks, only show them in December or January (configurable)
+        annual_month = 12  # December for annual reporting
+        if month == annual_month:
+            allowed_cadences = monthly_cadences + ['annual']
+        else:
+            allowed_cadences = monthly_cadences
 
-            # BULK QUERIES - Get all data at once upfront
+        # Event-based tasks are only created when specific events occur
+        # They should not appear as regular monthly tasks
+        checklist_items = CompanyChecklist.objects.filter(
+            company=company,
+            cadence__in=allowed_cadences
+        )
 
-            # 1. Get checklist items with element data in one query
-            checklist_items = CompanyChecklist.objects.filter(
-                company=company,
-                cadence__in=allowed_cadences
-            ).select_related('element')
+        tasks = []
+        for item in checklist_items:
+            if item.element.is_metered:
+                # For metered elements, create task for each active meter
+                # Enhanced matching for comprehensive ESG framework
+                element_lower = item.element.name.lower()
 
-            # 2. Get all active meters for this company in one query
-            all_active_meters = Meter.objects.filter(
-                company=company,
-                status='active'
-            ).select_related('company')
+                # Map comprehensive framework elements to meter types
+                if 'electricity consumption' in element_lower:
+                    meter_type = 'Electricity Consumption'
+                elif 'water consumption' in element_lower:
+                    meter_type = 'Water Consumption'
+                elif 'district cooling' in element_lower:
+                    meter_type = 'District Cooling Consumption'
+                elif 'renewable energy generation' in element_lower or 'on-site renewable' in element_lower:
+                    meter_type = 'Renewable Energy Generation'
+                elif 'water flow rate' in element_lower:
+                    if 'shower' in element_lower:
+                        meter_type = 'Water Flow - Showers'
+                    elif 'tap' in element_lower:
+                        meter_type = 'Water Flow - Taps'
+                    else:
+                        meter_type = 'Water Flow Rate'
+                elif 'sub-metered water' in element_lower:
+                    meter_type = 'Sub-metered Water'
+                elif 'renewable energy percentage' in element_lower:
+                    meter_type = 'Renewable Energy Percentage'
+                else:
+                    # For backward compatibility with legacy elements
+                    meter_type = item.element.name
 
-            # 3. Get all existing submissions for this company/month in one query
-            existing_submissions = CompanyDataSubmission.objects.filter(
-                company=company,
-                reporting_year=year,
-                reporting_period=month_name
-            ).select_related('element', 'meter', 'assigned_to', 'assigned_by')
+                # Try exact match first
+                meters = Meter.objects.filter(
+                    company=company,
+                    type=meter_type,
+                    status='active'
+                )
 
-            # BUILD LOOKUP DICTIONARIES for O(1) access instead of repeated queries
+                # If no exact match, try flexible matching
+                if not meters.exists():
+                    # Try partial matches for backward compatibility
+                    if 'electricity' in element_lower:
+                        meters = Meter.objects.filter(
+                            company=company,
+                            type__icontains='Electricity',
+                            status='active'
+                        )
+                    elif 'water' in element_lower:
+                        meters = Meter.objects.filter(
+                            company=company,
+                            type__icontains='Water',
+                            status='active'
+                        )
+                    elif 'renewable' in element_lower:
+                        meters = Meter.objects.filter(
+                            company=company,
+                            type__icontains='Renewable',
+                            status='active'
+                        )
 
-            # Meter lookup: type -> [meters]
-            meter_lookup = {}
-            for meter in all_active_meters:
-                meter_lookup.setdefault(meter.type, []).append(meter)
+                # If still no meters found, auto-create one
+                if not meters.exists():
+                    meter = Meter.objects.create(
+                        company=company,
+                        type=meter_type,
+                        name='Main',
+                        status='active',
+                        is_auto_created=True
+                    )
+                    meters = [meter]
+                for meter in meters:
+                    # Find existing submission from ANY user, or create new one for current user
+                    submission = CompanyDataSubmission.objects.filter(
+                        company=company,
+                        element=item.element,
+                        meter=meter,
+                        reporting_year=year,
+                        reporting_period=month_name
+                    ).first()
 
-            # Submission lookup: (element_id, meter_id) -> submission
-            submission_lookup = {}
-            for submission in existing_submissions:
-                element_id = submission.element.element_id if hasattr(submission, 'element') and submission.element else None
-                meter_id = submission.meter.id if hasattr(submission, 'meter') and submission.meter else None
+                    # Check for ElementAssignment to determine who should be assigned
+                    from .models import ElementAssignment
+                    element_assignment = ElementAssignment.objects.filter(
+                        checklist_item=item,
+                        company=company,
+                        assignment_level='element'
+                    ).first()
 
-                if element_id:
-                    key = (element_id, meter_id)
-                    submission_lookup[key] = submission
-
-            print(f"🔍 DEBUG: Built meter_lookup with {len(meter_lookup)} meter types")
-            print(f"🔍 DEBUG: Built submission_lookup with {len(submission_lookup)} submissions")
-
-            # Bulk fetch ElementAssignments to optimize assignment lookups
-            from .models import ElementAssignment
-            element_assignments = ElementAssignment.objects.filter(
-                company=company,
-                assignment_level='element'
-            ).select_related('checklist_item', 'assigned_to', 'assigned_by')
-
-            category_assignments = ElementAssignment.objects.filter(
-                company=company,
-                assignment_level='category'
-            ).select_related('assigned_to', 'assigned_by')
-
-            # Build assignment lookup dictionaries
-            element_assignment_lookup = {ea.checklist_item.id: ea for ea in element_assignments}
-            category_assignment_lookup = {ea.category: ea for ea in category_assignments}
-
-            print(f"🔍 DEBUG: Built element_assignment_lookup with {len(element_assignment_lookup)} assignments")
-            print(f"🔍 DEBUG: Built category_assignment_lookup with {len(category_assignment_lookup)} assignments")
-
-            print(f"🔍 DEBUG: Found {len(checklist_items)} checklist items")
-            print(f"🔍 DEBUG: Found {len(all_active_meters)} active meters")
-            print(f"🔍 DEBUG: Found {len(existing_submissions)} existing submissions")
-
-            # Debug: Show first few items
-            if checklist_items:
-                print(f"🔍 DEBUG: First checklist item: ID={checklist_items[0].id}, Element={checklist_items[0].element}, Cadence={checklist_items[0].cadence}")
-            if all_active_meters:
-                print(f"🔍 DEBUG: First meter: Type={all_active_meters[0].type}, Status={all_active_meters[0].status}")
-
-            tasks = []
-            for item in checklist_items:
-                try:
-                    element = item.element
-                    element_lower = element.name.lower()
-
-                    # Use optimized lookup instead of queries
-                    element_assignment = element_assignment_lookup.get(item.id)
-                    category_assignment = category_assignment_lookup.get(element.category) if element.category else None
+                    # Also check for category-level assignment
+                    category_assignment = None
+                    if not element_assignment:
+                        category_assignment = ElementAssignment.objects.filter(
+                            category=item.element.category,
+                            company=company,
+                            assignment_level='category'
+                        ).first()
 
                     # Determine assignment details
                     assigned_to = None
@@ -380,150 +403,105 @@ class DataCollectionService:
                         assigned_by = category_assignment.assigned_by
                         assigned_at = category_assignment.assigned_at
 
-                    if element.is_metered:
-                        # Map element to meter types
-                        if 'electricity consumption' in element_lower:
-                            meter_type = 'Electricity Consumption'
-                        elif 'water consumption' in element_lower:
-                            meter_type = 'Water Consumption'
-                        elif 'district cooling' in element_lower:
-                            meter_type = 'District Cooling Consumption'
-                        elif 'renewable energy generation' in element_lower or 'on-site renewable' in element_lower:
-                            meter_type = 'Renewable Energy Generation'
-                        elif 'water flow rate' in element_lower:
-                            if 'shower' in element_lower:
-                                meter_type = 'Water Flow - Showers'
-                            elif 'tap' in element_lower:
-                                meter_type = 'Water Flow - Taps'
-                            else:
-                                meter_type = 'Water Flow Rate'
-                        elif 'sub-metered water' in element_lower:
-                            meter_type = 'Sub-metered Water'
-                        elif 'renewable energy percentage' in element_lower:
-                            meter_type = 'Renewable Energy Percentage'
-                        else:
-                            meter_type = element.name
-
-                        # Get meters using lookup instead of queries
-                        meters = meter_lookup.get(meter_type, [])
-                        print(f"🔍 DEBUG: Element '{element.name}' -> meter_type '{meter_type}' -> found {len(meters)} meters")
-
-                        # Try flexible matching if no exact match
-                        if not meters:
-                            print(f"🔍 DEBUG: No exact match for '{meter_type}', trying flexible matching...")
-                            for key, meter_list in meter_lookup.items():
-                                if 'electricity' in element_lower and 'electricity' in key.lower():
-                                    meters = meter_list
-                                    print(f"🔍 DEBUG: Flexible match found: {key} -> {len(meters)} meters")
-                                    break
-                                elif 'water' in element_lower and 'water' in key.lower():
-                                    meters = meter_list
-                                    print(f"🔍 DEBUG: Flexible match found: {key} -> {len(meters)} meters")
-                                    break
-                                elif 'renewable' in element_lower and 'renewable' in key.lower():
-                                    meters = meter_list
-                                    print(f"🔍 DEBUG: Flexible match found: {key} -> {len(meters)} meters")
-                                    break
-                                elif 'water' in element_lower and 'water' in key.lower():
-                                    meters = meter_list
-                                    break
-                                elif 'renewable' in element_lower and 'renewable' in key.lower():
-                                    meters = meter_list
-                                    break
-
-                        # Auto-create meter if none found
-                        if not meters:
-                            meter = Meter.objects.create(
-                                company=company,
-                                type=meter_type,
-                                name='Main',
-                                status='active',
-                                is_auto_created=True
-                            )
-                            meters = [meter]
-
-                        # Process each meter
-                        for meter in meters:
-                            # Get submission using lookup instead of query
-                            key = (element.element_id, meter.id)
-                            submission = submission_lookup.get(key)
-
-                            if not submission:
-                                # Create new submission record
-                                submission = CompanyDataSubmission.objects.create(
-                                    user=user,
-                                    company=company,
-                                    element=element,
-                                    meter=meter,
-                                    reporting_year=year,
-                                    reporting_period=month_name,
-                                    assigned_to=assigned_to,
-                                    assigned_by=assigned_by,
-                                    assigned_at=assigned_at
-                                )
-                            else:
-                                # Update existing submission if needed
-                                if not submission.assigned_to and assigned_to:
-                                    submission.assigned_to = assigned_to
-                                    submission.assigned_by = assigned_by
-                                    submission.assigned_at = assigned_at
-                                    submission.save()
-
-                            tasks.append({
-                                'type': 'metered',
-                                'element': element,
-                                'meter': meter,
-                                'submission': submission,
-                                'cadence': item.cadence
-                            })
+                    if not submission:
+                        # Create new submission record with assignment information
+                        submission = CompanyDataSubmission.objects.create(
+                            user=user,
+                            company=company,
+                            element=item.element,
+                            meter=meter,
+                            reporting_year=year,
+                            reporting_period=month_name,
+                            assigned_to=assigned_to,
+                            assigned_by=assigned_by,
+                            assigned_at=assigned_at
+                        )
                     else:
-                        # Non-metered element - get submission using lookup
-                        key = (element.element_id, None)
-                        submission = submission_lookup.get(key)
+                        # Update existing submission with assignment information if not already assigned
+                        if not submission.assigned_to and assigned_to:
+                            submission.assigned_to = assigned_to
+                            submission.assigned_by = assigned_by
+                            submission.assigned_at = assigned_at
+                            submission.save()
+                    
+                    tasks.append({
+                        'type': 'metered',
+                        'element': item.element,
+                        'meter': meter,
+                        'submission': submission,
+                        'cadence': item.cadence
+                    })
+            else:
+                # For non-metered elements, find existing submission from ANY user or create new
+                submission = CompanyDataSubmission.objects.filter(
+                    company=company,
+                    element=item.element,
+                    meter=None,
+                    reporting_year=year,
+                    reporting_period=month_name
+                ).first()
 
-                        if not submission:
-                            # Create new submission record
-                            submission = CompanyDataSubmission.objects.create(
-                                user=user,
-                                company=company,
-                                element=element,
-                                meter=None,
-                                reporting_year=year,
-                                reporting_period=month_name,
-                                assigned_to=assigned_to,
-                                assigned_by=assigned_by,
-                                assigned_at=assigned_at
-                            )
-                        else:
-                            # Update existing submission if needed
-                            if not submission.assigned_to and assigned_to:
-                                submission.assigned_to = assigned_to
-                                submission.assigned_by = assigned_by
-                                submission.assigned_at = assigned_at
-                                submission.save()
+                # Check for ElementAssignment to determine who should be assigned
+                from .models import ElementAssignment
+                element_assignment = ElementAssignment.objects.filter(
+                    checklist_item=item,
+                    company=company,
+                    assignment_level='element'
+                ).first()
 
-                        tasks.append({
-                            'type': 'non_metered',
-                            'element': element,
-                            'meter': None,
-                            'submission': submission,
-                            'cadence': item.cadence
-                        })
+                # Also check for category-level assignment
+                category_assignment = None
+                if not element_assignment:
+                    category_assignment = ElementAssignment.objects.filter(
+                        category=item.element.category,
+                        company=company,
+                        assignment_level='category'
+                    ).first()
 
-                except Exception as e:
-                    print(f"❌ ERROR processing checklist item {item.id}: {str(e)}")
-                    import traceback
-                    traceback.print_exc()
-                    continue
+                # Determine assignment details
+                assigned_to = None
+                assigned_by = None
+                assigned_at = None
 
-            print(f"✅ Successfully generated {len(tasks)} tasks")
-            return tasks
+                if element_assignment:
+                    assigned_to = element_assignment.assigned_to
+                    assigned_by = element_assignment.assigned_by
+                    assigned_at = element_assignment.assigned_at
+                elif category_assignment:
+                    assigned_to = category_assignment.assigned_to
+                    assigned_by = category_assignment.assigned_by
+                    assigned_at = category_assignment.assigned_at
 
-        except Exception as e:
-            print(f"❌ CRITICAL ERROR in get_data_collection_tasks: {str(e)}")
-            import traceback
-            traceback.print_exc()
-            return []
+                if not submission:
+                    # Create new submission record with assignment information
+                    submission = CompanyDataSubmission.objects.create(
+                        user=user,
+                        company=company,
+                        element=item.element,
+                        meter=None,
+                        reporting_year=year,
+                        reporting_period=month_name,
+                        assigned_to=assigned_to,
+                        assigned_by=assigned_by,
+                        assigned_at=assigned_at
+                    )
+                else:
+                    # Update existing submission with assignment information if not already assigned
+                    if not submission.assigned_to and assigned_to:
+                        submission.assigned_to = assigned_to
+                        submission.assigned_by = assigned_by
+                        submission.assigned_at = assigned_at
+                        submission.save()
+                
+                tasks.append({
+                    'type': 'non_metered',
+                    'element': item.element,
+                    'meter': None,
+                    'submission': submission,
+                    'cadence': item.cadence
+                })
+        
+        return tasks
     
     @staticmethod
     def calculate_annual_task_totals(company, year, user=None):
@@ -625,221 +603,95 @@ class DataCollectionService:
         return total_monthly_tasks
 
     @staticmethod
-    def calculate_annual_task_totals_optimized(company, year, user=None):
-        """
-        SIMPLE OPTIMIZED version that avoids the 12 API calls.
-        Target: < 1 second instead of 3-4 seconds.
-        """
-        print(f"🚀 DEBUG: SIMPLE OPTIMIZED annual task totals for {company.name} {year}")
-        start_time = time.time()
-
-        # Use the existing working function but avoid the 12 API calls
-        # Just count tasks directly using bulk queries
-
-        # Get all checklist items in one query
-        checklist_items = CompanyChecklist.objects.filter(company=company).select_related('element')
-
-        # Get all active meters in one query
-        active_meters = Meter.objects.filter(company=company, status='active').count()
-
-        print(f"🔍 DEBUG: Found {len(checklist_items)} checklist items, {active_meters} active meters")
-
-        monthly_cadences = ['monthly', 'daily']
-        total_tasks = 0
-
-        # Count tasks by cadence - this is much faster than individual meter queries
-        monthly_items = checklist_items.filter(cadence__in=monthly_cadences)
-        annual_items = checklist_items.filter(cadence='annual')
-
-        # For simplicity, estimate based on average meter count per element
-        # This is much faster than exact individual lookups
-        if monthly_items.exists():
-            # Monthly items appear 12 times per year
-            monthly_count = monthly_items.count()
-            total_tasks += monthly_count * 12 * 2  # ×12 months × 2 tasks (data + evidence)
-
-        if annual_items.exists():
-            # Annual items appear once per year (December)
-            annual_count = annual_items.count()
-            total_tasks += annual_count * 1 * 2  # ×1 time × 2 tasks (data + evidence)
-
-        elapsed = (time.time() - start_time) * 1000
-        print(f"✅ SIMPLE optimized annual task totals completed in {elapsed:.0f}ms: {total_tasks} total tasks")
-        return total_tasks
-
-    @staticmethod
-    def calculate_progress_original(company, year, month=None, user=None):
-        """Original calculate_progress function as fallback - SLOW BUT RELIABLE"""
-        from django.db.models import Q
+    def calculate_progress(company, year, month=None, user=None):
+        """Calculate data collection progress - counts data and evidence as separate tasks"""
         filters = {'company': company, 'reporting_year': year}
+        
+        # Import Q at the top level for both branches
+        from django.db.models import Q
 
         if month:
             month_name = datetime(year, month, 1).strftime('%b')
             # Create tasks for this specific month
             tasks = DataCollectionService.get_data_collection_tasks(company, year, month, user=user)
+
             # For monthly view: get submissions from current month only
             submissions = CompanyDataSubmission.objects.filter(
                 company=company, reporting_year=year, reporting_period=month_name
             )
         else:
             # For yearly progress, ensure all tasks are created for all 12 months
+            # Create submissions for the FULL year (Jan-Dec)
             for month_num in range(1, 13):
                 tasks = DataCollectionService.get_data_collection_tasks(company, year, month_num, user=user)
+
             # For yearly view: get ALL submissions
             submissions = CompanyDataSubmission.objects.filter(**filters)
-
+        
         # Filter out submissions from inactive meters
+        # Include submissions without meters (non-metered tasks) and submissions from active meters only
         active_submissions = submissions.filter(
             Q(meter__isnull=True) | Q(meter__status='active')
         )
-
+        
         # Separate active period submissions from inactive period submissions
         active_period_submissions = active_submissions.exclude(value='INACTIVE_PERIOD')
         inactive_period_submissions = active_submissions.filter(value='INACTIVE_PERIOD')
-
+        
         total_active_submissions = active_period_submissions.count()
         total_inactive_submissions = inactive_period_submissions.count()
-
+        
         if total_active_submissions == 0 and total_inactive_submissions == 0:
             return {
-                'data_progress': 0,
-                'evidence_progress': 0,
-                'total_points': 0,
+                'data_progress': 0, 
+                'evidence_progress': 0, 
+                'total_points': 0, 
                 'completed_points': 0,
                 'items_remaining': 0,
                 'inactive_period_points': 0
             }
-
+        
         # Count completed data entries and evidence files separately (only from active period)
         data_complete = active_period_submissions.exclude(value='').count()
         evidence_complete = active_period_submissions.exclude(evidence_file='').count()
-
+        
         # Total tasks calculation
         if month:
+            # For monthly view: calculate correct totals including annual tasks
             total_active_tasks = DataCollectionService.calculate_monthly_task_totals(company, year, month, user)
         else:
+            # For yearly view: calculate correct annual totals based on cadence
             total_active_tasks = DataCollectionService.calculate_annual_task_totals(company, year, user)
-
+        
         # Inactive period tasks (shown as incomplete/orange)
         total_inactive_tasks = total_inactive_submissions * 2
-
+        
         # Completed tasks = data entries + evidence uploads (only from active period)
         completed_tasks = data_complete + evidence_complete
-
+        
         # Remaining tasks = total active tasks - completed tasks
         items_remaining = total_active_tasks - completed_tasks
-
+        
         # Calculate percentages based on active period only
         overall_progress = (completed_tasks / total_active_tasks) * 100 if total_active_tasks > 0 else 0
         data_progress = (data_complete / total_active_submissions) * 100 if total_active_submissions > 0 else 0
         evidence_progress = (evidence_complete / total_active_submissions) * 100 if total_active_submissions > 0 else 0
-
+        
         result = {
             'data_progress': data_progress,
             'evidence_progress': evidence_progress,
             'overall_progress': overall_progress,
-            'total_points': total_active_tasks,
+            'total_points': total_active_tasks,  # Only active period tasks
             'completed_points': completed_tasks,
             'items_remaining': items_remaining,
-            'total_submissions': total_active_submissions,
+            'total_submissions': total_active_submissions,  # Active period submissions
             'data_complete': data_complete,
             'evidence_complete': evidence_complete,
-            'inactive_period_points': total_inactive_tasks,
+            'inactive_period_points': total_inactive_tasks,  # New field for inactive period
             'inactive_period_submissions': total_inactive_submissions
         }
 
         return result
-
-    @staticmethod
-    def calculate_progress(company, year, month=None, user=None):
-        """Calculate data collection progress - OPTIMIZED VERSION"""
-        try:
-            print(f"🚀 DEBUG: Optimized calculate_progress called for company={company.name}, year={year}, month={month}")
-            start_time = time.time()
-
-            from django.db.models import Q
-
-            if month:
-                # Monthly progress - simple case
-                month_name = datetime(year, month, 1).strftime('%b')
-                print(f"🔍 DEBUG: Monthly progress for {month_name} {year}")
-
-                submissions = CompanyDataSubmission.objects.filter(
-                    company=company,
-                    reporting_year=year,
-                    reporting_period=month_name
-                ).select_related('meter').filter(
-                    Q(meter__isnull=True) | Q(meter__status='active')
-                )
-
-                total_active_tasks = DataCollectionService.calculate_monthly_task_totals(company, year, month, user)
-
-            else:
-                # YEARLY progress - OPTIMIZED version
-                print(f"🔍 DEBUG: YEARLY progress for {year} - OPTIMIZED")
-
-                # Get ALL submissions at once (no 12 separate calls!)
-                submissions = CompanyDataSubmission.objects.filter(
-                    company=company,
-                    reporting_year=year
-                ).select_related('meter').filter(
-                    Q(meter__isnull=True) | Q(meter__status='active')
-                )
-
-                # Use optimized annual totals calculation
-                total_active_tasks = DataCollectionService.calculate_annual_task_totals_optimized(company, year, user)
-
-            # Filter active period submissions
-            active_period_submissions = submissions.exclude(value='INACTIVE_PERIOD')
-            total_active_submissions = active_period_submissions.count()
-
-            if total_active_submissions == 0:
-                return {
-                    'data_progress': 0,
-                    'evidence_progress': 0,
-                    'total_points': total_active_tasks,
-                    'completed_points': 0,
-                    'items_remaining': total_active_tasks,
-                    'data_complete': 0,
-                    'evidence_complete': 0,
-                    'inactive_period_points': 0,
-                    'inactive_period_submissions': 0
-                }
-
-            # Count completed tasks
-            data_complete = active_period_submissions.exclude(value='').count()
-            evidence_complete = active_period_submissions.exclude(evidence_file='').count()
-            completed_tasks = data_complete + evidence_complete
-            items_remaining = total_active_tasks - completed_tasks
-
-            # Calculate percentages
-            overall_progress = (completed_tasks / total_active_tasks) * 100 if total_active_tasks > 0 else 0
-            data_progress = (data_complete / total_active_submissions) * 100 if total_active_submissions > 0 else 0
-            evidence_progress = (evidence_complete / total_active_submissions) * 100 if total_active_submissions > 0 else 0
-
-            elapsed = (time.time() - start_time) * 1000
-            print(f"✅ Optimized calculate_progress completed in {elapsed:.0f}ms")
-
-            return {
-                'data_progress': data_progress,
-                'evidence_progress': evidence_progress,
-                'overall_progress': overall_progress,
-                'total_points': total_active_tasks,
-                'completed_points': completed_tasks,
-                'items_remaining': items_remaining,
-                'total_submissions': total_active_submissions,
-                'data_complete': data_complete,
-                'evidence_complete': evidence_complete,
-                'inactive_period_points': 0,
-                'inactive_period_submissions': 0
-            }
-
-        except Exception as e:
-            print(f"❌ ERROR in optimized calculate_progress: {str(e)}")
-            import traceback
-            traceback.print_exc()
-            print("🔄 Falling back to original function...")
-            return DataCollectionService.calculate_progress_original(company, year, month, user)
 
 
 class DashboardService:

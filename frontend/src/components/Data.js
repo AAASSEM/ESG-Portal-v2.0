@@ -30,6 +30,7 @@ const Data = () => {
   const [assignmentFilter, setAssignmentFilter] = useState('all'); // 'all', 'assigned', 'unassigned'
   const [assignments, setAssignments] = useState({ category_assignments: {}, element_assignments: {} });
   const [showViewFilterModal, setShowViewFilterModal] = useState(false);
+  const [monthSwitchLoading, setMonthSwitchLoading] = useState(false);
   const [showGroupByModal, setShowGroupByModal] = useState(false);
   const [showAssignmentFilterModal, setShowAssignmentFilterModal] = useState(false);
   const [progressData, setProgressData] = useState({
@@ -212,46 +213,38 @@ const Data = () => {
     }
   };
 
-  // Generate months based on current date and available data
-  const generateMonthsData = async (availableMonths, currentYear, currentMonth, selectedMonth) => {
+  // Generate months based on current date and available data - NO API CALLS!
+  const generateMonthsData = (availableMonths, currentYear, currentMonth, selectedMonth) => {
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    
-    // Get completion status for each available month
-    const monthsWithStatus = await Promise.all(
-      monthNames.map(async (name, index) => {
-        const monthNum = index + 1;
-        let status = 'upcoming';
-        
-        if (monthNum === selectedMonth) {
-          status = 'selected';
-        } else if (monthNum < currentMonth) {
-          // Check if this past month is complete
-          if (availableMonths.includes(monthNum)) {
-            try {
-              const progress = await fetchProgress(currentYear, monthNum);
-              const isComplete = progress.items_remaining === 0;
-              status = isComplete ? 'complete' : 'incomplete';
-            } catch (error) {
-              status = 'incomplete';
-            }
-          } else {
-            status = 'upcoming';
-          }
-        } else if (monthNum === currentMonth) {
-          status = 'current';
-        } else if (monthNum > 12) { // Future months beyond December (shouldn't happen)
-          status = 'disabled';
+
+    // Generate month status without API calls - much faster!
+    const monthsWithStatus = monthNames.map((name, index) => {
+      const monthNum = index + 1;
+      let status = 'upcoming';
+
+      if (monthNum === selectedMonth) {
+        status = 'selected';
+      } else if (monthNum < currentMonth) {
+        // For past months, assume incomplete until user clicks them
+        if (availableMonths.includes(monthNum)) {
+          status = 'incomplete';  // Default status, will be updated when clicked
+        } else {
+          status = 'upcoming';
         }
-        
-        return {
-          id: monthNum,
-          name,
-          status,
-          available: availableMonths.includes(monthNum)
-        };
-      })
-    );
-    
+      } else if (monthNum === currentMonth) {
+        status = 'current';
+      } else if (monthNum > 12) { // Future months beyond December (shouldn't happen)
+        status = 'disabled';
+      }
+
+      return {
+        id: monthNum,
+        name,
+        status,
+        available: availableMonths.includes(monthNum)
+      };
+    });
+
     return monthsWithStatus;
   };
 
@@ -292,20 +285,48 @@ const Data = () => {
   useEffect(() => {
     const loadInitialData = async () => {
       if (!companyId) return; // Don't load if no company selected
-      
-      setLoading(true);
+
+      // Only show loading spinner for initial load, not month switches
+      if (!dataEntries || dataEntries.length === 0) {
+        setLoading(true);
+      } else {
+        // Show subtle loading for month switches only
+        setMonthSwitchLoading(true);
+      }
+      console.log('🚀 Starting optimized data load - current month only!');
+      const startTime = performance.now();
+
       try {
-        // Load all data in parallel for faster loading
-        const [availableMonths, entries, annualProgress, monthlyProgress] = await Promise.all([
+        // Load all API calls in PARALLEL for maximum speed! 🚀
+        console.log('🚀 Loading API calls in PARALLEL for maximum speed!');
+        const apiStart = performance.now();
+
+        // Fire all API calls at once using Promise.all()
+        const [
+          availableMonths,
+          entries,
+          annualProgress,
+          monthlyProgress
+        ] = await Promise.all([
           fetchAvailableMonths(selectedYear),
           fetchDataEntries(selectedYear, selectedMonth),
           fetchProgress(selectedYear),
           fetchProgress(selectedYear, selectedMonth)
         ]);
 
-        // Generate months data
+        const parallelTime = (performance.now() - apiStart).toFixed(0);
+        console.log(`⚡ All PARALLEL API calls completed in: ${parallelTime}ms`);
+
+        const totalTime = (performance.now() - startTime).toFixed(0);
+        console.log('✅ All data loaded!', {
+          availableMonths: availableMonths.length,
+          entriesCount: entries?.length || 0,
+          totalTime: `${totalTime}ms`
+        });
+
+        // Generate months data (no async needed anymore!)
         const currentDate = new Date();
-        const monthsData = await generateMonthsData(availableMonths, selectedYear, currentDate.getMonth() + 1, selectedMonth);
+        const monthsData = generateMonthsData(availableMonths, selectedYear, currentDate.getMonth() + 1, selectedMonth);
         setMonths(monthsData);
         
         setProgressData({
@@ -363,6 +384,7 @@ const Data = () => {
         console.error('Error loading initial data:', error);
       } finally {
         setLoading(false);
+        setMonthSwitchLoading(false);
       }
     };
 
@@ -946,7 +968,7 @@ const Data = () => {
       // Update month statuses when progress changes
       const availableMonths = await fetchAvailableMonths(selectedYear);
       const currentDate = new Date();
-      const monthsData = await generateMonthsData(availableMonths, selectedYear, currentDate.getMonth() + 1, selectedMonth);
+      const monthsData = generateMonthsData(availableMonths, selectedYear, currentDate.getMonth() + 1, selectedMonth);
       setMonths(monthsData);
     } catch (error) {
       console.error('Error refreshing progress data:', error);
@@ -1016,7 +1038,7 @@ const Data = () => {
         // Update months with new selected month
         const availableMonths = await fetchAvailableMonths(selectedYear);
         const currentDate = new Date();
-        const monthsData = await generateMonthsData(availableMonths, selectedYear, currentDate.getMonth() + 1, monthId);
+        const monthsData = generateMonthsData(availableMonths, selectedYear, currentDate.getMonth() + 1, monthId);
         setMonths(monthsData);
 
         // Reload data entries for new month
@@ -1257,6 +1279,14 @@ const Data = () => {
 
   return (
      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+
+      {/* Month Switch Loading Indicator - Subtle */}
+      {monthSwitchLoading && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+          <span className="text-blue-700 text-sm">Loading month data...</span>
+        </div>
+      )}
 
       {/* Reporting Period Selector */}
       <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 mb-8">

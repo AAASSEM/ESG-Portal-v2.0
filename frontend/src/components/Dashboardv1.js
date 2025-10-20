@@ -430,22 +430,40 @@ const Dashboard = () => {
       console.log('No company selected, skipping dashboard data fetch');
       return null;
     }
-    
+
     try {
+      console.log('🚀 Dashboard: Loading with individual timing to find bottlenecks!');
+      const startTime = performance.now();
+
       const dashboardUrl = `${API_BASE_URL}/api/dashboard/?company_id=${companyId}`;
       const frameworksUrl = `${API_BASE_URL}/api/companies/${companyId}/frameworks/`;
       const progressUrl = `${API_BASE_URL}/api/companies/${companyId}/progress/`;
 
-      const [dashboardResponse, progressResponse, frameworksResponse] = await Promise.all([
-        fetch(dashboardUrl, { credentials: 'include' }),
-        fetch(progressUrl, { credentials: 'include' }),
-        fetch(frameworksUrl, { credentials: 'include' })
+      // Fire all dashboard API calls individually with timing
+      const dashboardStart = performance.now();
+      const dashboardResponse = await fetch(dashboardUrl, { credentials: 'include' });
+      console.log(`📊 Dashboard API: ${(performance.now() - dashboardStart).toFixed(0)}ms`);
+
+      const frameworksStart = performance.now();
+      const frameworksResponse = await fetch(frameworksUrl, { credentials: 'include' });
+      console.log(`📋 Frameworks API: ${(performance.now() - frameworksStart).toFixed(0)}ms`);
+
+      const progressStart = performance.now();
+      const progressResponse = await fetch(progressUrl, { credentials: 'include' });
+      console.log(`📈 Progress API: ${(performance.now() - progressStart).toFixed(0)}ms`);
+
+      // Parse responses with timing
+      const parseStart = performance.now();
+      const [dashboard, progress, frameworks] = await Promise.all([
+        dashboardResponse.json(),
+        progressResponse.json(),
+        frameworksResponse.json()
       ]);
-      
-      const dashboard = await dashboardResponse.json();
-      const progress = await progressResponse.json();
-      const frameworks = await frameworksResponse.json();
-      
+      console.log(`📝 JSON parsing: ${(performance.now() - parseStart).toFixed(0)}ms`);
+
+      const elapsed = (performance.now() - startTime).toFixed(0);
+      console.log(`⚡ TOTAL dashboard data loaded in: ${elapsed}ms`);
+
       return {
         ...dashboard,
         progress,
@@ -462,52 +480,50 @@ const Dashboard = () => {
       console.log('No company selected, skipping chart data fetch');
       return { meters: [], dataEntries: [] };
     }
-    
-    try {
-      // Determine months to fetch based on selected time range
-      const now = new Date();
-      let targetMonths = [];
 
+    try {
+      console.log('🚀 Dashboard Chart: Loading with optimized current-month-first strategy!');
+      const startTime = performance.now();
+
+      // CURRENT-MONTH-FIRST STRATEGY: Only load current month initially
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth() + 1; // 1-based
+
+      // For time ranges, use current month as default (fastest loading)
+      let targetMonths = [{ year: currentYear, month: currentMonth }];
+
+      // Only load additional months if user specifically selects historical ranges
       if (selectedTimeRange === 'Last Quarter') {
-        // Get the last 3 months including current month (to match chart labels)
-        const currentMonth = now.getMonth() + 1; // 1-based
-        for (let i = 2; i >= 0; i--) {
+        const currentMonthIndex = now.getMonth(); // 0-based
+        targetMonths = [
+          { year: currentMonthIndex < 2 ? currentYear - 1 : currentYear, month: ((currentMonthIndex - 2 + 12) % 12) + 1 },
+          { year: currentMonthIndex < 1 ? currentYear - 1 : currentYear, month: ((currentMonthIndex - 1 + 12) % 12) + 1 },
+          { year: currentYear, month: currentMonth }
+        ];
+      } else if (selectedTimeRange === 'Last Year') {
+        // Load current month + recent months only (not full year for performance)
+        targetMonths = [];
+        for (let i = 5; i >= 0; i--) { // Last 6 months only
           let month = currentMonth - i;
-          let year = now.getFullYear();
+          let year = currentYear;
           if (month <= 0) {
             month += 12;
             year -= 1;
           }
           targetMonths.push({ year, month });
         }
-      } else if (selectedTimeRange === 'Last Year') {
-        // Get all 12 months from the current year (2025)
-        const currentYear = now.getFullYear();
-        for (let month = 1; month <= 12; month++) {
-          targetMonths.push({ year: currentYear, month });
-        }
-      } else if (selectedTimeRange.includes('2025') && !selectedTimeRange.includes('Quarter') && !selectedTimeRange.includes('Last')) {
-        // Handle month-specific selections like "Sep 2025", etc.
-        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const selectedMonth = selectedTimeRange.split(' ')[0]; // Extract month name
-        const monthIndex = monthNames.indexOf(selectedMonth);
-        if (monthIndex !== -1) {
-          targetMonths.push({ year: 2025, month: monthIndex + 1 });
-        }
-      } else {
-        // Default to current month for 'Last 7 Days' or other ranges
-        targetMonths.push({ year: now.getFullYear(), month: now.getMonth() + 1 });
       }
 
-      console.log(`📅 Fetching data for time range: ${selectedTimeRange}`);
+      console.log(`📅 Dashboard: Optimized loading for ${targetMonths.length} months instead of 12+`);
       console.log(`🗓️ Target months:`, targetMonths.map(tm => `${tm.year}-${tm.month.toString().padStart(2, '0')}`));
-      // Fetch meters once
-      const metersUrl = `${API_BASE_URL}/api/meters/?company_id=${companyId}`;
 
-      // Fetch data for all target months
-      const dataPromises = targetMonths.map(({ year, month }) => {
+      // Load all data in PARALLEL with individual timing
+      const metersStart = performance.now();
+      const metersUrl = `${API_BASE_URL}/api/meters/?company_id=${companyId}`;
+      const dataPromises = targetMonths.map(({ year, month }, index) => {
         const dataUrl = `${API_BASE_URL}/api/data-collection/tasks/?company_id=${companyId}&year=${year}&month=${month}`;
-        console.log(`🔗 Fetching: ${dataUrl}`);
+        console.log(`🔗 Chart API call ${index + 1}/${targetMonths.length}: ${year}-${month.toString().padStart(2, '0')}`);
         return fetch(dataUrl, { credentials: 'include' });
       });
 
@@ -515,40 +531,30 @@ const Dashboard = () => {
         fetch(metersUrl, { credentials: 'include' }),
         ...dataPromises
       ]);
+      console.log(`⚡ Meters API: ${(performance.now() - metersStart).toFixed(0)}ms`);
 
-      const meters = await metersResponse.json();
+      // Parse all responses in parallel with timing
+      const parseStart = performance.now();
+      const [meters, ...monthDataEntries] = await Promise.all([
+        metersResponse.json(),
+        ...dataResponses.map(response => response.json())
+      ]);
+      console.log(`📝 Chart JSON parsing: ${(performance.now() - parseStart).toFixed(0)}ms`);
 
       // Combine all data from different months
       const allDataEntries = [];
-
-      for (let i = 0; i < dataResponses.length; i++) {
-        const dataResponse = dataResponses[i];
-        const monthDataEntries = await dataResponse.json();
-
-        if (Array.isArray(monthDataEntries)) {
-          // Data is flat array of tasks
-          allDataEntries.push(...monthDataEntries);
+      monthDataEntries.forEach(monthData => {
+        if (Array.isArray(monthData)) {
+          allDataEntries.push(...monthData);
         }
-      }
+      });
 
-      const dataEntries = allDataEntries;
+      const elapsed = (performance.now() - startTime).toFixed(0);
+      console.log(`⚡ TOTAL chart data loaded in: ${elapsed}ms (${targetMonths.length} months, ${allDataEntries.length} entries)`);
 
-      console.log(`📊 Combined data from ${targetMonths.length} months`);
-      console.log(`📊 Data entries after combination:`, dataEntries?.length || 0);
-      
-      console.log(`📊 RAW API RESPONSE - Meters:`, meters);
-      console.log(`📊 RAW API RESPONSE - Data Entries:`, dataEntries);
-      console.log(`📊 Data entries count:`, dataEntries?.length || 0);
-      if (dataEntries && dataEntries.length > 0) {
-        console.log(`📊 FULL STRUCTURE - First data entry:`, JSON.stringify(dataEntries[0], null, 2));
-        console.log(`📊 Available keys in first entry:`, Object.keys(dataEntries[0] || {}));
-        console.log(`📊 Value field check:`, dataEntries[0]?.value, typeof dataEntries[0]?.value);
-        console.log(`📊 Meter field check:`, dataEntries[0]?.meter, typeof dataEntries[0]?.meter);
-      }
-      
       return {
         meters: meters.results || meters,
-        dataEntries: dataEntries || []
+        dataEntries: allDataEntries || []
       };
     } catch (error) {
       console.error('Error fetching chart data:', error);
@@ -559,13 +565,22 @@ const Dashboard = () => {
   useEffect(() => {
     const loadDashboardData = async () => {
       setLoading(true);
+      console.log('🚀 Dashboard: Starting optimized parallel load...');
+      const startTime = performance.now();
+
       try {
+        // Load dashboard and chart data in parallel
         const [data, charts] = await Promise.all([
           fetchDashboardData(),
           fetchChartData()
         ]);
+
         setDashboardData(data);
         setChartData(charts);
+
+        const totalTime = (performance.now() - startTime).toFixed(0);
+        console.log(`✅ Dashboard: All data loaded in ${totalTime}ms!`);
+
       } catch (error) {
         console.error('Error loading dashboard:', error);
         setDashboardData(null);

@@ -1,56 +1,24 @@
-Compiled with problems:
-×
-ERROR in ./src/components/List.js
-Module build failed (from ./node_modules/babel-loader/lib/index.js):
-SyntaxError: /mnt/c/Users/20100/thefinal/vsim2.0/frontend/src/components/List.js: Unexpected token (305:4)
-
-  303 |         await fetchAssignments();
-  304 |       }
-> 305 |     } catch (error) {
-      |     ^
-  306 |       console.error('Error assigning element:', error);
-  307 |       showModal('error', 'Error', 'Failed to assign element');
-  308 |       // Revert optimistic update on error
-    at constructor (/mnt/c/Users/20100/thefinal/vsim2.0/frontend/node_modules/@babel/parser/lib/index.js:367:19)
-    at FlowParserMixin.raise (/mnt/c/Users/20100/thefinal/vsim2.0/frontend/node_modules/@babel/parser/lib/index.js:6630:19)
-    at FlowParserMixin.unexpected (/mnt/c/Users/20100/thefinal/vsim2.0/frontend/node_modules/@babel/parser/lib/index.js:6650:16)
-    at FlowParserMixin.parseExprAtom (/mnt/c/Users/20100/thefinal/vsim2.0/frontend/node_modules/@babel/parser/lib/index.js:11447:16)
-    at FlowParserMixin.parseExprAtom (/mnt/c/Users/20100/thefinal/vsim2.0/frontend/node_modules/@babel/parser/lib/index.js:4797:20)
-    at FlowParserMixin.parseExprSubscripts (/mnt/c/Users/20100/thefinal/vsim2.0/frontend/node_modules/@babel/parser/lib/index.js:11081:23)
-    at FlowParserMixin.parseUpdate (/mnt/c/Users/20100/thefinal/vsim2.0/frontend/node_modules/@babel/parser/lib/index.js:11066:21)
-    at FlowParserMixin.parseMaybeUnary (/mnt/c/Users/20100/thefinal/vsim2.0/frontend/node_modules/@babel/parser/lib/index.js:11046:23)
-    at FlowParserMixin.parseMaybeUnaryOrPrivate (/mnt/c/Users/20100/thefinal/vsim2.0/frontend/node_modules/@babel/parser/lib/index.js:10899:61)
-    at FlowParserMixin.parseExprOps (/mnt/c/Users/20100/thefinal/vsim2.0/frontend/node_modules/@babel/parser/lib/index.js:10904:23)
-    at FlowParserMixin.parseMaybeConditional (/mnt/c/Users/20100/thefinal/vsim2.0/frontend/node_modules/@babel/parser/lib/index.js:10881:23)
-    at FlowParserMixin.parseMaybeAssign (/mnt/c/Users/20100/thefinal/vsim2.0/frontend/node_modules/@babel/parser/lib/index.js:10831:21)
-    at FlowParserMixin.parseMaybeAssign (/mnt/c/Users/20100/thefinal/vsim2.0/frontend/node_modules/@babel/parser/lib/index.js:3582:18)
-    at FlowParserMixin.parseExpressionBase (/mnt/c/Users/20100/thefinal/vsim2.0/frontend/node_modules/@babel/parser/lib/index.js:10784:23)
-    at /mnt/c/Users/20100/thefinal/vsim2.0/frontend/node_modules/@babel/parser/lib/index.js:10780:39
-    at FlowParserMixin.allowInAnd (/mnt/c/Users/20100/thefinal/vsim2.0/frontend/node_modules/@babel/parser/lib/index.js:12427:16)
-    at FlowParserMixin.parseExpression (/mnt/c/Users/20100/thefinal/vsim2.0/frontend/node_modules/@babel/parser/lib/index.js:10780:17)
-    at FlowParserMixin.parseStatementContent (/mnt/c/Users/20100/thefinal/vsim2.0/frontend/node_modules/@babel/parser/lib/index.js:12900:23)
-    at FlowParserMixin.parseStatementLike (/mnt/c/Users/20100/thefinal/vsim2.0/frontend/node_modules/@babel/parser/lib/index.js:12772:17)
-    at FlowParserMixin.parseStatementLike (/mnt/c/Users/20100/thefinal/vsim2.0/frontend/node_modules/@babel/parser/lib/index.js:2949:24)
-    at FlowParserMixin.parseModuleItem (/mnt/c/Users/20100/thefinal/vsim2.0/frontend/node_modules/@babel/parser/lib/index.js:12749:17)
-    at FlowParserMixin.parseBlockOrModuleBlockBody (/mnt/c/Users/20100/thefinal/vsim2.0/frontend/node_modules/@babel/parser/lib/index.js:13321:36)
-    at FlowParserMixin.parseBlockBody (/mnt/c/Users/20100/thefinal/vsim2.0/frontend/node_modules/@babel/parser/lib/index.js:13314:10)
-    at FlowParserMixin.parseProgram (/mnt/c/Users/20100/thefinal/vsim2.0/frontend/node_modules/@babel/parser/lib/index.js:12630:10)
-    at FlowParserMixin.parseTopLevel (/mnt/c/Users/20100/thefinal/vsim2.0/frontend/node_modules/@babel/parser/lib/index.js:12620:25)
-    at FlowParserMixin.parseTopLevel (/mnt/c/Users/20100/thefinal/vsim2.0/frontend/node_modules/@babel/parser/lib/index.js:3718:28)
-    at FlowParserMixin.parse (/mnt/c/Users/20100/thefinal/vsim2.0/frontend/node_modules/@babel/parser/lib/index.js:14497:10)
-    at parse (/mnt/c/Users/20100/thefinal/vsim2.0/frontend/node_modules/@babel/parser/lib/index.js:14531:38)
-    at parser (/mnt/c/Users/20100/thefinal/vsim2.0/frontend/node_modules/@babel/core/lib/parser/index.js:41:34)
-    at parser.next (<anonymous>)
-    at normalizeFile (/mnt/c/Users/20100/thefinal/vsim2.0/frontend/node_modules/@babel/core/lib/transformation/normalize-file.js:64:37)
-    at normalizeFile.next (<anonymous>)
-    at run (/mnt/c/Users/20100/thefinal/vsim2.0/frontend/node_modules/@babel/core/lib/transformation/index.js:22:50)
-    at run.next (<anonymous>)
-    at transform (/mnt/c/Users/20100/thefinal/vsim2.0/frontend/node_modules/@babel/core/lib/transform.js:22:33)
-    at transform.next (<anonymous>)
-    at step (/mnt/c/Users/20100/thefinal/vsim2.0/frontend/node_modules/gensync/index.js:261:32)
-    at /mnt/c/Users/20100/thefinal/vsim2.0/frontend/node_modules/gensync/index.js:273:13
-    at async.call.result.err.err (/mnt/c/Users/20100/thefinal/vsim2.0/frontend/node_modules/gensync/index.js:223:11)
-ERROR
-[eslint] 
-src/components/List.js
-  Line 305:4:  Parsing error: Unexpected token (305:4)
+DataCacheContext.js:92 
+ ❌ Error fetching chart-data-2025-10: Error: Failed to fetch chart data
+    at DataCacheContext.js:185:1
+    at async fetchWithCache (DataCacheContext.js:62:1)
+    at async fetchChartData (Dashboardv1.js:469:1)
+    at async Promise.all (index 1)
+    at async loadDashboardData (Dashboardv1.js:489:1)
+fetchWithCache	@	DataCacheContext.js:92
+await in fetchWithCache		
+fetchChartData	@	DataCacheContext.js:175
+fetchChartData	@	Dashboardv1.js:469
+loadDashboardData	@	Dashboardv1.js:489
+(anonymous)	@	Dashboardv1.js:509
+Dashboardv1.js:476 
+ Error fetching chart data: Error: Failed to fetch chart data
+    at DataCacheContext.js:185:1
+    at async fetchWithCache (DataCacheContext.js:62:1)
+    at async fetchChartData (Dashboardv1.js:469:1)
+    at async Promise.all (index 1)
+    at async loadDashboardData (Dashboardv1.js:489:1)
+fetchChartData	@	Dashboardv1.js:476
+await in fetchChartData		
+loadDashboardData	@	Dashboardv1.js:489
+(anonymous)	@	Dashboardv1.js:509

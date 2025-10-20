@@ -358,6 +358,12 @@ class CompanyDataSubmission(models.Model):
     
     class Meta:
         unique_together = ('user', 'company', 'element', 'meter', 'reporting_year', 'reporting_period')
+        indexes = [
+            # Performance indexes for tasks API - optimize company-based queries
+            models.Index(fields=['company', 'reporting_year', 'reporting_period'], name='idx_company_year_period'),
+            models.Index(fields=['company', 'element'], name='idx_submission_company_element'),
+            models.Index(fields=['company'], name='idx_submission_company'),
+        ]
     
     @property
     def status(self):
@@ -392,6 +398,12 @@ class CompanyChecklist(models.Model):
     
     class Meta:
         unique_together = ('user', 'company', 'element')
+        indexes = [
+            # Performance indexes for tasks API - optimize company-based queries
+            models.Index(fields=['company', 'cadence'], name='idx_company_cadence'),
+            models.Index(fields=['company', 'element'], name='idx_checklist_company_element'),
+            models.Index(fields=['company'], name='idx_checklist_company'),
+        ]
     
     def __str__(self):
         return f"{self.company.name} - {self.element.name}"

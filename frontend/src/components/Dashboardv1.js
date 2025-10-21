@@ -502,9 +502,9 @@ const Dashboard = () => {
           { year: currentYear, month: currentMonth }
         ];
       } else if (selectedTimeRange === 'Last Year') {
-        // Load current month + recent months only (not full year for performance)
+        // Load all 12 months for the full year view
         targetMonths = [];
-        for (let i = 5; i >= 0; i--) { // Last 6 months only
+        for (let i = 13; i >= 0; i--) { // All 12 months
           let month = currentMonth - i;
           let year = currentYear;
           if (month <= 0) {
@@ -846,7 +846,10 @@ const Dashboard = () => {
   };
 
   const handleQuickAction = (action) => {
-    if (action.path) {
+    if (action.title === 'Profiling') {
+      // Handle Profiling button specially to force showing questions
+      navigate('/list', { state: { forceShowQuestions: true } });
+    } else if (action.path) {
       navigate(action.path);
     } else if (action.action === 'export') {
       handleExportData();
@@ -1251,7 +1254,12 @@ const Dashboard = () => {
   };
 
   const generateEmissionsData = () => {
+    console.log('🏭 generateEmissionsData called');
+    console.log('🏭 chartData:', chartData);
+    console.log('🏭 dataEntries count:', chartData?.dataEntries?.length || 0);
+
     if (!chartData || !chartData.dataEntries) {
+      console.log('🏭 No chartData or dataEntries, returning zeros');
       return {
         'Scope 1': { value: 0, color: '#ef4444', items: [] },
         'Scope 2': { value: 0, color: '#3b82f6', items: [] },
@@ -1326,18 +1334,61 @@ const Dashboard = () => {
     };
 
     // Handle data for GHG emissions calculation
-    chartData.dataEntries.forEach((task) => {
-      if (task.meter && task.submission && task.submission.value) {
-        const meterType = task.meter.type;
-        const value = parseFloat(task.submission.value) || 0;
-        const displayName = task.meter.type;
-        const scope = getScopeForMeterType(meterType);
-        const emissionFactor = getEmissionFactor(meterType);
+    console.log(`🏭 Processing ${chartData.dataEntries.length} tasks for GHG...`);
+
+    let processedCount = 0;
+    let skippedCount = 0;
+
+    chartData.dataEntries.forEach((task, index) => {
+      // Log first few tasks to see their structure
+      if (index < 5) {
+        console.log(`🏭 Task ${index}: element_name="${task.element_name}", value="${task.value}", meter=${!!task.meter}`);
+        console.log(`🏭 Looking for data in task ${index}:`, {
+          value: task.value,
+          submission: task.submission,
+          data: task.data,
+          submission_data: task.submission_data,
+          latest_submission: task.latest_submission
+        });
+        console.log(`🏭 Full task ${index}:`, task);
+      }
+
+      // Process ALL tasks with values (both metered and non-metered)
+
+      // Try different ways to get the submission value
+      let submissionValue = null;
+
+      if (task.value && task.value !== '') {
+        submissionValue = task.value;
+      } else if (task.submission && task.submission.value && task.submission.value !== '') {
+        submissionValue = task.submission.value;
+      }
+
+      if (submissionValue) {
+        // Use element_name for the type (works for both metered and non-metered tasks)
+        const taskType = task.element_name;
+        const value = parseFloat(submissionValue) || 0;
+        const displayName = taskType;
+        const scope = getScopeForMeterType(taskType);
+        const emissionFactor = getEmissionFactor(taskType);
+
+        console.log(`🏭 GHG Processing: ${taskType} (${scope}) - Value: ${value}, Factor: ${emissionFactor}, Source: ${task.value ? 'direct' : 'submission'}`);
 
         scopes[scope].value += value * emissionFactor;
         scopes[scope].items.push(displayName);
+        processedCount++;
+      } else {
+        skippedCount++;
+        if (index < 5) {
+          console.log(`🏭 No value found for ${task.element_name}`);
+        }
       }
     });
+
+    console.log(`🏭 GHG Summary: Processed ${processedCount} tasks, Skipped ${skippedCount} tasks`);
+
+    // Log final results
+    console.log(`🏭 Final emissions: Scope 1: ${scopes['Scope 1'].value}, Scope 2: ${scopes['Scope 2'].value}, Scope 3: ${scopes['Scope 3'].value}`);
 
     Object.keys(scopes).forEach(scopeName => {
       scopes[scopeName].items = [...new Set(scopes[scopeName].items)];
@@ -1684,8 +1735,8 @@ const Dashboard = () => {
             { icon: 'fas fa-upload', title: 'Upload Data', color: 'blue', path: '/data', description: 'Enter ESG data entries' },
             { icon: 'fas fa-file-alt', title: 'Generate Report', color: 'green', action: 'export', description: 'Export current data' },
             { icon: 'fas fa-cog', title: 'Configure Meters', color: 'orange', path: '/meter', description: 'Manage meter settings' },
-            { icon: 'fas fa-chart-bar', title: 'View Analytics', color: 'purple', path: '/dashboard', description: 'Current page' },
-            { icon: 'fas fa-bell', title: 'Profiling', color: 'red', path: '/rame', description: 'Company profiling' },
+            { icon: 'fas fa-sitemap', title: 'Framework', color: 'purple', path: '/rame', description: 'View framework selection' },
+            { icon: 'fas fa-bell', title: 'Profiling', color: 'red', path: '/list#questions', description: 'Company profiling questions' },
             { icon: 'fas fa-list', title: 'Checklist', color: 'gray', path: '/list', description: 'ESG checklist' }
           ].map((action, index) => (
             <button

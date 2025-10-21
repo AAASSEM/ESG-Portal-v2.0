@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth, makeAuthenticatedRequest } from '../context/AuthContext';
 import { API_BASE_URL } from '../config';
 import Modal from './Modal';
@@ -8,6 +8,7 @@ import Layout from './Layout';
 
 const List = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, selectedCompany, hasPermission } = useAuth();
   const [answers, setAnswers] = useState({});
   const [showChecklist, setShowChecklist] = useState(false);
@@ -55,11 +56,13 @@ const List = () => {
           console.log('📋 Raw frameworks response:', frameworks);
 
           // Filter for voluntary frameworks (type === 'voluntary')
-          const voluntaryIds = frameworks
-            .filter(fw => fw.type === 'voluntary')
-            .map(fw => fw.framework_id);
+          const voluntaryFrameworks = frameworks.filter(fw => fw.type === 'voluntary');
+          const voluntaryIds = voluntaryFrameworks.map(fw => fw.framework_id);
 
+          console.log('📋 Voluntary frameworks found:', voluntaryFrameworks);
           console.log('📋 Selected voluntary frameworks from DB:', voluntaryIds);
+          console.log('📋 Framework IDs being stored:', voluntaryIds);
+
           setSelectedVoluntaryFrameworks(voluntaryIds);
         } else {
           console.log('❌ Failed to fetch frameworks, status:', response.status);
@@ -421,16 +424,22 @@ const List = () => {
 
         // Store the backend checklist with proper IDs
         if (exists) {
-          const transformedChecklist = checklistItems.map(item => ({
-            id: item.id,  // This is the actual database ID we need for assignments
-            name: item.element_name,
-            description: item.element_description,
-            unit: item.element_unit,
-            cadence: item.cadence,
-            frameworks: filterFrameworks(item.frameworks_list || []),
-            category: item.category || (item.is_metered ? 'Environmental' : 'Social'),
-            isMetered: item.is_metered
-          }));
+          const transformedChecklist = checklistItems.map(item => {
+            console.log(`🔍 Processing checklist item: ${item.element_name}, frameworks_list:`, item.frameworks_list);
+            const filteredFrameworks = filterFrameworks(item.frameworks_list || []);
+            console.log(`🔍 After filtering:`, filteredFrameworks);
+
+            return {
+              id: item.id,  // This is the actual database ID we need for assignments
+              name: item.element_name,
+              description: item.element_description,
+              unit: item.element_unit,
+              cadence: item.cadence,
+              frameworks: filteredFrameworks,
+              category: item.category || (item.is_metered ? 'Environmental' : 'Social'),
+              isMetered: item.is_metered
+            };
+          });
           setBackendChecklist(transformedChecklist);
           console.log('âœ… Loaded backend checklist with', transformedChecklist.length, 'items:', transformedChecklist);
         }
@@ -449,10 +458,16 @@ const List = () => {
 
   // Helper function to filter frameworks based on selection
   const filterFrameworks = (frameworks) => {
+    console.log('🔍 Filtering frameworks:', frameworks, 'Selected voluntary frameworks:', selectedVoluntaryFrameworks);
     return frameworks.filter(framework => {
       if (framework === 'Green Key') {
-        // Only include Green Key if it was selected in the framework page
-        return selectedVoluntaryFrameworks.includes('GREEN_KEY');
+        // Check for multiple possible Green Key identifiers
+        const hasGreenKey = selectedVoluntaryFrameworks.includes('GREEN_KEY') ||
+                           selectedVoluntaryFrameworks.includes('Green Key') ||
+                           selectedVoluntaryFrameworks.includes('green_key') ||
+                           selectedVoluntaryFrameworks.some(fw => fw.toLowerCase().includes('green'));
+        console.log(`🔍 Green Key check - framework: ${framework}, hasGreenKey: ${hasGreenKey}, selectedVoluntaryFrameworks:`, selectedVoluntaryFrameworks);
+        return hasGreenKey;
       }
       // Include all other frameworks (DST, ESG, etc.)
       return true;
@@ -462,7 +477,17 @@ const List = () => {
   // Check if wizard has been completed
   const checkWizardCompletion = async () => {
     if (!companyId) return;
-    
+
+    // Check if we should force showing questions (from Dashboard Profiling button)
+    const forceShowQuestions = location.state?.forceShowQuestions;
+    if (forceShowQuestions) {
+      console.log('Force showing questions from navigation state');
+      setShowChecklist(false);
+      // Clear the navigation state to prevent it from affecting subsequent visits
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return;
+    }
+
     try {
       // Check if company has answered all questions (wizard completed)
       const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/companies/${companyId}/profile_answers/`);
@@ -471,7 +496,7 @@ const List = () => {
         const questionsResponse = await makeAuthenticatedRequest(`${API_BASE_URL}/api/profiling-questions/for_company/?company_id=${companyId}`);
         if (questionsResponse.ok) {
           const questionsData = await questionsResponse.json();
-          
+
           // If all questions are answered, check if checklist exists
           if (answersData.length > 0 && answersData.length >= questionsData.length) {
             console.log('Profiling wizard completed');
@@ -664,16 +689,22 @@ const List = () => {
             throw new Error('Invalid checklist data format');
           }
 
-          const transformedChecklist = checklistItems.map(item => ({
-            id: item.id,  // This is the actual database ID we need for assignments
-            name: item.element_name,
-            description: item.element_description,
-            unit: item.element_unit,
-            cadence: item.cadence,
-            frameworks: item.frameworks_list || [],
-            category: item.category || (item.is_metered ? 'Environmental' : 'Social'),
-            isMetered: item.is_metered
-          }));
+          const transformedChecklist = checklistItems.map(item => {
+            console.log(`🔍 Generating checklist - Processing item: ${item.element_name}, frameworks_list:`, item.frameworks_list);
+            const filteredFrameworks = filterFrameworks(item.frameworks_list || []);
+            console.log(`🔍 Generating checklist - After filtering:`, filteredFrameworks);
+
+            return {
+              id: item.id,  // This is the actual database ID we need for assignments
+              name: item.element_name,
+              description: item.element_description,
+              unit: item.element_unit,
+              cadence: item.cadence,
+              frameworks: filteredFrameworks,
+              category: item.category || (item.is_metered ? 'Environmental' : 'Social'),
+              isMetered: item.is_metered
+            };
+          });
           
           // Store in state for use in assignments
           setBackendChecklist(transformedChecklist);

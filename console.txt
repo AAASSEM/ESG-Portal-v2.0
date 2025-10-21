@@ -1,171 +1,21 @@
-App.js loaded
-index.js:7 index.js loaded
-index.js:10 Root element: div#root
-index.js:16 Rendering App...
-index.js:20 App render called
-App.js:33 App component rendering
-deprecations.ts:9  ⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
-warnOnce @ deprecations.ts:9
-logDeprecation @ deprecations.ts:13
-logV6DeprecationWarnings @ deprecations.ts:26
-(anonymous) @ index.tsx:816
-commitHookEffectListMount @ react-dom.development.js:23189
-commitPassiveMountOnFiber @ react-dom.development.js:24965
-commitPassiveMountEffects_complete @ react-dom.development.js:24930
-commitPassiveMountEffects_begin @ react-dom.development.js:24917
-commitPassiveMountEffects @ react-dom.development.js:24905
-flushPassiveEffectsImpl @ react-dom.development.js:27078
-flushPassiveEffects @ react-dom.development.js:27023
-(anonymous) @ react-dom.development.js:26808
-workLoop @ scheduler.development.js:266
-flushWork @ scheduler.development.js:239
-performWorkUntilDeadline @ scheduler.development.js:533
-deprecations.ts:9  ⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
-warnOnce @ deprecations.ts:9
-logDeprecation @ deprecations.ts:13
-logV6DeprecationWarnings @ deprecations.ts:37
-(anonymous) @ index.tsx:816
-commitHookEffectListMount @ react-dom.development.js:23189
-commitPassiveMountOnFiber @ react-dom.development.js:24965
-commitPassiveMountEffects_complete @ react-dom.development.js:24930
-commitPassiveMountEffects_begin @ react-dom.development.js:24917
-commitPassiveMountEffects @ react-dom.development.js:24905
-flushPassiveEffectsImpl @ react-dom.development.js:27078
-flushPassiveEffects @ react-dom.development.js:27023
-(anonymous) @ react-dom.development.js:26808
-workLoop @ scheduler.development.js:266
-flushWork @ scheduler.development.js:239
-performWorkUntilDeadline @ scheduler.development.js:533
-[NEW] Explain Console errors by using Copilot in Edge: click
-         
-         to explain an error. 
-        Learn more
-        Don't show again
-AuthContext.js:123 ✅ User authenticated: {id: 10, username: 'super1', email: 'super1@dubai.com', name: 'super1', role: 'super_user', …}
-AuthContext.js:150 🏢 User companies fetched: [{…}]
-AuthContext.js:153 🔍 Available companies for user: [{…}]
-AuthContext.js:157 🏢 Using user assigned company: {id: 6, name: 'Dubai Luxury Hotel', emirate: 'dubai', sector: 'hospitality', created_at: '2025-08-26T10:07:36.142826+04:00'}
-Data.js:289 🚀 Starting optimized data load - current month only!
-Data.js:294 📊 Loading API calls individually...
-AuthContext.js:46 🔄 Making request to: http://localhost:8080/api/data-collection/available_months/?year=2025
-AuthContext.js:52 🔑 CSRF token: obtained
-AuthContext.js:76 ✅ Request completed: http://localhost:8080/api/data-collection/available_months/?year=2025 Status: 200
-Data.js:299 📅 Available months: 157ms
-AuthContext.js:46 🔄 Making request to: http://localhost:8080/api/data-collection/tasks/?company_id=6&year=2025&month=10
-AuthContext.js:52 🔑 CSRF token: obtained
-AuthContext.js:71   GET http://localhost:8080/api/data-collection/tasks/?company_id=6&year=2025&month=10 500 (Internal Server Error)
-makeAuthenticatedRequest @ AuthContext.js:71
-await in makeAuthenticatedRequest
-fetchDataEntries @ Data.js:165
-loadInitialData @ Data.js:302
-await in loadInitialData
-(anonymous) @ Data.js:383
-commitHookEffectListMount @ react-dom.development.js:23189
-commitPassiveMountOnFiber @ react-dom.development.js:24965
-commitPassiveMountEffects_complete @ react-dom.development.js:24930
-commitPassiveMountEffects_begin @ react-dom.development.js:24917
-commitPassiveMountEffects @ react-dom.development.js:24905
-flushPassiveEffectsImpl @ react-dom.development.js:27078
-flushPassiveEffects @ react-dom.development.js:27023
-(anonymous) @ react-dom.development.js:26808
-workLoop @ scheduler.development.js:266
-flushWork @ scheduler.development.js:239
-performWorkUntilDeadline @ scheduler.development.js:533
-AuthContext.js:76 ✅ Request completed: http://localhost:8080/api/data-collection/tasks/?company_id=6&year=2025&month=10 Status: 500
-Data.js:175  Error fetching data entries: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-fetchDataEntries @ Data.js:175
-await in fetchDataEntries
-loadInitialData @ Data.js:302
-await in loadInitialData
-(anonymous) @ Data.js:383
-commitHookEffectListMount @ react-dom.development.js:23189
-commitPassiveMountOnFiber @ react-dom.development.js:24965
-commitPassiveMountEffects_complete @ react-dom.development.js:24930
-commitPassiveMountEffects_begin @ react-dom.development.js:24917
-commitPassiveMountEffects @ react-dom.development.js:24905
-flushPassiveEffectsImpl @ react-dom.development.js:27078
-flushPassiveEffects @ react-dom.development.js:27023
-(anonymous) @ react-dom.development.js:26808
-workLoop @ scheduler.development.js:266
-flushWork @ scheduler.development.js:239
-performWorkUntilDeadline @ scheduler.development.js:533
-Data.js:303 📋 Data entries: 328ms
-AuthContext.js:46 🔄 Making request to: http://localhost:8080/api/data-collection/progress/?company_id=6&year=2025
-AuthContext.js:52 🔑 CSRF token: obtained
-AuthContext.js:71   GET http://localhost:8080/api/data-collection/progress/?company_id=6&year=2025 500 (Internal Server Error)
-makeAuthenticatedRequest @ AuthContext.js:71
-await in makeAuthenticatedRequest
-fetchProgress @ Data.js:189
-loadInitialData @ Data.js:306
-await in loadInitialData
-(anonymous) @ Data.js:383
-commitHookEffectListMount @ react-dom.development.js:23189
-commitPassiveMountOnFiber @ react-dom.development.js:24965
-commitPassiveMountEffects_complete @ react-dom.development.js:24930
-commitPassiveMountEffects_begin @ react-dom.development.js:24917
-commitPassiveMountEffects @ react-dom.development.js:24905
-flushPassiveEffectsImpl @ react-dom.development.js:27078
-flushPassiveEffects @ react-dom.development.js:27023
-(anonymous) @ react-dom.development.js:26808
-workLoop @ scheduler.development.js:266
-flushWork @ scheduler.development.js:239
-performWorkUntilDeadline @ scheduler.development.js:533
-AuthContext.js:76 ✅ Request completed: http://localhost:8080/api/data-collection/progress/?company_id=6&year=2025 Status: 500
-Data.js:193  Error fetching progress: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-fetchProgress @ Data.js:193
-await in fetchProgress
-loadInitialData @ Data.js:306
-await in loadInitialData
-(anonymous) @ Data.js:383
-commitHookEffectListMount @ react-dom.development.js:23189
-commitPassiveMountOnFiber @ react-dom.development.js:24965
-commitPassiveMountEffects_complete @ react-dom.development.js:24930
-commitPassiveMountEffects_begin @ react-dom.development.js:24917
-commitPassiveMountEffects @ react-dom.development.js:24905
-flushPassiveEffectsImpl @ react-dom.development.js:27078
-flushPassiveEffects @ react-dom.development.js:27023
-(anonymous) @ react-dom.development.js:26808
-workLoop @ scheduler.development.js:266
-flushWork @ scheduler.development.js:239
-performWorkUntilDeadline @ scheduler.development.js:533
-Data.js:307 📈 Annual progress: 316ms
-AuthContext.js:46 🔄 Making request to: http://localhost:8080/api/data-collection/progress/?company_id=6&year=2025&month=10
-AuthContext.js:52 🔑 CSRF token: obtained
-AuthContext.js:71   GET http://localhost:8080/api/data-collection/progress/?company_id=6&year=2025&month=10 500 (Internal Server Error)
-makeAuthenticatedRequest @ AuthContext.js:71
-await in makeAuthenticatedRequest
-fetchProgress @ Data.js:189
-loadInitialData @ Data.js:310
-await in loadInitialData
-(anonymous) @ Data.js:383
-commitHookEffectListMount @ react-dom.development.js:23189
-commitPassiveMountOnFiber @ react-dom.development.js:24965
-commitPassiveMountEffects_complete @ react-dom.development.js:24930
-commitPassiveMountEffects_begin @ react-dom.development.js:24917
-commitPassiveMountEffects @ react-dom.development.js:24905
-flushPassiveEffectsImpl @ react-dom.development.js:27078
-flushPassiveEffects @ react-dom.development.js:27023
-(anonymous) @ react-dom.development.js:26808
-workLoop @ scheduler.development.js:266
-flushWork @ scheduler.development.js:239
-performWorkUntilDeadline @ scheduler.development.js:533
-AuthContext.js:76 ✅ Request completed: http://localhost:8080/api/data-collection/progress/?company_id=6&year=2025&month=10 Status: 500
-Data.js:193  Error fetching progress: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
-fetchProgress @ Data.js:193
-await in fetchProgress
-loadInitialData @ Data.js:310
-await in loadInitialData
-(anonymous) @ Data.js:383
-commitHookEffectListMount @ react-dom.development.js:23189
-commitPassiveMountOnFiber @ react-dom.development.js:24965
-commitPassiveMountEffects_complete @ react-dom.development.js:24930
-commitPassiveMountEffects_begin @ react-dom.development.js:24917
-commitPassiveMountEffects @ react-dom.development.js:24905
-flushPassiveEffectsImpl @ react-dom.development.js:27078
-flushPassiveEffects @ react-dom.development.js:27023
-(anonymous) @ react-dom.development.js:26808
-workLoop @ scheduler.development.js:266
-flushWork @ scheduler.development.js:239
-performWorkUntilDeadline @ scheduler.development.js:533
-Data.js:311 📊 Monthly progress: 288ms
-Data.js:314 ✅ All data loaded! {availableMonths: 12, entriesCount: 0, totalTime: '1091ms'}
+🏭 generateEmissionsData called
+Dashboardv1.js:1255 🏭 chartData: {meters: Array(8), dataEntries: Array(18)}dataEntries: (18) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]meters: (8) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}][[Prototype]]: Object
+Dashboardv1.js:1256 🏭 dataEntries count: 18
+Dashboardv1.js:1334 🏭 Processing 18 tasks for GHG...
+Dashboardv1.js:1342 🏭 Task 0: element_name="Water Leak Detection System", value="undefined", meter=false
+Dashboardv1.js:1343 🏭 Looking for data in task 0: {value: undefined, submission: {…}, data: undefined, submission_data: undefined, latest_submission: undefined}data: undefinedlatest_submission: undefinedsubmission: {id: 6876, element: 'HOSP-G-065', element_name: 'Water Leak Detection System', meter: null, meter_name: null, …}submission_data: undefinedvalue: undefined[[Prototype]]: Object
+Dashboardv1.js:1350 🏭 Full task 0: {type: 'non_metered', element_id: 'HOSP-G-065', element_name: 'Water Leak Detection System', element_unit: 'count', element_description: 'Enter the number of leak checks performed daily.', …}cadence: "daily"checklist_item_id: 1310element_category: "Governance"element_description: "Enter the number of leak checks performed daily."element_id: "HOSP-G-065"element_name: "Water Leak Detection System"element_unit: "count"meter: nullsubmission: {id: 6876, element: 'HOSP-G-065', element_name: 'Water Leak Detection System', meter: null, meter_name: null, …}type: "non_metered"[[Prototype]]: Object
+Dashboardv1.js:1342 🏭 Task 1: element_name="Electricity Consumption", value="undefined", meter=true
+Dashboardv1.js:1343 🏭 Looking for data in task 1: {value: undefined, submission: {…}, data: undefined, submission_data: undefined, latest_submission: undefined}data: undefinedlatest_submission: undefinedsubmission: {id: 6877, element: 'HOSP-E-001', element_name: 'Electricity Consumption', meter: 37, meter_name: 'Main', …}submission_data: undefinedvalue: undefined[[Prototype]]: Object
+Dashboardv1.js:1350 🏭 Full task 1: {type: 'metered', element_id: 'HOSP-E-001', element_name: 'Electricity Consumption', element_unit: 'kWh', element_description: 'Enter the total electricity consumed (in kWh) each month from your utility provider.', …}cadence: "monthly"checklist_item_id: 1255element_category: "Environmental"element_description: "Enter the total electricity consumed (in kWh) each month from your utility provider."element_id: "HOSP-E-001"element_name: "Electricity Consumption"element_unit: "kWh"meter: {id: 37, name: 'Main', type: 'Electricity Consumption', location: '', account_number: '', …}submission: {id: 6877, element: 'HOSP-E-001', element_name: 'Electricity Consumption', meter: 37, meter_name: 'Main', …}type: "metered"[[Prototype]]: Object
+Dashboardv1.js:1342 🏭 Task 2: element_name="Water Consumption", value="undefined", meter=true
+Dashboardv1.js:1343 🏭 Looking for data in task 2: {value: undefined, submission: {…}, data: undefined, submission_data: undefined, latest_submission: undefined}data: undefinedlatest_submission: undefinedsubmission: {id: 6878, element: 'HOSP-E-002', element_name: 'Water Consumption', meter: 39, meter_name: 'Main', …}submission_data: undefinedvalue: undefined[[Prototype]]: Object
+Dashboardv1.js:1350 🏭 Full task 2: {type: 'metered', element_id: 'HOSP-E-002', element_name: 'Water Consumption', element_unit: 'mÂ³', element_description: 'Enter the total water consumed (in cubic meters) each month.', …}cadence: "monthly"checklist_item_id: 1256element_category: "Environmental"element_description: "Enter the total water consumed (in cubic meters) each month."element_id: "HOSP-E-002"element_name: "Water Consumption"element_unit: "mÂ³"meter: {id: 39, name: 'Main', type: 'Water Consumption', location: '', account_number: '', …}submission: {id: 6878, element: 'HOSP-E-002', element_name: 'Water Consumption', meter: 39, meter_name: 'Main', …}type: "metered"[[Prototype]]: Object
+Dashboardv1.js:1342 🏭 Task 3: element_name="District Cooling Consumption", value="undefined", meter=true
+Dashboardv1.js:1343 🏭 Looking for data in task 3: {value: undefined, submission: {…}, data: undefined, submission_data: undefined, latest_submission: undefined}data: undefinedlatest_submission: undefinedsubmission: {id: 6879, element: 'HOSP-E-003', element_name: 'District Cooling Consumption', meter: 80, meter_name: 'Main', …}submission_data: undefinedvalue: undefined[[Prototype]]: Object
+Dashboardv1.js:1350 🏭 Full task 3: {type: 'metered', element_id: 'HOSP-E-003', element_name: 'District Cooling Consumption', element_unit: 'RT-h', element_description: 'Enter the total district cooling energy consumed (in RT-h) each month from your utility provider.', …}cadence: "monthly"checklist_item_id: 1257element_category: "Environmental"element_description: "Enter the total district cooling energy consumed (in RT-h) each month from your utility provider."element_id: "HOSP-E-003"element_name: "District Cooling Consumption"element_unit: "RT-h"meter: {id: 80, name: 'Main', type: 'District Cooling Consumption', location: '', account_number: '', …}submission: {id: 6879, element: 'HOSP-E-003', element_name: 'District Cooling Consumption', meter: 80, meter_name: 'Main', …}type: "metered"[[Prototype]]: Object
+Dashboardv1.js:1342 🏭 Task 4: element_name="LPG Fuel Consumption", value="undefined", meter=false
+Dashboardv1.js:1343 🏭 Looking for data in task 4: {value: undefined, submission: {…}, data: undefined, submission_data: undefined, latest_submission: undefined}data: undefinedlatest_submission: undefinedsubmission: {id: 6880, element: 'HOSP-E-004', element_name: 'LPG Fuel Consumption', meter: null, meter_name: null, …}submission_data: undefinedvalue: undefined[[Prototype]]: Object
+Dashboardv1.js:1350 🏭 Full task 4: {type: 'non_metered', element_id: 'HOSP-E-004', element_name: 'LPG Fuel Consumption', element_unit: 'kg', element_description: 'Enter the total LPG (propane) consumed (in kg) in the period.', …}cadence: "monthly"checklist_item_id: 1258element_category: "Environmental"element_description: "Enter the total LPG (propane) consumed (in kg) in the period."element_id: "HOSP-E-004"element_name: "LPG Fuel Consumption"element_unit: "kg"meter: nullsubmission: {id: 6880, element: 'HOSP-E-004', element_name: 'LPG Fuel Consumption', meter: null, meter_name: null, …}type: "non_metered"[[Prototype]]: Object
+Dashboardv1.js:1372 🏭 GHG Summary: Processed 0 tasks, Skipped 18 tasks
+Dashboardv1.js:1375 🏭 Final emissions: Scope 1: 0, Scope 2: 0, Scope 3: 0

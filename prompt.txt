@@ -31,3 +31,27 @@ FILES TO MODIFY:
 - services.py: DataCollectionService.calculate_progress_original method
 
 Please make this change and confirm the optimization is complete.
+
+
+
+
+Initialize scopes with zero values:
+    - Scope 1 (Red): Direct emissions
+    - Scope 2 (Blue): Indirect emissions from energy
+    - Scope 3 (Gray): Other indirect emissions
+  2. Apply UAE-specific emission factors (lines 1269-1307):
+    - Electricity: 0.00023 kg CO2e/kWh (UAE grid average)
+    - District Cooling: 0.00009 kg CO2e/RT-h
+    - Diesel: 0.00268 kg CO2e/L
+    - Petrol: 0.00231 kg CO2e/L
+    - LPG: 0.003 kg CO2e/kg
+    - Water: 0.0005 kg CO2e/m³
+    - Waste: 0.00006 kg CO2e/kg
+    - Refrigerant: 1.3 GWP factor
+  3. Calculate emissions for each task (lines 1329-1340):
+  emission = value × emissionFactor
+  scopes[scope].value += emission
+  4. Categorize by scope based on meter type:
+    - Scope 1: LPG, Petrol, Diesel, Natural Gas, Refrigerant
+    - Scope 2: Electricity, Renewable Energy, District Cooling
+    - Scope 3: Water, Waste

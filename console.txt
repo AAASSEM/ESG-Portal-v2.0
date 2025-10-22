@@ -1,21 +1,112 @@
-🏭 generateEmissionsData called
-Dashboardv1.js:1255 🏭 chartData: {meters: Array(8), dataEntries: Array(18)}dataEntries: (18) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]meters: (8) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}][[Prototype]]: Object
-Dashboardv1.js:1256 🏭 dataEntries count: 18
-Dashboardv1.js:1334 🏭 Processing 18 tasks for GHG...
-Dashboardv1.js:1342 🏭 Task 0: element_name="Water Leak Detection System", value="undefined", meter=false
-Dashboardv1.js:1343 🏭 Looking for data in task 0: {value: undefined, submission: {…}, data: undefined, submission_data: undefined, latest_submission: undefined}data: undefinedlatest_submission: undefinedsubmission: {id: 6876, element: 'HOSP-G-065', element_name: 'Water Leak Detection System', meter: null, meter_name: null, …}submission_data: undefinedvalue: undefined[[Prototype]]: Object
-Dashboardv1.js:1350 🏭 Full task 0: {type: 'non_metered', element_id: 'HOSP-G-065', element_name: 'Water Leak Detection System', element_unit: 'count', element_description: 'Enter the number of leak checks performed daily.', …}cadence: "daily"checklist_item_id: 1310element_category: "Governance"element_description: "Enter the number of leak checks performed daily."element_id: "HOSP-G-065"element_name: "Water Leak Detection System"element_unit: "count"meter: nullsubmission: {id: 6876, element: 'HOSP-G-065', element_name: 'Water Leak Detection System', meter: null, meter_name: null, …}type: "non_metered"[[Prototype]]: Object
-Dashboardv1.js:1342 🏭 Task 1: element_name="Electricity Consumption", value="undefined", meter=true
-Dashboardv1.js:1343 🏭 Looking for data in task 1: {value: undefined, submission: {…}, data: undefined, submission_data: undefined, latest_submission: undefined}data: undefinedlatest_submission: undefinedsubmission: {id: 6877, element: 'HOSP-E-001', element_name: 'Electricity Consumption', meter: 37, meter_name: 'Main', …}submission_data: undefinedvalue: undefined[[Prototype]]: Object
-Dashboardv1.js:1350 🏭 Full task 1: {type: 'metered', element_id: 'HOSP-E-001', element_name: 'Electricity Consumption', element_unit: 'kWh', element_description: 'Enter the total electricity consumed (in kWh) each month from your utility provider.', …}cadence: "monthly"checklist_item_id: 1255element_category: "Environmental"element_description: "Enter the total electricity consumed (in kWh) each month from your utility provider."element_id: "HOSP-E-001"element_name: "Electricity Consumption"element_unit: "kWh"meter: {id: 37, name: 'Main', type: 'Electricity Consumption', location: '', account_number: '', …}submission: {id: 6877, element: 'HOSP-E-001', element_name: 'Electricity Consumption', meter: 37, meter_name: 'Main', …}type: "metered"[[Prototype]]: Object
-Dashboardv1.js:1342 🏭 Task 2: element_name="Water Consumption", value="undefined", meter=true
-Dashboardv1.js:1343 🏭 Looking for data in task 2: {value: undefined, submission: {…}, data: undefined, submission_data: undefined, latest_submission: undefined}data: undefinedlatest_submission: undefinedsubmission: {id: 6878, element: 'HOSP-E-002', element_name: 'Water Consumption', meter: 39, meter_name: 'Main', …}submission_data: undefinedvalue: undefined[[Prototype]]: Object
-Dashboardv1.js:1350 🏭 Full task 2: {type: 'metered', element_id: 'HOSP-E-002', element_name: 'Water Consumption', element_unit: 'mÂ³', element_description: 'Enter the total water consumed (in cubic meters) each month.', …}cadence: "monthly"checklist_item_id: 1256element_category: "Environmental"element_description: "Enter the total water consumed (in cubic meters) each month."element_id: "HOSP-E-002"element_name: "Water Consumption"element_unit: "mÂ³"meter: {id: 39, name: 'Main', type: 'Water Consumption', location: '', account_number: '', …}submission: {id: 6878, element: 'HOSP-E-002', element_name: 'Water Consumption', meter: 39, meter_name: 'Main', …}type: "metered"[[Prototype]]: Object
-Dashboardv1.js:1342 🏭 Task 3: element_name="District Cooling Consumption", value="undefined", meter=true
-Dashboardv1.js:1343 🏭 Looking for data in task 3: {value: undefined, submission: {…}, data: undefined, submission_data: undefined, latest_submission: undefined}data: undefinedlatest_submission: undefinedsubmission: {id: 6879, element: 'HOSP-E-003', element_name: 'District Cooling Consumption', meter: 80, meter_name: 'Main', …}submission_data: undefinedvalue: undefined[[Prototype]]: Object
-Dashboardv1.js:1350 🏭 Full task 3: {type: 'metered', element_id: 'HOSP-E-003', element_name: 'District Cooling Consumption', element_unit: 'RT-h', element_description: 'Enter the total district cooling energy consumed (in RT-h) each month from your utility provider.', …}cadence: "monthly"checklist_item_id: 1257element_category: "Environmental"element_description: "Enter the total district cooling energy consumed (in RT-h) each month from your utility provider."element_id: "HOSP-E-003"element_name: "District Cooling Consumption"element_unit: "RT-h"meter: {id: 80, name: 'Main', type: 'District Cooling Consumption', location: '', account_number: '', …}submission: {id: 6879, element: 'HOSP-E-003', element_name: 'District Cooling Consumption', meter: 80, meter_name: 'Main', …}type: "metered"[[Prototype]]: Object
-Dashboardv1.js:1342 🏭 Task 4: element_name="LPG Fuel Consumption", value="undefined", meter=false
-Dashboardv1.js:1343 🏭 Looking for data in task 4: {value: undefined, submission: {…}, data: undefined, submission_data: undefined, latest_submission: undefined}data: undefinedlatest_submission: undefinedsubmission: {id: 6880, element: 'HOSP-E-004', element_name: 'LPG Fuel Consumption', meter: null, meter_name: null, …}submission_data: undefinedvalue: undefined[[Prototype]]: Object
-Dashboardv1.js:1350 🏭 Full task 4: {type: 'non_metered', element_id: 'HOSP-E-004', element_name: 'LPG Fuel Consumption', element_unit: 'kg', element_description: 'Enter the total LPG (propane) consumed (in kg) in the period.', …}cadence: "monthly"checklist_item_id: 1258element_category: "Environmental"element_description: "Enter the total LPG (propane) consumed (in kg) in the period."element_id: "HOSP-E-004"element_name: "LPG Fuel Consumption"element_unit: "kg"meter: nullsubmission: {id: 6880, element: 'HOSP-E-004', element_name: 'LPG Fuel Consumption', meter: null, meter_name: null, …}type: "non_metered"[[Prototype]]: Object
-Dashboardv1.js:1372 🏭 GHG Summary: Processed 0 tasks, Skipped 18 tasks
-Dashboardv1.js:1375 🏭 Final emissions: Scope 1: 0, Scope 2: 0, Scope 3: 0
+react refresh:37 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+App.js:30 App.js loaded
+index.js:7 index.js loaded
+index.js:10 Root element: div#root
+index.js:16 Rendering App...
+index.js:20 App render called
+App.js:33 App component rendering
+deprecations.ts:9  ⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+warnOnce @ deprecations.ts:9
+logDeprecation @ deprecations.ts:13
+logV6DeprecationWarnings @ deprecations.ts:26
+(anonymous) @ index.tsx:816
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+(anonymous) @ react-dom.development.js:26808
+workLoop @ scheduler.development.js:266
+flushWork @ scheduler.development.js:239
+performWorkUntilDeadline @ scheduler.development.js:533
+deprecations.ts:9  ⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+warnOnce @ deprecations.ts:9
+logDeprecation @ deprecations.ts:13
+logV6DeprecationWarnings @ deprecations.ts:37
+(anonymous) @ index.tsx:816
+commitHookEffectListMount @ react-dom.development.js:23189
+commitPassiveMountOnFiber @ react-dom.development.js:24965
+commitPassiveMountEffects_complete @ react-dom.development.js:24930
+commitPassiveMountEffects_begin @ react-dom.development.js:24917
+commitPassiveMountEffects @ react-dom.development.js:24905
+flushPassiveEffectsImpl @ react-dom.development.js:27078
+flushPassiveEffects @ react-dom.development.js:27023
+(anonymous) @ react-dom.development.js:26808
+workLoop @ scheduler.development.js:266
+flushWork @ scheduler.development.js:239
+performWorkUntilDeadline @ scheduler.development.js:533
+[NEW] Explain Console errors by using Copilot in Edge: click
+         
+         to explain an error. 
+        Learn more
+        Don't show again
+AuthContext.js:123 ✅ User authenticated: {id: 10, username: 'super1', email: 'super1@dubai.com', name: 'super1', role: 'super_user', …}
+AuthContext.js:150 🏢 User companies fetched: [{…}]
+AuthContext.js:153 🔍 Available companies for user: [{…}]
+AuthContext.js:157 🏢 Using user assigned company: {id: 6, name: 'Dubai Luxury Hotel', emirate: 'dubai', sector: 'hospitality', created_at: '2025-08-26T10:07:36.142826+04:00'}
+List.js:41 List component - companyId: 6
+List.js:605 Ã°Å¸â€Â Component render state: {companyId: 6, answersCount: 0, questionsCount: 0, allQuestionsAnswered: false, showChecklist: false, …}
+List.js:713 Ã°Å¸â€œÅ  Checklist Status: {backendChecklistCount: 0, localChecklistCount: 0, finalChecklistCount: 0, usingBackend: false}
+List.js:1049 List.js - Framework selection access: true User role: super_user
+List.js:71 Fetching profiling questions for company: 6
+AuthContext.js:46 🔄 Making request to: http://localhost:8080/api/profiling-questions/for_company/?company_id=6
+List.js:403 Fetching existing profile answers for company: 6
+AuthContext.js:46 🔄 Making request to: http://localhost:8080/api/companies/6/profile_answers/
+AuthContext.js:46 🔄 Making request to: http://localhost:8080/api/profiling-questions/for_company/?company_id=6
+List.js:436 Ã°Å¸â€Â Checking if checklist exists for company: 6
+AuthContext.js:46 🔄 Making request to: http://localhost:8080/api/checklist/?company_id=6
+List.js:41 List component - companyId: 6
+List.js:605 Ã°Å¸â€Â Component render state: {companyId: 6, answersCount: 0, questionsCount: 0, allQuestionsAnswered: false, showChecklist: false, …}
+List.js:713 Ã°Å¸â€œÅ  Checklist Status: {backendChecklistCount: 0, localChecklistCount: 0, finalChecklistCount: 0, usingBackend: false}
+List.js:1049 List.js - Framework selection access: true User role: super_user
+AuthContext.js:52 🔑 CSRF token: obtained
+AuthContext.js:52 🔑 CSRF token: obtained
+AuthContext.js:52 🔑 CSRF token: obtained
+AuthContext.js:52 🔑 CSRF token: obtained
+AuthContext.js:76 ✅ Request completed: http://localhost:8080/api/profiling-questions/for_company/?company_id=6 Status: 200
+AuthContext.js:76 ✅ Request completed: http://localhost:8080/api/profiling-questions/for_company/?company_id=6 Status: 200
+List.js:73 Response status: 200 Response ok: true
+List.js:77 Fetched questions from backend: (22) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+List.js:78 Questions type: object Length: 22
+List.js:87 Transformed questions: (22) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+List.js:41 List component - companyId: 6
+List.js:605 Ã°Å¸â€Â Component render state: {companyId: 6, answersCount: 0, questionsCount: 22, allQuestionsAnswered: false, showChecklist: false, …}
+List.js:713 Ã°Å¸â€œÅ  Checklist Status: {backendChecklistCount: 0, localChecklistCount: 0, finalChecklistCount: 0, usingBackend: false}
+List.js:1049 List.js - Framework selection access: true User role: super_user
+AuthContext.js:76 ✅ Request completed: http://localhost:8080/api/companies/6/profile_answers/ Status: 200
+List.js:408 Loaded profile answers from API: (22) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+List.js:416 Setting answers state to: {cond_hosp_e_003: true, cond_hosp_e_004: true, cond_hosp_e_006: true, cond_hosp_e_007: true, cond_hosp_e_008: true, …}
+List.js:41 List component - companyId: 6
+List.js:605 Ã°Å¸â€Â Component render state: {companyId: 6, answersCount: 22, questionsCount: 22, allQuestionsAnswered: true, showChecklist: false, …}
+List.js:713 Ã°Å¸â€œÅ  Checklist Status: {backendChecklistCount: 0, localChecklistCount: 14, finalChecklistCount: 14, usingBackend: false}
+List.js:1049 List.js - Framework selection access: true User role: super_user
+AuthContext.js:76 ✅ Request completed: http://localhost:8080/api/checklist/?company_id=6 Status: 200
+List.js:443 Ã°Å¸â€Â Checklist data: {dataType: 'object', isArray: true, itemsCount: 80, exists: true}
+List.js:449 Ã¢Å“â€¦ Checklist exists check result: true
+List.js:465 Ã¢Å“â€¦ Loaded backend checklist with 80 items: (80) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+List.js:297 🚀 ALL API calls completed in parallel in 1869.20ms
+List.js:300 🔍 Checking wizard completion...
+List.js:301   - answersData: exists
+List.js:302   - questionsData: exists
+List.js:303   - checklistExistsResult: true
+List.js:41 List component - companyId: 6
+List.js:605 Ã°Å¸â€Â Component render state: {companyId: 6, answersCount: 22, questionsCount: 22, allQuestionsAnswered: true, showChecklist: false, …}
+List.js:713 Ã°Å¸â€œÅ  Checklist Status: {backendChecklistCount: 80, localChecklistCount: 14, finalChecklistCount: 80, usingBackend: true}
+List.js:1049 List.js - Framework selection access: true User role: super_user
+List.js:311 🔍 Wizard completion check: {answersCount: 22, questionsCount: 22, allQuestionsAnswered: true, checklistExists: true, shouldShowChecklist: true}
+List.js:322 ✅ Profiling wizard completed and checklist exists, showing checklist view
+List.js:340 🎯 Setting showChecklist to: true
+List.js:347 List component loaded in 1874.40ms
+List.js:348 🎯 Final state check: {showChecklist: true, checklistExists: true, answersCount: 22, profilingQuestionsCount: 0}
+List.js:41 List component - companyId: 6
+List.js:605 Ã°Å¸â€Â Component render state: {companyId: 6, answersCount: 22, questionsCount: 22, allQuestionsAnswered: true, showChecklist: true, …}
+List.js:713 Ã°Å¸â€œÅ  Checklist Status: {backendChecklistCount: 80, localChecklistCount: 14, finalChecklistCount: 80, usingBackend: true}
+List.js:369 🔄 State sync useEffect: {loading: false, checklistExists: true, hasAnswers: true, hasQuestions: true, currentShowChecklist: true, …}
+AuthContext.js:46 🔄 Making request to: http://localhost:8080/api/element-assignments/get_assignments/?company_id=6
+AuthContext.js:52 🔑 CSRF token: obtained
+AuthContext.js:76 ✅ Request completed: http://localhost:8080/api/element-assignments/get_assignments/?company_id=6 Status: 200
+List.js:41 List component - companyId: 6
+List.js:605 Ã°Å¸â€Â Component render state: {companyId: 6, answersCount: 22, questionsCount: 22, allQuestionsAnswered: true, showChecklist: true, …}
+List.js:713 Ã°Å¸â€œÅ  Checklist Status: {backendChecklistCount: 80, localChecklistCount: 14, finalChecklistCount: 80, usingBackend: true}

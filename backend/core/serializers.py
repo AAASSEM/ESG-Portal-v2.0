@@ -138,7 +138,8 @@ class CompanyChecklistSerializer(serializers.ModelSerializer):
             frameworks_str = obj.element.frameworks
             # Split by comma and clean up
             framework_codes = [code.strip() for code in frameworks_str.split(',') if code.strip()]
-            # Map codes to full names with colors
+
+            # Map codes to full names
             framework_mapping = {
                 'E': 'ESG',
                 'D': 'DST',
@@ -149,7 +150,44 @@ class CompanyChecklistSerializer(serializers.ModelSerializer):
                 'TCFD': 'TCFD',
                 'SASB': 'SASB'
             }
-            return [framework_mapping.get(code, code) for code in framework_codes]
+
+            # ✅ FIX: Check company's selected voluntary frameworks from CompanyFramework table
+            company_frameworks = []
+            if obj.company:
+                # Get all active frameworks for this company
+                from .models import CompanyFramework
+
+                active_company_frameworks = CompanyFramework.objects.filter(
+                    company=obj.company
+                ).select_related('framework').values_list('framework__framework_id', flat=True)
+
+                print(f"🔍 Active frameworks for {obj.company.name} (emirate: {obj.company.emirate}): {list(active_company_frameworks)}")
+
+                for code in framework_codes:
+                    framework_name = framework_mapping.get(code, code)
+
+                    # For Green Key (G), check if GREEN_KEY is in company's frameworks
+                    if code == 'G':
+                        if 'GREEN_KEY' in active_company_frameworks:
+                            company_frameworks.append(framework_name)
+                            print(f"  ✅ Including Green Key (GREEN_KEY found)")
+                        else:
+                            print(f"  ❌ Excluding Green Key (GREEN_KEY not found)")
+                    # For ESG (E), always include (mandatory for all companies)
+                    elif code in ['E', 'ESG']:
+                        company_frameworks.append(framework_name)
+                        print(f"  ✅ Including {framework_name} (mandatory)")
+                    # For DST (D), only include if company is in Dubai
+                    elif code in ['D', 'DST']:
+                        if obj.company.emirate == 'dubai':
+                            company_frameworks.append(framework_name)
+                            print(f"  ✅ Including {framework_name} (Dubai company)")
+                        else:
+                            print(f"  ❌ Excluding {framework_name} (not Dubai company: {obj.company.emirate})")
+
+                print(f"  📋 Final frameworks: {company_frameworks}")
+                return company_frameworks
+
         return []
 
 

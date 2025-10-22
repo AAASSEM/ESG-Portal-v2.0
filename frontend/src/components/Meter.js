@@ -95,6 +95,7 @@ const Meter = () => {
       const data = await response.json();
       
       // Transform backend data to frontend format
+      console.log('🔍 Raw meter data from backend:', data.results);
       const transformedMeters = data.results.map(meter => {
         // Detect auto-created meters by name pattern (starts with "Main")
         const isAutoCreated = meter.name && meter.name.trim().toLowerCase().startsWith('main');
@@ -116,6 +117,11 @@ const Meter = () => {
       });
       
       setMeters(transformedMeters);
+      console.log('🔍 All meter types in system:', [...new Set(transformedMeters.map(m => m.type))]);
+      console.log('🔍 Meter counts by type:', transformedMeters.reduce((acc, meter) => {
+        acc[meter.type] = (acc[meter.type] || 0) + 1;
+        return acc;
+      }, {}));
     } catch (error) {
       console.error('Error fetching meters:', error);
     } finally {
@@ -341,6 +347,54 @@ const Meter = () => {
       color: 'teal',
       count: meters.filter(m => m.type === 'Renewable Energy Usage').length,
       description: 'Renewable energy generation tracking'
+    },
+    {
+      id: 'district-cooling',
+      name: 'District Cooling',
+      icon: 'fas fa-snowflake',
+      color: 'teal',
+      count: meters.filter(m => m.type === 'District Cooling Consumption').length,
+      description: 'District cooling consumption monitoring'
+    },
+    {
+      id: 'onsite-renewable',
+      name: 'On-site Renewable',
+      icon: 'fas fa-solar-panel',
+      color: 'green',
+      count: meters.filter(m => m.type === 'On-site Renewable Energy Generation').length,
+      description: 'On-site renewable energy generation'
+    },
+    {
+      id: 'renewable-percentage',
+      name: 'Renewable %',
+      icon: 'fas fa-chart-line',
+      color: 'purple',
+      count: meters.filter(m => m.type === 'Renewable Energy Percentage').length,
+      description: 'Renewable energy percentage tracking'
+    },
+    {
+      id: 'submeter-water',
+      name: 'Sub-meter Water',
+      icon: 'fas fa-tint',
+      color: 'blue',
+      count: meters.filter(m => m.type === 'Sub-metered Water Consumption').length,
+      description: 'Sub-metered water consumption'
+    },
+    {
+      id: 'water-showers',
+      name: 'Water Flow - Showers',
+      icon: 'fas fa-shower',
+      color: 'cyan',
+      count: meters.filter(m => m.type === 'Water Flow Rate - Showers').length,
+      description: 'Water flow rate for showers'
+    },
+    {
+      id: 'water-taps',
+      name: 'Water Flow - Taps',
+      icon: 'fas fa-faucet',
+      color: 'cyan',
+      count: meters.filter(m => m.type === 'Water Flow Rate - Taps').length,
+      description: 'Water flow rate for taps'
     }
   ];
 
@@ -662,6 +716,12 @@ const Meter = () => {
                       category === 'Vehicle Fuel Consumption' ? 'bg-purple-100' :
                       category === 'LPG Usage' ? 'bg-orange-100' :
                       category === 'Renewable Energy Usage' ? 'bg-teal-100' :
+                      category === 'District Cooling Consumption' ? 'bg-teal-100' :
+                      category === 'On-site Renewable Energy Generation' ? 'bg-green-100' :
+                      category === 'Renewable Energy Percentage' ? 'bg-purple-100' :
+                      category === 'Sub-metered Water Consumption' ? 'bg-blue-100' :
+                      category === 'Water Flow Rate - Showers' ? 'bg-cyan-100' :
+                      category === 'Water Flow Rate - Taps' ? 'bg-cyan-100' :
                       'bg-gray-100'
                     }`}>
                       <i className={`${
@@ -672,6 +732,12 @@ const Meter = () => {
                         category === 'Vehicle Fuel Consumption' ? 'fas fa-car text-purple-600' :
                         category === 'LPG Usage' ? 'fas fa-fire text-orange-600' :
                         category === 'Renewable Energy Usage' ? 'fas fa-solar-panel text-teal-600' :
+                        category === 'District Cooling Consumption' ? 'fas fa-snowflake text-teal-600' :
+                        category === 'On-site Renewable Energy Generation' ? 'fas fa-solar-panel text-green-600' :
+                        category === 'Renewable Energy Percentage' ? 'fas fa-chart-line text-purple-600' :
+                        category === 'Sub-metered Water Consumption' ? 'fas fa-tint text-blue-500' :
+                        category === 'Water Flow Rate - Showers' ? 'fas fa-shower text-cyan-600' :
+                        category === 'Water Flow Rate - Taps' ? 'fas fa-faucet text-cyan-500' :
                         'fas fa-gauge text-gray-600'
                       }`}></i>
                     </div>
@@ -695,6 +761,12 @@ const Meter = () => {
                       meter.type === 'Vehicle Fuel Consumption' ? 'bg-purple-100' :
                       meter.type === 'LPG Usage' ? 'bg-orange-100' :
                       meter.type === 'Renewable Energy Usage' ? 'bg-teal-100' :
+                      meter.type === 'District Cooling Consumption' ? 'bg-teal-100' :
+                      meter.type === 'On-site Renewable Energy Generation' ? 'bg-green-100' :
+                      meter.type === 'Renewable Energy Percentage' ? 'bg-purple-100' :
+                      meter.type === 'Sub-metered Water Consumption' ? 'bg-blue-100' :
+                      meter.type === 'Water Flow Rate - Showers' ? 'bg-cyan-100' :
+                      meter.type === 'Water Flow Rate - Taps' ? 'bg-cyan-100' :
                       'bg-gray-100'
                     }`}>
                       <i className={`${
@@ -705,6 +777,12 @@ const Meter = () => {
                         meter.type === 'Vehicle Fuel Consumption' ? 'fas fa-car text-purple-600' :
                         meter.type === 'LPG Usage' ? 'fas fa-fire text-orange-600' :
                         meter.type === 'Renewable Energy Usage' ? 'fas fa-solar-panel text-teal-600' :
+                        meter.type === 'District Cooling Consumption' ? 'fas fa-snowflake text-teal-600' :
+                        meter.type === 'On-site Renewable Energy Generation' ? 'fas fa-solar-panel text-green-600' :
+                        meter.type === 'Renewable Energy Percentage' ? 'fas fa-chart-line text-purple-600' :
+                        meter.type === 'Sub-metered Water Consumption' ? 'fas fa-tint text-blue-500' :
+                        meter.type === 'Water Flow Rate - Showers' ? 'fas fa-shower text-cyan-600' :
+                        meter.type === 'Water Flow Rate - Taps' ? 'fas fa-faucet text-cyan-500' :
                         'fas fa-gauge text-gray-600'
                       }`}></i>
                     </div>
@@ -827,6 +905,12 @@ const Meter = () => {
                       category === 'Vehicle Fuel Consumption' ? 'bg-purple-100' :
                       category === 'LPG Usage' ? 'bg-orange-100' :
                       category === 'Renewable Energy Usage' ? 'bg-teal-100' :
+                      category === 'District Cooling Consumption' ? 'bg-teal-100' :
+                      category === 'On-site Renewable Energy Generation' ? 'bg-green-100' :
+                      category === 'Renewable Energy Percentage' ? 'bg-purple-100' :
+                      category === 'Sub-metered Water Consumption' ? 'bg-blue-100' :
+                      category === 'Water Flow Rate - Showers' ? 'bg-cyan-100' :
+                      category === 'Water Flow Rate - Taps' ? 'bg-cyan-100' :
                       'bg-gray-100'
                     }`}>
                       <i className={`${
@@ -837,6 +921,12 @@ const Meter = () => {
                         category === 'Vehicle Fuel Consumption' ? 'fas fa-car text-purple-600' :
                         category === 'LPG Usage' ? 'fas fa-fire text-orange-600' :
                         category === 'Renewable Energy Usage' ? 'fas fa-solar-panel text-teal-600' :
+                        category === 'District Cooling Consumption' ? 'fas fa-snowflake text-teal-600' :
+                        category === 'On-site Renewable Energy Generation' ? 'fas fa-solar-panel text-green-600' :
+                        category === 'Renewable Energy Percentage' ? 'fas fa-chart-line text-purple-600' :
+                        category === 'Sub-metered Water Consumption' ? 'fas fa-tint text-blue-500' :
+                        category === 'Water Flow Rate - Showers' ? 'fas fa-shower text-cyan-600' :
+                        category === 'Water Flow Rate - Taps' ? 'fas fa-faucet text-cyan-500' :
                         'fas fa-gauge text-gray-600'
                       } text-sm`}></i>
                     </div>
@@ -872,6 +962,12 @@ const Meter = () => {
                             meter.type === 'Vehicle Fuel Consumption' ? 'bg-purple-100' :
                             meter.type === 'LPG Usage' ? 'bg-orange-100' :
                             meter.type === 'Renewable Energy Usage' ? 'bg-teal-100' :
+                            meter.type === 'District Cooling Consumption' ? 'bg-teal-100' :
+                            meter.type === 'On-site Renewable Energy Generation' ? 'bg-green-100' :
+                            meter.type === 'Renewable Energy Percentage' ? 'bg-purple-100' :
+                            meter.type === 'Sub-metered Water Consumption' ? 'bg-blue-100' :
+                            meter.type === 'Water Flow Rate - Showers' ? 'bg-cyan-100' :
+                            meter.type === 'Water Flow Rate - Taps' ? 'bg-cyan-100' :
                             'bg-gray-100'
                           }`}>
                             <i className={`${
@@ -882,6 +978,12 @@ const Meter = () => {
                               meter.type === 'Vehicle Fuel Consumption' ? 'fas fa-car text-purple-600' :
                               meter.type === 'LPG Usage' ? 'fas fa-fire text-orange-600' :
                               meter.type === 'Renewable Energy Usage' ? 'fas fa-solar-panel text-teal-600' :
+                              meter.type === 'District Cooling Consumption' ? 'fas fa-snowflake text-teal-600' :
+                              meter.type === 'On-site Renewable Energy Generation' ? 'fas fa-solar-panel text-green-600' :
+                              meter.type === 'Renewable Energy Percentage' ? 'fas fa-chart-line text-purple-600' :
+                              meter.type === 'Sub-metered Water Consumption' ? 'fas fa-tint text-blue-500' :
+                              meter.type === 'Water Flow Rate - Showers' ? 'fas fa-shower text-cyan-600' :
+                              meter.type === 'Water Flow Rate - Taps' ? 'fas fa-faucet text-cyan-500' :
                               'fas fa-gauge text-gray-600'
                             } text-sm`}></i>
                           </div>
@@ -1297,12 +1399,18 @@ const MeterFormModal = ({ isOpen, title, meter, meterTypes, onSave, onClose }) =
     // Map short names to full backend names
     const typeMapping = {
       'Electricity': 'Electricity Consumption',
-      'Water': 'Water Consumption', 
+      'Water': 'Water Consumption',
       'Waste': 'Waste to Landfill',
       'Generator': 'Generator Fuel Consumption',
       'Vehicle': 'Vehicle Fuel Consumption',
       'LPG': 'LPG Usage',
-      'Renewable Energy': 'Renewable Energy Usage'
+      'Renewable Energy': 'Renewable Energy Usage',
+      'District Cooling': 'District Cooling Consumption',
+      'On-site Renewable': 'On-site Renewable Energy Generation',
+      'Renewable %': 'Renewable Energy Percentage',
+      'Sub-meter Water': 'Sub-metered Water Consumption',
+      'Water Flow - Showers': 'Water Flow Rate - Showers',
+      'Water Flow - Taps': 'Water Flow Rate - Taps'
     };
     
     const fullTypeName = typeMapping[selectedType] || selectedType;
@@ -1351,7 +1459,14 @@ const MeterFormModal = ({ isOpen, title, meter, meterTypes, onSave, onClose }) =
             <div>
               <p className="text-gray-600 mb-4">Select the type of meter to add:</p>
               <div className="space-y-2">
-                {meterTypes.filter(type => type.id !== 'total').map((type) => (
+                {meterTypes.filter(type =>
+                  type.id !== 'total' &&
+                  type.id !== 'waste' &&
+                  type.id !== 'generator' &&
+                  type.id !== 'vehicle' &&
+                  type.id !== 'lpg' &&
+                  type.id !== 'renewable'
+                ).map((type) => (
                   <button
                     key={type.id}
                     type="button"
@@ -1385,7 +1500,25 @@ const MeterFormModal = ({ isOpen, title, meter, meterTypes, onSave, onClose }) =
                   <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <div className="flex items-center space-x-3">
                       {(() => {
-                        const typeData = meterTypes.find(t => t.name.replace(' Meters', '').replace(' Trackers', '') === formData.type);
+                        // Try to find typeData by matching the display name or full type name
+                        let typeData = meterTypes.find(t => t.name.replace(' Meters', '').replace(' Trackers', '') === formData.type);
+
+                        // If not found, try matching with the full type name
+                        if (!typeData) {
+                          const typeMapping = {
+                            'Electricity Consumption': 'Electricity',
+                            'Water Consumption': 'Water',
+                            'District Cooling Consumption': 'District Cooling',
+                            'On-site Renewable Energy Generation': 'On-site Renewable',
+                            'Renewable Energy Percentage': 'Renewable %',
+                            'Sub-metered Water Consumption': 'Sub-meter Water',
+                            'Water Flow Rate - Showers': 'Water Flow - Showers',
+                            'Water Flow Rate - Taps': 'Water Flow - Taps'
+                          };
+                          const displayName = typeMapping[formData.type];
+                          typeData = meterTypes.find(t => t.name.replace(' Meters', '').replace(' Trackers', '') === displayName);
+                        }
+
                         return (
                           <>
                             <div className={`w-8 h-8 bg-${typeData?.color}-100 rounded-lg flex items-center justify-center`}>

@@ -84,21 +84,16 @@ class FrameworkService:
         """Assign a voluntary framework to a company"""
         try:
             framework = Framework.objects.get(framework_id=framework_id, type='voluntary')
-            CompanyFramework.objects.get_or_create(
+            obj, created = CompanyFramework.objects.get_or_create(
                 company=company,
                 framework=framework,
                 defaults={'is_auto_assigned': False}
             )
 
-            # Bridge to new framework system: update Company model
-            if framework_id == 'GREEN_KEY':
-                company.has_green_key = True
-                company.save()
-                # Update active frameworks to include 'G'
-                company.update_active_frameworks()
-
+            print(f"✅ Assigned {framework_id} to {company.name}, created={created}")
             return True
         except Framework.DoesNotExist:
+            print(f"❌ Framework {framework_id} not found")
             return False
 
 

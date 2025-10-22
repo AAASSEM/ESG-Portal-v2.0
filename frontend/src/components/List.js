@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, memo } from 'react';
 import { createPortal } from 'react-dom';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth, makeAuthenticatedRequest } from '../context/AuthContext';
 import { API_BASE_URL } from '../config';
 import Modal from './Modal';
@@ -8,13 +8,13 @@ import Layout from './Layout';
 
 const List = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { user, selectedCompany, hasPermission } = useAuth();
   const [answers, setAnswers] = useState({});
   const [showChecklist, setShowChecklist] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [profilingQuestions, setProfilingQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [initialLoad, setInitialLoad] = useState(true); // Track first load
   const [modalState, setModalState] = useState({
     isOpen: false,
     type: 'info',
@@ -32,54 +32,14 @@ const List = () => {
   const [assignments, setAssignments] = useState({ category_assignments: {}, element_assignments: {} });
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [backendChecklist, setBackendChecklist] = useState([]);
-  const [selectedVoluntaryFrameworks, setSelectedVoluntaryFrameworks] = useState([]);
 
   // Get company ID from auth context
   const companyId = selectedCompany?.id;
 
-  // Fetch selected voluntary frameworks
-  useEffect(() => {
-    if (!companyId) {
-      console.log('⏸️ No company selected, skipping voluntary framework fetch');
-      return;
-    }
-
-    const fetchSelectedVoluntaryFrameworks = async () => {
-      try {
-        console.log('🔍 Fetching selected voluntary frameworks for company:', companyId);
-
-        // Get all company frameworks
-        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/companies/${companyId}/frameworks/`);
-
-        if (response.ok) {
-          const frameworks = await response.json();
-          console.log('📋 Raw frameworks response:', frameworks);
-
-          // Filter for voluntary frameworks (type === 'voluntary')
-          const voluntaryFrameworks = frameworks.filter(fw => fw.type === 'voluntary');
-          const voluntaryIds = voluntaryFrameworks.map(fw => fw.framework_id);
-
-          console.log('📋 Voluntary frameworks found:', voluntaryFrameworks);
-          console.log('📋 Selected voluntary frameworks from DB:', voluntaryIds);
-          console.log('📋 Framework IDs being stored:', voluntaryIds);
-
-          setSelectedVoluntaryFrameworks(voluntaryIds);
-        } else {
-          console.log('❌ Failed to fetch frameworks, status:', response.status);
-        }
-      } catch (error) {
-        console.error('❌ Error fetching voluntary frameworks:', error);
-      }
-    };
-
-    fetchSelectedVoluntaryFrameworks();
-  }, [companyId]);
-
-  // Debug logging
-  console.log('List component - selectedCompany:', selectedCompany);
-  console.log('List component - companyId:', companyId);
-  console.log('List component - user:', user);
-  console.log('List component - selectedVoluntaryFrameworks:', selectedVoluntaryFrameworks);
+  // Performance: Only log in development mode
+  if (process.env.NODE_ENV === 'development') {
+    console.log('List component - companyId:', companyId);
+  }
 
   // Modal helper function
   const showModal = (type, title, message) => {
@@ -306,58 +266,127 @@ const List = () => {
     return null;
   };
 
-  // Fetch selected voluntary frameworks (moved to a separate function for reuse)
-  const fetchSelectedVoluntaryFrameworks = async () => {
-    if (!companyId) return;
-
-    try {
-      console.log('🔍 Fetching selected voluntary frameworks for company:', companyId);
-
-      // Get all company frameworks
-      const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/companies/${companyId}/frameworks/`);
-
-      if (response.ok) {
-        const frameworks = await response.json();
-
-        // Filter for voluntary frameworks (type === 'voluntary')
-        const voluntaryIds = frameworks
-          .filter(fw => fw.type === 'voluntary')
-          .map(fw => fw.framework_id);
-
-        console.log('📋 Selected voluntary frameworks from DB:', voluntaryIds);
-        setSelectedVoluntaryFrameworks(voluntaryIds);
-      } else {
-        console.log('❌ Failed to fetch frameworks, status:', response.status);
-      }
-    } catch (error) {
-      console.error('❌ Error fetching voluntary frameworks:', error);
-    }
-  };
-
+  
   useEffect(() => {
     const fetchData = async () => {
+      const startTime = performance.now();
       setLoading(true);
       // Reset state to ensure clean load (but keep checklistExists to prevent flickering)
       setAnswers({});
-      setShowChecklist(false);
       setProfilingQuestions([]);
+      // Don't reset setShowChecklist here - let the logic determine the correct state
       // Don't reset checklistExists here to prevent flickering
 
-      // Fetch all data in parallel for faster loading
-      await Promise.all([
+      // Optimized: Fetch ALL data in parallel including checklist check
+      const apiStartTime = performance.now();
+
+      const [
+        profilingData,
+        answersData,
+        questionsData,
+        checklistExistsResult
+      ] = await Promise.all([
         fetchProfilingQuestions(),
         fetchExistingAnswers(),
-        checkChecklistExists(),
-        checkWizardCompletion(),
-        fetchSelectedVoluntaryFrameworks()
+        makeAuthenticatedRequest(`${API_BASE_URL}/api/profiling-questions/for_company/?company_id=${companyId}`),
+        checkChecklistExists() // Make this return a promise
       ]);
+
+      const apiEndTime = performance.now();
+      const apiLoadTime = apiEndTime - apiStartTime;
+      console.log(`🚀 ALL API calls completed in parallel in ${apiLoadTime.toFixed(2)}ms`);
+
+      // Check wizard completion using already fetched data
+      console.log('🔍 Checking wizard completion...');
+      console.log('  - answersData:', answersData ? 'exists' : 'null');
+      console.log('  - questionsData:', questionsData ? 'exists' : 'null');
+      console.log('  - checklistExistsResult:', checklistExistsResult);
+
+      let shouldShowChecklist = false;
+
+      if (answersData && questionsData && questionsData.ok) {
+        const questionsList = await questionsData.json();
+        const allQuestionsAnswered = answersData.length > 0 && answersData.length >= questionsList.length;
+
+        console.log('🔍 Wizard completion check:', {
+          answersCount: answersData.length,
+          questionsCount: questionsList.length,
+          allQuestionsAnswered,
+          checklistExists: checklistExistsResult,
+          shouldShowChecklist: allQuestionsAnswered && checklistExistsResult
+        });
+
+        shouldShowChecklist = allQuestionsAnswered && checklistExistsResult;
+
+        if (shouldShowChecklist) {
+          console.log('✅ Profiling wizard completed and checklist exists, showing checklist view');
+        } else {
+          console.log('📝 Showing questions - wizard not completed or no checklist');
+          if (!allQuestionsAnswered) {
+            console.log(`  - Questions not complete: ${answersData.length}/${questionsList.length}`);
+          }
+          if (!checklistExistsResult) {
+            console.log('  - No checklist exists');
+          }
+        }
+      } else {
+        console.log('❌ Cannot check wizard completion - missing data');
+        if (!answersData) console.log('  - Missing answersData');
+        if (!questionsData) console.log('  - Missing questionsData');
+        if (questionsData && !questionsData.ok) console.log(`  - Questions API error: ${questionsData.status}`);
+      }
+
+      // CRITICAL: Force the state to match the calculated decision
+      console.log(`🎯 Setting showChecklist to: ${shouldShowChecklist}`);
+      setShowChecklist(shouldShowChecklist);
       setLoading(false);
+      setInitialLoad(false); // Mark initial load as complete
+
+      const endTime = performance.now();
+      const loadTime = endTime - startTime;
+      console.log(`List component loaded in ${loadTime.toFixed(2)}ms`);
+      console.log('🎯 Final state check:', {
+        showChecklist: shouldShowChecklist,
+        checklistExists: checklistExistsResult,
+        answersCount: answersData?.length || 0,
+        profilingQuestionsCount: profilingData?.length || 0
+      });
     };
 
     if (companyId) {
       fetchData();
     }
   }, [companyId]); // Re-run when companyId changes
+
+  // CRITICAL: Ensure showChecklist state is correct when data changes
+  useEffect(() => {
+    // Only run after data is loaded and we have all the necessary information
+    if (!loading && checklistExists !== null) {
+      // Check if we have answers (they're set in state) and profiling questions
+      const hasAnswers = Object.keys(answers).length > 0;
+      const hasQuestions = profilingQuestions.length > 0;
+
+      console.log('🔄 State sync useEffect:', {
+        loading,
+        checklistExists,
+        hasAnswers,
+        hasQuestions,
+        currentShowChecklist: showChecklist,
+        answersCount: Object.keys(answers).length,
+        questionsCount: profilingQuestions.length
+      });
+
+      // Only update if the current state doesn't match what it should be
+      const shouldBeChecklist = hasAnswers && checklistExists && hasQuestions;
+      if (showChecklist !== shouldBeChecklist) {
+        console.log(`🔄 Syncing showChecklist from ${showChecklist} to ${shouldBeChecklist}`);
+        setShowChecklist(shouldBeChecklist);
+      }
+    }
+  }, [loading, checklistExists, answers, profilingQuestions]); // Remove showChecklist from dependencies
+
+  // Add loading state optimization
+  const [isDataLoading, setIsDataLoading] = useState(false);
 
   // Fetch assignments when checklist is shown
   useEffect(() => {
@@ -366,183 +395,122 @@ const List = () => {
     }
   }, [showChecklist, companyId]);
 
-  // Fetch existing answers from database
+  // Fetch existing answers from database (returns data for optimization)
   const fetchExistingAnswers = async () => {
-    if (!companyId) return;
-    
+    if (!companyId) return null;
+
     try {
       console.log('Fetching existing profile answers for company:', companyId);
       const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/companies/${companyId}/profile_answers/`);
-      
+
       if (response.ok) {
         const answersData = await response.json();
         console.log('Loaded profile answers from API:', answersData);
-        
+
         // Convert API format to component format
         const answersMap = {};
         answersData.forEach(item => {
           answersMap[item.question] = item.answer;
         });
-        
+
         console.log('Setting answers state to:', answersMap);
         setAnswers(answersMap);
-        
-        // If we have answers, we should show the checklist
-        if (Object.keys(answersMap).length > 0) {
-          console.log('Answers found, checking if should show checklist');
-        }
+
+        // Return the raw answers data for optimization
+        return answersData;
       } else {
         console.log('No existing answers found or API error, status:', response.status);
+        return null;
       }
     } catch (error) {
       console.error('Error fetching existing answers:', error);
+      return null;
     }
   };
 
-  // Check if checklist exists and fetch it
+  // Check if checklist exists and fetch it (returns result for parallel execution)
   const checkChecklistExists = async () => {
     if (!companyId) return false;
     
     try {
-      console.log('ðŸ” Checking if checklist exists for company:', companyId);
-      // Add timestamp to force cache bypass
-      const timestamp = new Date().getTime();
-      const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/checklist/?company_id=${companyId}&t=${timestamp}`);
+      console.log('Ã°Å¸â€Â Checking if checklist exists for company:', companyId);
+      const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/checklist/?company_id=${companyId}`);
       if (response.ok) {
         const checklistData = await response.json();
         // Handle both paginated {results: []} and direct array responses
         const checklistItems = checklistData.results || checklistData;
         const exists = Array.isArray(checklistItems) && checklistItems.length > 0;
-        console.log('ðŸ” Checklist data:', {
+        console.log('Ã°Å¸â€Â Checklist data:', {
           dataType: typeof checklistData,
           isArray: Array.isArray(checklistData),
           itemsCount: checklistItems ? checklistItems.length : 0,
           exists: exists
         });
-        console.log('âœ… Checklist exists check result:', exists);
+        console.log('Ã¢Å“â€¦ Checklist exists check result:', exists);
         setChecklistExists(exists);
 
         // Store the backend checklist with proper IDs
         if (exists) {
-          const transformedChecklist = checklistItems.map(item => {
-            console.log(`🔍 Processing checklist item: ${item.element_name}, frameworks_list:`, item.frameworks_list);
-            const filteredFrameworks = filterFrameworks(item.frameworks_list || []);
-            console.log(`🔍 After filtering:`, filteredFrameworks);
-
-            return {
-              id: item.id,  // This is the actual database ID we need for assignments
-              name: item.element_name,
-              description: item.element_description,
-              unit: item.element_unit,
-              cadence: item.cadence,
-              frameworks: filteredFrameworks,
-              category: item.category || (item.is_metered ? 'Environmental' : 'Social'),
-              isMetered: item.is_metered
-            };
-          });
+          const transformedChecklist = checklistItems.map(item => ({
+            id: item.id,  // This is the actual database ID we need for assignments
+            name: item.element_name,
+            description: item.element_description,
+            unit: item.element_unit,
+            cadence: item.cadence,
+            frameworks: item.frameworks_list || [],
+            category: item.category || (item.is_metered ? 'Environmental' : 'Social'),
+            isMetered: item.is_metered
+          }));
           setBackendChecklist(transformedChecklist);
-          console.log('âœ… Loaded backend checklist with', transformedChecklist.length, 'items:', transformedChecklist);
+          console.log('Ã¢Å“â€¦ Loaded backend checklist with', transformedChecklist.length, 'items:', transformedChecklist);
         }
         
         return exists;
       } else {
-        console.log('âŒ Failed to check checklist:', response.status);
+        console.log('Ã¢ÂÅ’ Failed to check checklist:', response.status);
         setChecklistExists(false);
       }
     } catch (error) {
-      console.error('âŒ Error checking checklist existence:', error);
+      console.error('Ã¢ÂÅ’ Error checking checklist existence:', error);
       setChecklistExists(false);
     }
     return false;
   };
 
-  // Helper function to filter frameworks based on selection
-  const filterFrameworks = (frameworks) => {
-    console.log('🔍 Filtering frameworks:', frameworks, 'Selected voluntary frameworks:', selectedVoluntaryFrameworks);
-    return frameworks.filter(framework => {
-      if (framework === 'Green Key') {
-        // Check for multiple possible Green Key identifiers
-        const hasGreenKey = selectedVoluntaryFrameworks.includes('GREEN_KEY') ||
-                           selectedVoluntaryFrameworks.includes('Green Key') ||
-                           selectedVoluntaryFrameworks.includes('green_key') ||
-                           selectedVoluntaryFrameworks.some(fw => fw.toLowerCase().includes('green'));
-        console.log(`🔍 Green Key check - framework: ${framework}, hasGreenKey: ${hasGreenKey}, selectedVoluntaryFrameworks:`, selectedVoluntaryFrameworks);
-        return hasGreenKey;
-      }
-      // Include all other frameworks (DST, ESG, etc.)
-      return true;
-    });
-  };
+  // Backend now handles framework filtering correctly - no need for frontend filtering
 
-  // Check if wizard has been completed
-  const checkWizardCompletion = async () => {
-    if (!companyId) return;
-
-    // Check if we should force showing questions (from Dashboard Profiling button)
-    const forceShowQuestions = location.state?.forceShowQuestions;
-    if (forceShowQuestions) {
-      console.log('Force showing questions from navigation state');
-      setShowChecklist(false);
-      // Clear the navigation state to prevent it from affecting subsequent visits
-      window.history.replaceState({}, document.title, window.location.pathname);
-      return;
-    }
-
-    try {
-      // Check if company has answered all questions (wizard completed)
-      const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/companies/${companyId}/profile_answers/`);
-      if (response.ok) {
-        const answersData = await response.json();
-        const questionsResponse = await makeAuthenticatedRequest(`${API_BASE_URL}/api/profiling-questions/for_company/?company_id=${companyId}`);
-        if (questionsResponse.ok) {
-          const questionsData = await questionsResponse.json();
-
-          // If all questions are answered, check if checklist exists
-          if (answersData.length > 0 && answersData.length >= questionsData.length) {
-            console.log('Profiling wizard completed');
-            const checklistExists = await checkChecklistExists();
-            if (checklistExists) {
-              console.log('Checklist exists, showing checklist view');
-              setShowChecklist(true);
-            }
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error checking wizard completion:', error);
-    }
-  };
+  // Wizard completion is now handled inline in the main data loading function for better performance
 
   // Must-have data elements (always required) - frameworks filtered based on selection
   const mustHaveElements = useMemo(() => [
-    { id: 'electricity', name: 'Electricity Consumption', description: 'Total electricity from local providers', unit: 'kWh', cadence: 'Monthly', frameworks: filterFrameworks(['DST', 'ESG', 'Green Key']), category: 'Environmental', is_metered: true, meter_type: 'Electricity' },
-    { id: 'water', name: 'Water Consumption', description: 'Total water usage', unit: 'mÂ³', cadence: 'Monthly', frameworks: filterFrameworks(['DST', 'ESG', 'Green Key']), category: 'Environmental', is_metered: true, meter_type: 'Water' },
-    { id: 'waste_landfill', name: 'Waste to Landfill', description: 'Non-recycled waste disposal', unit: 'kg', cadence: 'Monthly', frameworks: filterFrameworks(['DST', 'ESG', 'Green Key']), category: 'Environmental', is_metered: true, meter_type: 'Waste' },
-    { id: 'sustainability_policy', name: 'Sustainability Policy', description: 'Written sustainability policy', unit: 'Document', cadence: 'Annually', frameworks: filterFrameworks(['DST', 'Green Key', 'ESG']), category: 'Social', is_metered: false },
-    { id: 'sustainability_personnel', name: 'Sustainability Personnel', description: 'Certified sustainability staff', unit: 'Count', cadence: 'Annually', frameworks: filterFrameworks(['DST', 'Green Key']), category: 'Social', is_metered: false },
-    { id: 'employee_training', name: 'Employee Training Hours', description: 'Sustainability training per employee', unit: 'Hours', cadence: 'Annually', frameworks: filterFrameworks(['DST', 'Green Key', 'ESG']), category: 'Social', is_metered: false },
-    { id: 'guest_education', name: 'Guest Education', description: 'Guest sustainability initiatives', unit: 'Count', cadence: 'Quarterly', frameworks: filterFrameworks(['DST', 'Green Key']), category: 'Social', is_metered: false },
-    { id: 'community_initiatives', name: 'Community Initiatives', description: 'Local community programs', unit: 'Count, AED', cadence: 'Annually', frameworks: filterFrameworks(['DST', 'Green Key', 'ESG']), category: 'Social', is_metered: false },
+    { id: 'electricity', name: 'Electricity Consumption', description: 'Total electricity from local providers', unit: 'kWh', cadence: 'Monthly', frameworks: ['DST', 'ESG', 'Green Key'], category: 'Environmental', is_metered: true, meter_type: 'Electricity' },
+    { id: 'water', name: 'Water Consumption', description: 'Total water usage', unit: 'mÃ‚Â³', cadence: 'Monthly', frameworks: ['DST', 'ESG', 'Green Key'], category: 'Environmental', is_metered: true, meter_type: 'Water' },
+    { id: 'waste_landfill', name: 'Waste to Landfill', description: 'Non-recycled waste disposal', unit: 'kg', cadence: 'Monthly', frameworks: ['DST', 'ESG', 'Green Key'], category: 'Environmental', is_metered: true, meter_type: 'Waste' },
+    { id: 'sustainability_policy', name: 'Sustainability Policy', description: 'Written sustainability policy', unit: 'Document', cadence: 'Annually', frameworks: ['DST', 'Green Key', 'ESG'], category: 'Social', is_metered: false },
+    { id: 'sustainability_personnel', name: 'Sustainability Personnel', description: 'Certified sustainability staff', unit: 'Count', cadence: 'Annually', frameworks: ['DST', 'Green Key'], category: 'Social', is_metered: false },
+    { id: 'employee_training', name: 'Employee Training Hours', description: 'Sustainability training per employee', unit: 'Hours', cadence: 'Annually', frameworks: ['DST', 'Green Key', 'ESG'], category: 'Social', is_metered: false },
+    { id: 'guest_education', name: 'Guest Education', description: 'Guest sustainability initiatives', unit: 'Count', cadence: 'Quarterly', frameworks: ['DST', 'Green Key'], category: 'Social', is_metered: false },
+    { id: 'community_initiatives', name: 'Community Initiatives', description: 'Local community programs', unit: 'Count, AED', cadence: 'Annually', frameworks: ['DST', 'Green Key', 'ESG'], category: 'Social', is_metered: false },
     { id: 'government_compliance', name: 'Government Compliance', description: 'Energy regulation compliance', unit: 'Status', cadence: 'Annually', frameworks: ['DST', 'ESG'], category: 'Governance', is_metered: false },
-    { id: 'action_plan', name: 'Action Plan', description: 'Annual sustainability objectives', unit: 'Document', cadence: 'Annually', frameworks: filterFrameworks(['DST', 'Green Key', 'ESG']), category: 'Governance', is_metered: false },
+    { id: 'action_plan', name: 'Action Plan', description: 'Annual sustainability objectives', unit: 'Document', cadence: 'Annually', frameworks: ['DST', 'Green Key', 'ESG'], category: 'Governance', is_metered: false },
     { id: 'carbon_footprint', name: 'Carbon Footprint', description: 'Total GHG emissions', unit: 'tonnes CO2e', cadence: 'Annually', frameworks: ['ESG', 'DST'], category: 'Environmental', is_metered: false },
     { id: 'health_safety', name: 'Health & Safety Incidents', description: 'Workplace incidents', unit: 'Count', cadence: 'Monthly', frameworks: ['ESG'], category: 'Social', is_metered: false },
     { id: 'anti_corruption', name: 'Anti-corruption Policies', description: 'Anti-corruption measures', unit: 'Status', cadence: 'Annually', frameworks: ['ESG'], category: 'Governance', is_metered: false },
     { id: 'risk_management', name: 'Risk Management', description: 'ESG risk framework', unit: 'Status', cadence: 'Annually', frameworks: ['ESG'], category: 'Governance', is_metered: false }
-  ], [selectedVoluntaryFrameworks]);
+  ], []);
 
   // Conditional data elements (activated by "Yes" answers) - frameworks filtered based on selection
   const conditionalElements = useMemo(() => ({
     'generator_fuel': { id: 'generator_fuel', name: 'Generator Fuel', description: 'Fuel for backup generators', unit: 'liters', cadence: 'Monthly', frameworks: ['DST', 'ESG'], category: 'Environmental', is_metered: true, meter_type: 'Generator' },
     'vehicle_fuel': { id: 'vehicle_fuel', name: 'Vehicle Fuel', description: 'Company vehicle fuel', unit: 'liters', cadence: 'Monthly', frameworks: ['DST', 'ESG'], category: 'Environmental', is_metered: true, meter_type: 'Vehicle' },
     'lpg_consumption': { id: 'lpg_consumption', name: 'LPG Usage', description: 'Liquid petroleum gas consumption', unit: 'kg', cadence: 'Monthly', frameworks: ['DST', 'ESG'], category: 'Environmental', is_metered: true, meter_type: 'LPG' },
-    'green_events': { id: 'green_events', name: 'Green Events', description: 'Sustainable event services', unit: 'Count', cadence: 'Quarterly', frameworks: filterFrameworks(['DST', 'Green Key']), category: 'Social', is_metered: false },
-    'food_sourcing': { id: 'food_sourcing', name: 'Food Sourcing', description: 'Local/organic food purchases', unit: '%', cadence: 'Quarterly', frameworks: filterFrameworks(['Green Key', 'ESG']), category: 'Environmental', is_metered: false },
-    'green_spaces': { id: 'green_spaces', name: 'Green Spaces', description: 'Sustainable landscaping', unit: 'mÂ²', cadence: 'Annually', frameworks: filterFrameworks(['Green Key']), category: 'Environmental', is_metered: false },
-    'renewable_energy_usage': { id: 'renewable_energy_usage', name: 'Renewable Energy', description: 'Energy from renewable sources', unit: '%', cadence: 'Quarterly', frameworks: filterFrameworks(['Green Key', 'ESG']), category: 'Environmental', is_metered: true, meter_type: 'Renewable Energy' },
-    'environmental_management_system': { id: 'environmental_management_system', name: 'Environmental Management System', description: 'EMS certification', unit: 'Status', cadence: 'Annually', frameworks: filterFrameworks(['Green Key', 'ESG']), category: 'Governance', is_metered: false },
+    'green_events': { id: 'green_events', name: 'Green Events', description: 'Sustainable event services', unit: 'Count', cadence: 'Quarterly', frameworks: ['DST', 'Green Key'], category: 'Social', is_metered: false },
+    'food_sourcing': { id: 'food_sourcing', name: 'Food Sourcing', description: 'Local/organic food purchases', unit: '%', cadence: 'Quarterly', frameworks: ['Green Key', 'ESG'], category: 'Environmental', is_metered: false },
+    'green_spaces': { id: 'green_spaces', name: 'Green Spaces', description: 'Sustainable landscaping', unit: 'mÃ‚Â²', cadence: 'Annually', frameworks: ['Green Key'], category: 'Environmental', is_metered: false },
+    'renewable_energy_usage': { id: 'renewable_energy_usage', name: 'Renewable Energy', description: 'Energy from renewable sources', unit: '%', cadence: 'Quarterly', frameworks: ['Green Key', 'ESG'], category: 'Environmental', is_metered: true, meter_type: 'Renewable Energy' },
+    'environmental_management_system': { id: 'environmental_management_system', name: 'Environmental Management System', description: 'EMS certification', unit: 'Status', cadence: 'Annually', frameworks: ['Green Key', 'ESG'], category: 'Governance', is_metered: false },
     'board_composition': { id: 'board_composition', name: 'Board Composition', description: 'Board diversity metrics', unit: '%', cadence: 'Annually', frameworks: ['ESG'], category: 'Governance', is_metered: false }
-  }), [selectedVoluntaryFrameworks]);
+  }), []);
 
   const handleAnswerChange = async (questionId, answer) => {
     // Check if user has edit permission
@@ -634,7 +602,7 @@ const List = () => {
   );
   
   // Debug logging
-  console.log('ðŸ” Component render state:', {
+  console.log('Ã°Å¸â€Â Component render state:', {
     companyId,
     answersCount: Object.keys(answers).length,
     questionsCount: profilingQuestions.length,
@@ -675,36 +643,30 @@ const List = () => {
         const checklistResponse = await makeAuthenticatedRequest(`${API_BASE_URL}/api/checklist/?company_id=${companyId}`);
         if (checklistResponse.ok) {
           const checklistData = await checklistResponse.json();
-          console.log('ðŸ” API Response type:', typeof checklistData, 'Is Array:', Array.isArray(checklistData));
-          console.log('ðŸ” API Response keys:', checklistData.results ? 'Has results property' : 'Direct array/object');
-          console.log('ðŸ” API Response length/count:', Array.isArray(checklistData) ? checklistData.length : Object.keys(checklistData).length);
+          console.log('Ã°Å¸â€Â API Response type:', typeof checklistData, 'Is Array:', Array.isArray(checklistData));
+          console.log('Ã°Å¸â€Â API Response keys:', checklistData.results ? 'Has results property' : 'Direct array/object');
+          console.log('Ã°Å¸â€Â API Response length/count:', Array.isArray(checklistData) ? checklistData.length : Object.keys(checklistData).length);
 
           // Transform backend checklist to frontend format for display
           // Handle both paginated {results: []} and direct array responses
           const checklistItems = checklistData.results || checklistData;
-          console.log('ðŸ” ChecklistItems type:', typeof checklistItems, 'Is Array:', Array.isArray(checklistItems));
+          console.log('Ã°Å¸â€Â ChecklistItems type:', typeof checklistItems, 'Is Array:', Array.isArray(checklistItems));
 
           if (!Array.isArray(checklistItems)) {
-            console.error('âŒ ChecklistItems is not an array:', checklistItems);
+            console.error('Ã¢ÂÅ’ ChecklistItems is not an array:', checklistItems);
             throw new Error('Invalid checklist data format');
           }
 
-          const transformedChecklist = checklistItems.map(item => {
-            console.log(`🔍 Generating checklist - Processing item: ${item.element_name}, frameworks_list:`, item.frameworks_list);
-            const filteredFrameworks = filterFrameworks(item.frameworks_list || []);
-            console.log(`🔍 Generating checklist - After filtering:`, filteredFrameworks);
-
-            return {
-              id: item.id,  // This is the actual database ID we need for assignments
-              name: item.element_name,
-              description: item.element_description,
-              unit: item.element_unit,
-              cadence: item.cadence,
-              frameworks: filteredFrameworks,
-              category: item.category || (item.is_metered ? 'Environmental' : 'Social'),
-              isMetered: item.is_metered
-            };
-          });
+          const transformedChecklist = checklistItems.map(item => ({
+            id: item.id,  // This is the actual database ID we need for assignments
+            name: item.element_name,
+            description: item.element_description,
+            unit: item.element_unit,
+            cadence: item.cadence,
+            frameworks: item.frameworks_list || [], // Apply filtering here too
+            category: item.category || (item.is_metered ? 'Environmental' : 'Social'),
+            isMetered: item.is_metered
+          }));
           
           // Store in state for use in assignments
           setBackendChecklist(transformedChecklist);
@@ -748,7 +710,7 @@ const List = () => {
   const canAssign = backendChecklist.length > 0; // Only allow assignment when backend data is loaded
   
   // Debug logging
-  console.log('ðŸ“Š Checklist Status:', {
+  console.log('Ã°Å¸â€œÅ  Checklist Status:', {
     backendChecklistCount: backendChecklist.length,
     localChecklistCount: localChecklist.length,
     finalChecklistCount: finalChecklist.length,
@@ -1086,12 +1048,13 @@ const List = () => {
   const canAccessFrameworkSelection = hasPermission('frameworkSelection', 'read');
   console.log('List.js - Framework selection access:', canAccessFrameworkSelection, 'User role:', user?.role);
 
-  if (loading) {
+  // Show loading during initial load OR regular loading
+  if (loading || initialLoad) {
     return (
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="ml-3 text-sm sm:text-base text-gray-600">Loading profiling questions...</span>
+          <span className="ml-3 text-sm sm:text-base text-gray-600">Loading your ESG checklist...</span>
         </div>
       </div>
     );
@@ -1354,4 +1317,4 @@ const List = () => {
   );
 };
 
-export default List;
+export default memo(List);

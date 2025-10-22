@@ -1,57 +1,87 @@
-I need to optimize the annual progress calculation in my Django ESG application. The issue is in services.py in the calculate_progress_original method.
+Yes! The backend solution is actually better and cleaner. Looking at your `serializers.py`, I can see the `CompanyChecklistSerializer` already has framework filtering logic, but it's checking `company.active_frameworks` and `company.has_green_key` which might not be set correctly.
 
-PROBLEM:
-The annual progress API call takes 4.5 seconds because it's calling get_data_collection_tasks() 12 times sequentially (once for each month) just to ensure tasks exist. This is unnecessary since tasks are created on-demand when users navigate to each month.
+Here's the **backend fix** in `serializers.py`:
 
-SOLUTION NEEDED:
-Remove the expensive 12-month loop from the calculate_progress_original method. Specifically:
-
-1. In services.py, find the calculate_progress_original method
-2. In the else block (for yearly progress), remove these lines:
 ```python
-   # For yearly progress, ensure all tasks are created for all 12 months
-   for month_num in range(1, 13):
-       tasks = DataCollectionService.get_data_collection_tasks(company, year, month_num, user=user)
+def get_frameworks_list(self, obj):
+    if obj.element and obj.element.frameworks:
+        # Parse the frameworks string (e.g., "E, D, G" or "E,D,G")
+        frameworks_str = obj.element.frameworks
+        # Split by comma and clean up
+        framework_codes = [code.strip() for code in frameworks_str.split(',') if code.strip()]
+
+        # Map codes to full names
+        framework_mapping = {
+            'E': 'ESG',
+            'D': 'DST',
+            'G': 'Green Key',
+            'ESG': 'ESG',
+            'DST': 'DST',
+            'Green Key': 'Green Key',
+            'TCFD': 'TCFD',
+            'SASB': 'SASB'
+        }
+
+        # ✅ FIX: Check company's selected voluntary frameworks from CompanyFramework table
+        company_frameworks = []
+        if obj.company:
+            # Get all active frameworks for this company
+            from .models import CompanyFramework
+            
+            active_company_frameworks = CompanyFramework.objects.filter(
+                company=obj.company
+            ).select_related('framework').values_list('framework__framework_id', flat=True)
+            
+            print(f"🔍 Active frameworks for {obj.company.name}: {list(active_company_frameworks)}")
+
+            for code in framework_codes:
+                framework_name = framework_mapping.get(code, code)
+
+                # For Green Key (G), check if GREEN_KEY is in company's frameworks
+                if code == 'G':
+                    if 'GREEN_KEY' in active_company_frameworks:
+                        company_frameworks.append(framework_name)
+                        print(f"  ✅ Including Green Key (GREEN_KEY found)")
+                    else:
+                        print(f"  ❌ Excluding Green Key (GREEN_KEY not found)")
+                # For other frameworks (E=ESG, D=DST), always include
+                elif code in ['E', 'D', 'ESG', 'DST']:
+                    company_frameworks.append(framework_name)
+                    print(f"  ✅ Including {framework_name} (mandatory)")
+
+            print(f"  📋 Final frameworks: {company_frameworks}")
+            return company_frameworks
+        
+        return []
 ```
 
-3. Replace with a simple comment explaining the change:
+**Key changes:**
+1. **Query `CompanyFramework` directly** instead of relying on `company.active_frameworks` 
+2. **Check for `'GREEN_KEY'`** framework ID in the database
+3. **Always include mandatory frameworks** (ESG, DST)
+4. **Only include Green Key** if the company has selected it
+
+This way, the filtering happens on the backend when the checklist is fetched, and the frontend doesn't need to do any filtering at all!
+
+**Also update your `services.py`** to ensure the framework assignment is working:
+
 ```python
-   # For yearly progress: just fetch ALL existing submissions
-   # No need to create tasks for all months - they'll be created on-demand when users visit each month
+@staticmethod
+def assign_voluntary_framework(company, framework_id):
+    """Assign a voluntary framework to a company"""
+    try:
+        framework = Framework.objects.get(framework_id=framework_id, type='voluntary')
+        obj, created = CompanyFramework.objects.get_or_create(
+            company=company,
+            framework=framework,
+            defaults={'is_auto_assigned': False}
+        )
+        
+        print(f"✅ Assigned {framework_id} to {company.name}, created={created}")
+        return True
+    except Framework.DoesNotExist:
+        print(f"❌ Framework {framework_id} not found")
+        return False
 ```
 
-4. Keep the monthly progress logic (if month:) unchanged - it should still create tasks for the specific month
-
-EXPECTED OUTCOME:
-- Annual progress API should drop from 4.5 seconds to under 500ms
-- Monthly progress should continue working as before
-- Tasks will still be created on-demand when users navigate to specific months
-
-FILES TO MODIFY:
-- services.py: DataCollectionService.calculate_progress_original method
-
-Please make this change and confirm the optimization is complete.
-
-
-
-
-Initialize scopes with zero values:
-    - Scope 1 (Red): Direct emissions
-    - Scope 2 (Blue): Indirect emissions from energy
-    - Scope 3 (Gray): Other indirect emissions
-  2. Apply UAE-specific emission factors (lines 1269-1307):
-    - Electricity: 0.00023 kg CO2e/kWh (UAE grid average)
-    - District Cooling: 0.00009 kg CO2e/RT-h
-    - Diesel: 0.00268 kg CO2e/L
-    - Petrol: 0.00231 kg CO2e/L
-    - LPG: 0.003 kg CO2e/kg
-    - Water: 0.0005 kg CO2e/m³
-    - Waste: 0.00006 kg CO2e/kg
-    - Refrigerant: 1.3 GWP factor
-  3. Calculate emissions for each task (lines 1329-1340):
-  emission = value × emissionFactor
-  scopes[scope].value += emission
-  4. Categorize by scope based on meter type:
-    - Scope 1: LPG, Petrol, Diesel, Natural Gas, Refrigerant
-    - Scope 2: Electricity, Renewable Energy, District Cooling
-    - Scope 3: Water, Waste
+With this backend fix, your frontend won't need the `filterFrameworks` function at all - the frameworks will already be filtered correctly when the data comes from the API! 🎉

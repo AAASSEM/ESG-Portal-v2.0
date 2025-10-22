@@ -2003,7 +2003,7 @@ const Data = () => {
             className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-lg font-medium"
             onClick={handleContinue}
           >
-            Complete Setup
+            Save & Continue
             <i className="fas fa-arrow-right ml-2"></i>
           </button>
         </div>

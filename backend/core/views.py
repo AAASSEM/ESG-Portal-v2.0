@@ -707,7 +707,18 @@ class MeterViewSet(viewsets.ModelViewSet):
             print(f"🔍 Meter create request received from user: {request.user}")
             print(f"📊 Request data: {request.data}")
             print(f"📊 Query params: {request.query_params}")
-            
+
+            # Check if meter creation is allowed via feature flag
+            from .models import FeatureFlag
+            meter_creation_enabled = FeatureFlag.is_enabled('meter_creation', default=True)
+            if not meter_creation_enabled:
+                print(f"❌ Meter creation is disabled by feature flag")
+                return Response(
+                    {'error': 'Meter creation is currently disabled by the system administrator'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            print(f"✅ Meter creation is enabled (feature flag: {meter_creation_enabled})")
+
             # Get company_id from query params or request body
             company_id = request.query_params.get('company_id') or request.data.get('company')
             print(f"🏢 Company ID: {company_id}")

@@ -366,21 +366,10 @@ const List = () => {
       const hasAnswers = Object.keys(answers).length > 0;
       const hasQuestions = profilingQuestions.length > 0;
 
-      console.log('🔄 State sync useEffect:', {
-        loading,
-        checklistExists,
-        hasAnswers,
-        hasQuestions,
-        currentShowChecklist: showChecklist,
-        answersCount: Object.keys(answers).length,
-        questionsCount: profilingQuestions.length
-      });
-
       // Only update if the current state doesn't match what it should be
       const shouldBeChecklist = hasAnswers && checklistExists && hasQuestions;
       if (showChecklist !== shouldBeChecklist) {
-        console.log(`🔄 Syncing showChecklist from ${showChecklist} to ${shouldBeChecklist}`);
-        setShowChecklist(shouldBeChecklist);
+                setShowChecklist(shouldBeChecklist);
       }
     }
   }, [loading, checklistExists, answers, profilingQuestions]); // Remove showChecklist from dependencies
@@ -433,21 +422,13 @@ const List = () => {
     if (!companyId) return false;
     
     try {
-      console.log('Ã°Å¸â€Â Checking if checklist exists for company:', companyId);
-      const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/checklist/?company_id=${companyId}`);
+            const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/checklist/?company_id=${companyId}`);
       if (response.ok) {
         const checklistData = await response.json();
         // Handle both paginated {results: []} and direct array responses
         const checklistItems = checklistData.results || checklistData;
         const exists = Array.isArray(checklistItems) && checklistItems.length > 0;
-        console.log('Ã°Å¸â€Â Checklist data:', {
-          dataType: typeof checklistData,
-          isArray: Array.isArray(checklistData),
-          itemsCount: checklistItems ? checklistItems.length : 0,
-          exists: exists
-        });
-        console.log('Ã¢Å“â€¦ Checklist exists check result:', exists);
-        setChecklistExists(exists);
+                setChecklistExists(exists);
 
         // Store the backend checklist with proper IDs
         if (exists) {
@@ -462,13 +443,11 @@ const List = () => {
             isMetered: item.is_metered
           }));
           setBackendChecklist(transformedChecklist);
-          console.log('Ã¢Å“â€¦ Loaded backend checklist with', transformedChecklist.length, 'items:', transformedChecklist);
-        }
+                  }
         
         return exists;
       } else {
-        console.log('Ã¢ÂÅ’ Failed to check checklist:', response.status);
-        setChecklistExists(false);
+                setChecklistExists(false);
       }
     } catch (error) {
       console.error('Ã¢ÂÅ’ Error checking checklist existence:', error);
@@ -601,19 +580,7 @@ const List = () => {
     answers.hasOwnProperty(question.id)
   );
   
-  // Debug logging
-  console.log('Ã°Å¸â€Â Component render state:', {
-    companyId,
-    answersCount: Object.keys(answers).length,
-    questionsCount: profilingQuestions.length,
-    allQuestionsAnswered: allQuestionsAnswered,
-    showChecklist: showChecklist,
-    checklistExists: checklistExists,
-    hasEditPermission: hasPermission('frameworkSelection', 'update'),
-    userRole: user?.role,
-    loading: loading
-  });
-
+  
 
   // API function to save answers and generate checklist
   const saveAnswersAndGenerateChecklist = async () => {
@@ -643,15 +610,11 @@ const List = () => {
         const checklistResponse = await makeAuthenticatedRequest(`${API_BASE_URL}/api/checklist/?company_id=${companyId}`);
         if (checklistResponse.ok) {
           const checklistData = await checklistResponse.json();
-          console.log('Ã°Å¸â€Â API Response type:', typeof checklistData, 'Is Array:', Array.isArray(checklistData));
-          console.log('Ã°Å¸â€Â API Response keys:', checklistData.results ? 'Has results property' : 'Direct array/object');
-          console.log('Ã°Å¸â€Â API Response length/count:', Array.isArray(checklistData) ? checklistData.length : Object.keys(checklistData).length);
-
+                              
           // Transform backend checklist to frontend format for display
           // Handle both paginated {results: []} and direct array responses
           const checklistItems = checklistData.results || checklistData;
-          console.log('Ã°Å¸â€Â ChecklistItems type:', typeof checklistItems, 'Is Array:', Array.isArray(checklistItems));
-
+          
           if (!Array.isArray(checklistItems)) {
             console.error('Ã¢ÂÅ’ ChecklistItems is not an array:', checklistItems);
             throw new Error('Invalid checklist data format');
@@ -709,14 +672,7 @@ const List = () => {
   const finalChecklist = backendChecklist.length > 0 ? backendChecklist : localChecklist;
   const canAssign = backendChecklist.length > 0; // Only allow assignment when backend data is loaded
   
-  // Debug logging
-  console.log('Ã°Å¸â€œÅ  Checklist Status:', {
-    backendChecklistCount: backendChecklist.length,
-    localChecklistCount: localChecklist.length,
-    finalChecklistCount: finalChecklist.length,
-    usingBackend: backendChecklist.length > 0
-  });
-  
+    
   const getCategoryStats = () => {
     if (!finalChecklist) return { environmental: 0, social: 0, governance: 0 };
     

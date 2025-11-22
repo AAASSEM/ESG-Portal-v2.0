@@ -8,6 +8,7 @@ from .views import (
 from .user_views import UserViewSet
 from .auth_views import SignupView, LoginView, LogoutView, UserProfileView, CsrfTokenView, UserSitesView, RoleSwitchView, ResetPasswordView, CompanyUpdateView, EmailVerificationView, EmailCodeVerificationView, ResendVerificationView, SendResetCodeView, VerifyResetCodeView, MagicLinkAuthView
 from .assignment_views import ElementAssignmentViewSet
+from . import admin_views
 
 # Create router and register viewsets
 router = DefaultRouter()
@@ -45,4 +46,16 @@ urlpatterns = [
     path('user/sites/', UserSitesView.as_view(), name='user-sites'),
     # Direct company update (bypasses DRF router)
     path('company/<int:company_id>/update/', CompanyUpdateView.as_view(), name='company-update'),
+    # Developer Admin Panel endpoints
+    path('admin/access/', admin_views.admin_access_required, name='admin-access'),
+    path('admin/feature-flags/', admin_views.feature_flags, name='feature-flags'),
+    path('admin/feature-flags/<int:flag_id>/', admin_views.feature_flag_detail, name='feature-flag-detail'),
+    path('admin/system/health/', admin_views.system_health, name='system-health'),
+    path('admin/system/logs/', admin_views.system_logs, name='system-logs'),
+    path('admin/tools/command/', admin_views.run_management_command, name='run-command'),
+    path('admin/users/manage/', admin_views.user_management, name='user-management'),
+    path('admin/users/list/', admin_views.user_control_list, name='user-control-list'),
+    path('admin/users/<int:user_id>/action/', admin_views.user_control_action, name='user-control-action'),
+    path('admin/emails/tools/', admin_views.email_tools, name='email-tools'),
+    path('admin/emergency/controls/', admin_views.emergency_controls, name='emergency-controls'),
 ]

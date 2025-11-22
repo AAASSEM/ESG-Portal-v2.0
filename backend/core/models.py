@@ -539,3 +539,93 @@ class ElementAssignment(models.Model):
         self.status = 'completed'
         self.completed_at = timezone.now()
         self.save()
+
+
+class FeatureFlag(models.Model):
+    """Feature flags for controlling system behavior without code deployments"""
+
+    FLAG_TYPES = [
+        ('boolean', 'Boolean Toggle'),
+        ('string', 'String Value'),
+        ('integer', 'Integer Value'),
+        ('json', 'JSON Configuration'),
+    ]
+
+    CATEGORIES = [
+        ('authentication', 'Authentication'),
+        ('email', 'Email Services'),
+        ('data_collection', 'Data Collection'),
+        ('user_management', 'User Management'),
+        ('api', 'API Access'),
+        ('ui', 'User Interface'),
+        ('maintenance', 'Maintenance'),
+        ('security', 'Security'),
+        ('performance', 'Performance'),
+    ]
+
+    key = models.CharField(max_length=100, unique=True, help_text="Unique feature flag key")
+    name = models.CharField(max_length=200, help_text="Human-readable feature name")
+    description = models.TextField(blank=True, help_text="Description of what this feature controls")
+    category = models.CharField(max_length=50, choices=CATEGORIES, default='ui')
+    flag_type = models.CharField(max_length=20, choices=FLAG_TYPES, default='boolean')
+
+    # Value fields based on type
+    boolean_value = models.BooleanField(default=False)
+    string_value = models.CharField(max_length=500, blank=True)
+    integer_value = models.IntegerField(default=0)
+    json_value = models.JSONField(default=dict, blank=True)
+
+    # Metadata
+    is_active = models.BooleanField(default=True, help_text="Whether this flag is enabled in the system")
+    requires_restart = models.BooleanField(default=False, help_text="Whether changes require server restart")
+    last_modified = models.DateTimeField(auto_now=True)
+    modified_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.key})"
+
+    def get_value(self):
+        """Get the appropriate value based on flag type"""
+        if self.flag_type == 'boolean':
+            return self.boolean_value
+        elif self.flag_type == 'string':
+            return self.string_value
+        elif self.flag_type == 'integer':
+            return self.integer_value
+        elif self.flag_type == 'json':
+            return self.json_value
+        return None
+
+    def set_value(self, value):
+        """Set the appropriate value based on flag type"""
+        if self.flag_type == 'boolean':
+            self.boolean_value = bool(value)
+        elif self.flag_type == 'string':
+            self.string_value = str(value)
+        elif self.flag_type == 'integer':
+            self.integer_value = int(value)
+        elif self.flag_type == 'json':
+            self.json_value = value
+
+    @classmethod
+    def is_enabled(cls, key, default=False):
+        """Quick check if boolean feature flag is enabled"""
+        try:
+            flag = cls.objects.get(key=key, is_active=True)
+            return flag.get_value() if flag.flag_type == 'boolean' else default
+        except cls.DoesNotExist:
+            return default
+
+    @classmethod
+    def get_flag(cls, key, default=None):
+        """Get any feature flag value"""
+        try:
+            flag = cls.objects.get(key=key, is_active=True)
+            return flag.get_value()
+        except cls.DoesNotExist:
+            return default
+
+    class Meta:
+        ordering = ['category', 'name']
+        verbose_name = "Feature Flag"
+        verbose_name_plural = "Feature Flags"

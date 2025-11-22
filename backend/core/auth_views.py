@@ -18,6 +18,14 @@ class SignupView(APIView):
     permission_classes = [AllowAny]  # Allow unauthenticated access
     
     def post(self, request):
+        # Check if user registration is allowed via feature flag
+        from .models import FeatureFlag
+        user_registration_enabled = FeatureFlag.is_enabled('user_registration', default=True)
+        if not user_registration_enabled:
+            return Response({
+                'error': 'User registration is currently disabled by the system administrator'
+            }, status=status.HTTP_403_FORBIDDEN)
+
         username = request.data.get('username', '').strip()
         email = request.data.get('email', '').strip()
         company_name = request.data.get('companyName', '').strip()
@@ -697,8 +705,17 @@ class ResendVerificationView(APIView):
                     'error': 'Email is already verified'
                 }, status=status.HTTP_400_BAD_REQUEST)
             
-            # Send verification email
-            email_sent = send_email_verification(user, request)
+            # Check if magic link authentication is enabled
+            from .models import FeatureFlag
+            magic_link_enabled = FeatureFlag.is_enabled('magic_link_auth', default=True)
+
+            if magic_link_enabled:
+                # Send verification email with magic link
+                email_sent = send_email_verification(user, request)
+            else:
+                # Magic link auth is disabled - use verification code instead
+                from .email_service import send_verification_code_email
+                email_sent = send_verification_code_email(user, request)
             
             if email_sent:
                 return Response({

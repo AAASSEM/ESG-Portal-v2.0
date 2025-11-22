@@ -1254,13 +1254,9 @@ const Dashboard = () => {
   };
 
   const generateEmissionsData = () => {
-    console.log('🏭 generateEmissionsData called');
-    console.log('🏭 chartData:', chartData);
-    console.log('🏭 dataEntries count:', chartData?.dataEntries?.length || 0);
-
+    
     if (!chartData || !chartData.dataEntries) {
-      console.log('🏭 No chartData or dataEntries, returning zeros');
-      return {
+            return {
         'Scope 1': { value: 0, color: '#ef4444', items: [] },
         'Scope 2': { value: 0, color: '#3b82f6', items: [] },
         'Scope 3': { value: 0, color: '#6b7280', items: [] }
@@ -1334,24 +1330,11 @@ const Dashboard = () => {
     };
 
     // Handle data for GHG emissions calculation
-    console.log(`🏭 Processing ${chartData.dataEntries.length} tasks for GHG...`);
-
+    
     let processedCount = 0;
     let skippedCount = 0;
 
     chartData.dataEntries.forEach((task, index) => {
-      // Log first few tasks to see their structure
-      if (index < 5) {
-        console.log(`🏭 Task ${index}: element_name="${task.element_name}", value="${task.value}", meter=${!!task.meter}`);
-        console.log(`🏭 Looking for data in task ${index}:`, {
-          value: task.value,
-          submission: task.submission,
-          data: task.data,
-          submission_data: task.submission_data,
-          latest_submission: task.latest_submission
-        });
-        console.log(`🏭 Full task ${index}:`, task);
-      }
 
       // Process ALL tasks with values (both metered and non-metered)
 
@@ -1372,24 +1355,20 @@ const Dashboard = () => {
         const scope = getScopeForMeterType(taskType);
         const emissionFactor = getEmissionFactor(taskType);
 
-        console.log(`🏭 GHG Processing: ${taskType} (${scope}) - Value: ${value}, Factor: ${emissionFactor}, Source: ${task.value ? 'direct' : 'submission'}`);
-
+        
         scopes[scope].value += value * emissionFactor;
         scopes[scope].items.push(displayName);
         processedCount++;
       } else {
         skippedCount++;
         if (index < 5) {
-          console.log(`🏭 No value found for ${task.element_name}`);
-        }
+                  }
       }
     });
 
-    console.log(`🏭 GHG Summary: Processed ${processedCount} tasks, Skipped ${skippedCount} tasks`);
-
+    
     // Log final results
-    console.log(`🏭 Final emissions: Scope 1: ${scopes['Scope 1'].value}, Scope 2: ${scopes['Scope 2'].value}, Scope 3: ${scopes['Scope 3'].value}`);
-
+    
     Object.keys(scopes).forEach(scopeName => {
       scopes[scopeName].items = [...new Set(scopes[scopeName].items)];
     });
@@ -1410,15 +1389,7 @@ const Dashboard = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
         <div className="flex items-center space-x-4">
-          <button
-            onClick={() => navigate('/')}
-            className="flex items-center text-gray-600 hover:text-gray-800 transition-colors"
-          >
-            <i className="fas fa-arrow-left mr-2"></i>
-            <span className="hidden sm:inline">Back to Main</span>
-            <span className="sm:hidden">Back</span>
-          </button>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">ESG Dashboard</h1>
+                    <h1 className="text-xl sm:text-2xl font-bold text-gray-900">ESG Dashboard</h1>
         </div>
       </div>
 

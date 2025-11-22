@@ -24,21 +24,9 @@ pip install -r requirements.txt
 echo "Collecting static files..."
 python3 manage.py collectstatic --no-input
 
-# Run migrations with verbose output
+# Run migrations
 echo "Running database migrations..."
-python3 manage.py migrate --verbosity=2
-
-# IMPORTANT: Ensure sessions table exists with explicit check
-echo "Checking if sessions app is migrated..."
-python3 manage.py migrate sessions --verbosity=2
-
-# Verify session table exists
-echo "Verifying session table..."
-python3 manage.py shell -c "from django.contrib.sessions.models import Session; print(f'Sessions table ready. Count: {Session.objects.count()}')"
-
-# IMPORTANT: Ensure sessions table exists
-echo "Migrating sessions table..."
-python3 manage.py migrate sessions
+python3 manage.py migrate
 
 # Load 80 ESG framework elements from fixtures
 echo "Loading comprehensive ESG framework (80 elements)..."

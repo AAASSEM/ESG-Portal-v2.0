@@ -1,118 +1,94 @@
-Looking at your code, I can see a few issues with the assignment functionality that could prevent the assign button from working properly:
-Issues Identified:
-1. Missing Assignment Status in Checklist Items
-The checklist items don't have assignedTo or assignedUserId properties, so the assignment section won't render properly.
-2. Incorrect API Endpoint
-You're using /api/checklist/assign-task/ but this endpoint might not exist for checklist items.
-3. Missing Assignment Data in Items
-The checklist items need to include assignment information.
-Here's the fix:
-1. Add Assignment Data to Checklist Items
-Update the saveAnswersAndGenerateChecklist function to include assignment data:
-javascript// Transform backend checklist to frontend format for display
-const transformedChecklist = checklistData.results.map(item => ({
-  id: item.id,
-  name: item.element_name,
-  description: item.element_description,
-  unit: item.element_unit,
-  frequency: item.cadence,
-  frameworks: item.frameworks_list,
-  category: item.is_metered ? 'Environmental' : 'Social',
-  isMetered: item.is_metered,
-  // Add assignment fields
-  assignedTo: item.assigned_to ? 
-    `${item.assigned_to.first_name || ''} ${item.assigned_to.last_name || ''}`.trim() || 
-    item.assigned_to.username || item.assigned_to.email : null,
-  assignedUserId: item.assigned_to ? item.assigned_to.id : null,
-  assignedAt: item.assigned_at || null
-}));
-2. Fix the Assignment Button Click Handler
-The assignment section should be outside the main content div. Move it after the frameworks section:
-javascript<div className="flex items-center space-x-8 text-sm font-medium text-gray-700">
-  {/* ... existing framework section ... */}
-</div>
+🏭 GHG Emissions Calculation System
 
-{/* Task Assignment Section - Move this outside and fix the layout */}
-{(canAssignToAnyone || canAssignInCompany || canAssignToUploadersAtOwnSites) && (
-  <div className="mt-4 pt-4 border-t border-gray-200">
-    <div className="flex items-center justify-between">
-      <div className="flex items-center space-x-2 text-sm">
-        <i className="fas fa-user-tag text-gray-500"></i>
-        <span className="text-gray-600">
-          {item.assignedTo ? `Assigned to: ${item.assignedTo}` : 'Unassigned'}
-        </span>
-      </div>
-      <button 
-        className="px-3 py-1 bg-blue-50 text-blue-600 rounded text-sm font-medium hover:bg-blue-100 transition-colors"
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          console.log('Assignment button clicked for item:', item.name);
-          handleOpenAssignModal(item);
-        }}
-      >
-        <i className="fas fa-user-plus mr-1"></i>
-        {item.assignedTo ? 'Reassign' : 'Assign'}
-      </button>
-    </div>
-  </div>
-)}
-3. Fix the API Endpoint
-Update the handleAssignTask function to use the correct endpoint:
-javascriptconst handleAssignTask = async (userId, taskId) => {
-  try {
-    // Use the data collection assignment endpoint since checklist items become data collection tasks
-    const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/data-collection/assign-task/`, {
-      method: 'POST',
-      body: JSON.stringify({
-        task_id: taskId,
-        assigned_user_id: userId
-      })
-    });
-    
-    if (response.ok) {
-      const responseData = await response.json();
-      console.log('Assignment response:', responseData);
-      
-      // Update the checklist item assignment status locally
-      const assignedUser = availableUsers.find(u => u.id === userId);
-      const assignedName = assignedUser ? 
-        `${assignedUser.first_name || ''} ${assignedUser.last_name || ''}`.trim() || assignedUser.name || assignedUser.email
-        : 'Unknown User';
-      
-      // Close modal
-      setShowAssignModal(false);
-      setSelectedTaskForAssignment(null);
-      
-      // Show success message
-      showModal('success', 'Task Assigned', `Task successfully assigned to ${assignedName}`);
-      
-      // Optionally refresh the checklist to get updated assignment data
-      // You might want to add a refresh function here
-      
-    } else {
-      const errorText = await response.text();
-      console.error('Assignment failed:', errorText);
-      showModal('error', 'Assignment Failed', 'Failed to assign task. Please check the console for details.');
+  Overview
+
+  The generateEmissionsData() function processes existing meter data to calculate greenhouse gas emissions across three scopes, using
+  UAE-specific emission factors.
+
+  Step-by-Step Process:
+
+  1. Data Source
+
+  - Uses existing chart data (no separate API call needed)
+  - Processes chartData.dataEntries which contains all meter readings
+  - Each entry has: task.element_name, task.value, task.submission, etc.
+
+  2. Scope Classification
+
+  The getScopeForMeterType() function categorizes each meter type:
+
+  🔴 Scope 1 - Direct Emissions:
+  - LPG, Petrol, Diesel, Natural Gas, Refrigerants
+  - Examples: Fuel generators, vehicles, gas systems
+
+  🔵 Scope 2 - Indirect Energy Emissions:
+  - Electricity, Energy, Renewable Energy, District Cooling
+  - Examples: Grid electricity, cooling systems
+
+  ⚫ Scope 3 - Other Indirect Emissions:
+  - Water, Waste (default category)
+  - Examples: Water treatment, waste disposal
+
+  3. Emission Factors (UAE-Specific)
+
+  The getEmissionFactor() function applies conversion factors:
+
+  Scope 1 Factors:
+  - LPG: 0.003 kg CO2e/kg
+  - Petrol: 0.00231 kg CO2e/L
+  - Diesel: 0.00268 kg CO2e/L
+  - Natural Gas: 0.002 kg CO2e/unit
+  - Refrigerants: 1.3 GWP factor
+
+  Scope 2 Factors:
+  - Electricity: 0.00023 kg CO2e/kWh (UAE grid average)
+  - District Cooling: 0.00009 kg CO2e/RT-h
+
+  Scope 3 Factors:
+  - Water: 0.0005 kg CO2e/m³ (treatment)
+  - Waste: 0.00006 kg CO2e/kg (landfill)
+
+  4. Calculation Formula
+
+  For each meter reading:
+  Emissions (tCO2e) = Value × Emission Factor
+
+  Example Calculation:
+  - Electricity: 1,000 kWh × 0.00023 = 0.23 tCO2e
+  - Water: 500 m³ × 0.0005 = 0.25 tCO2e
+
+  5. Data Flow
+
+  1. Extract meter readings from chart data
+  2. Classify each reading into Scope 1, 2, or 3
+  3. Apply appropriate emission factor
+  4. Calculate emissions for each scope
+  5. Aggregate totals by scope
+  6. Display in pie chart with breakdown
+
+  6. Output Format
+
+  {
+    'Scope 1': {
+      value: 1.23,           // Total tCO2e
+      color: '#ef4444',      // Red
+      items: ['LPG', 'Diesel'] // Sources
+    },
+    'Scope 2': {
+      value: 2.45,
+      color: '#3b82f6',      // Blue  
+      items: ['Electricity', 'District Cooling']
+    },
+    'Scope 3': {
+      value: 0.67,
+      color: '#6b7280',      // Gray
+      items: ['Water', 'Waste']
     }
-  } catch (error) {
-    console.error('Error assigning task:', error);
-    showModal('error', 'Assignment Error', 'An error occurred while assigning the task');
   }
-};
-4. Add Debug Logging
-Add these console.log statements to debug:
-javascriptconst handleOpenAssignModal = (task) => {
-  console.log('Opening assignment modal for task:', task);
-  console.log('User permissions:', {
-    canAssignToAnyone,
-    canAssignInCompany, 
-    canAssignToUploadersAtOwnSites,
-    userRole: user?.role
-  });
-  
-  setSelectedTaskForAssignment(task);
-  setShowAssignModal(true);
-  fetchAvailableUsers();
-};
-Try these fixes and let me know if the assignment button starts working. The main issue is likely that the checklist items don't have the proper assignment data structure and the API endpoint might need adjustment.Retry
+
+  Key Features:
+
+  ✅ Real-time calculation from existing meter data✅ UAE-specific factors for accurate local emissions✅ Automatic categorization by
+  meter type✅ No additional API calls needed✅ Interactive visualization with scope selection
+
+  This provides companies with instant GHG emissions insights based on their actual meter readings!

@@ -1,87 +1,370 @@
-Yes! The backend solution is actually better and cleaner. Looking at your `serializers.py`, I can see the `CompanyChecklistSerializer` already has framework filtering logic, but it's checking `company.active_frameworks` and `company.has_green_key` which might not be set correctly.
+# Developer Admin Panel - System Control & Configuration
 
-Here's the **backend fix** in `serializers.py`:
+## Executive Summary
+Create a **developer-focused admin panel** for you to control the ESG Portal application's features, configurations, and system behavior in real-time without code deployments. This is your control center to toggle features, manage system settings, monitor logs, and troubleshoot issues.
 
-```python
-def get_frameworks_list(self, obj):
-    if obj.element and obj.element.frameworks:
-        # Parse the frameworks string (e.g., "E, D, G" or "E,D,G")
-        frameworks_str = obj.element.frameworks
-        # Split by comma and clean up
-        framework_codes = [code.strip() for code in frameworks_str.split(',') if code.strip()]
+## 1. Feature Flag Management
 
-        # Map codes to full names
-        framework_mapping = {
-            'E': 'ESG',
-            'D': 'DST',
-            'G': 'Green Key',
-            'ESG': 'ESG',
-            'DST': 'DST',
-            'Green Key': 'Green Key',
-            'TCFD': 'TCFD',
-            'SASB': 'SASB'
-        }
+### Toggle System Features
+- **Module Controls**:
+  - ✅/❌ Enable/Disable entire modules (Dashboard, Data Collection, Meters, etc.)
+  - ✅/❌ Authentication methods (Magic Link, Password, Email Verification)
+  - ✅/❌ User registration (open/closed/invite-only)
+  - ✅/❌ Framework auto-assignment
+  - ✅/❌ Email notifications (globally or by type)
+  - ✅/❌ File uploads
+  - ✅/❌ Data export functionality
+  - ✅/❌ API access
 
-        # ✅ FIX: Check company's selected voluntary frameworks from CompanyFramework table
-        company_frameworks = []
-        if obj.company:
-            # Get all active frameworks for this company
-            from .models import CompanyFramework
-            
-            active_company_frameworks = CompanyFramework.objects.filter(
-                company=obj.company
-            ).select_related('framework').values_list('framework__framework_id', flat=True)
-            
-            print(f"🔍 Active frameworks for {obj.company.name}: {list(active_company_frameworks)}")
+- **Beta Features**:
+  - ✅/❌ New framework types
+  - ✅/❌ Experimental data collection methods
+  - ✅/❌ Advanced analytics
+  - ✅/❌ AI-powered suggestions
 
-            for code in framework_codes:
-                framework_name = framework_mapping.get(code, code)
+### Environment Controls
+- Switch between development/staging/production behaviors
+- Toggle debug mode
+- Enable/disable verbose logging
+- Maintenance mode with custom message
 
-                # For Green Key (G), check if GREEN_KEY is in company's frameworks
-                if code == 'G':
-                    if 'GREEN_KEY' in active_company_frameworks:
-                        company_frameworks.append(framework_name)
-                        print(f"  ✅ Including Green Key (GREEN_KEY found)")
-                    else:
-                        print(f"  ❌ Excluding Green Key (GREEN_KEY not found)")
-                # For other frameworks (E=ESG, D=DST), always include
-                elif code in ['E', 'D', 'ESG', 'DST']:
-                    company_frameworks.append(framework_name)
-                    print(f"  ✅ Including {framework_name} (mandatory)")
+## 2. System Configuration Dashboard
 
-            print(f"  📋 Final frameworks: {company_frameworks}")
-            return company_frameworks
-        
-        return []
+### Real-Time Settings
+- **Email Configuration**:
+  - Switch between SendGrid/SMTP/Console backend
+  - Test email delivery
+  - View email queue status
+  - Toggle email types (verification, password reset, invitations)
+
+- **Database Controls**:
+  - View connection status
+  - Query performance stats
+  - Cache status and clear cache
+  - Database backup trigger
+
+- **API Settings**:
+  - Rate limiting controls (requests per minute/hour)
+  - API key management
+  - CORS configuration
+  - Webhook endpoints
+
+### Performance Tuning
+- Cache TTL adjustments
+- Query timeout settings
+- File upload size limits
+- Session timeout duration
+- Pagination limits
+
+## 3. Application Monitoring
+
+### Live System Stats
+- **Health Indicators**:
+  - Server uptime
+  - Memory usage
+  - CPU utilization
+  - Active database connections
+  - Response time averages
+  - Error rate (last hour/day)
+
+- **Request Monitoring**:
+  - Active requests counter
+  - Slowest endpoints
+  - Most called endpoints
+  - Failed requests log
+  - API usage by endpoint
+
+### Resource Usage
+- Storage space used/available
+- Media files count and size
+- Database size
+- Cache hit/miss ratios
+- Background job queue length
+
+## 4. Log Viewer & Debugger
+
+### Centralized Logging
+- **Log Levels**:
+  - Filter by: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  - Search logs by keyword, user, company, timestamp
+  - Tail logs in real-time
+  - Download logs as files
+
+- **Error Tracking**:
+  - Recent exceptions with stack traces
+  - Grouped errors by type
+  - Error frequency charts
+  - Quick jump to problematic code
+
+### Request Inspector
+- View recent HTTP requests
+- Request/response body inspection
+- Headers and cookies viewer
+- Timing breakdown
+- User session details
+
+## 5. Database Management
+
+### Data Operations
+- **Quick Actions**:
+  - Run Django management commands via UI
+  - Execute safe SQL queries (read-only option)
+  - View table schemas
+  - Check indexes and performance
+  - Database migrations status
+
+- **Data Cleanup**:
+  - Delete orphaned records
+  - Clear expired sessions
+  - Remove old verification codes
+  - Archive old data
+  - Vacuum and optimize
+
+### Backup & Restore
+- Trigger manual backups
+- View backup history
+- Restore from backup (with confirmation)
+- Export specific tables
+- Import test data
+
+## 6. User & Permission Testing
+
+### Quick User Actions
+- **Test Accounts**:
+  - Create test users with any role
+  - Generate magic links for any user
+  - Reset any user's password
+  - Bypass email verification
+  - Impersonate any user (with exit button)
+
+- **Permission Tester**:
+  - Check what any user can access
+  - Test permission inheritance
+  - View effective permissions
+  - Simulate role-based access
+
+## 7. Framework & Data Management
+
+### Content Controls
+- **Quick Bulk Actions**:
+  - Import frameworks from Excel
+  - Export all frameworks
+  - Populate initial data (activities, frameworks, elements)
+  - Reset demo company data
+  - Clone framework configurations
+
+- **Data Generation**:
+  - Generate test data for development
+  - Create dummy companies with full data
+  - Populate sample meter readings
+  - Generate realistic task completion data
+
+## 8. Email Testing & Preview
+
+### Email Debugger
+- **Template Management**:
+  - Preview all email templates
+  - Send test emails to your address
+  - View recently sent emails
+  - Check email delivery status
+  - Review SendGrid statistics
+
+- **Email Queue**:
+  - View pending emails
+  - Retry failed emails
+  - Cancel queued emails
+  - Clear email queue
+
+## 9. Security & Access Control
+
+### Security Dashboard
+- **Active Sessions**:
+  - View all active user sessions
+  - Force logout specific users
+  - Clear all sessions
+  - View session details (IP, device, location)
+
+- **Access Logs**:
+  - Failed login attempts
+  - Suspicious activity detection
+  - API key usage tracking
+  - Admin action audit trail
+
+### Emergency Controls
+- **Kill Switches**:
+  - 🚨 Disable all logins
+  - 🚨 Read-only mode (disable writes)
+  - 🚨 Emergency maintenance mode
+  - 🚨 Disable all email sending
+  - 🚨 Block specific IP addresses
+
+## 10. Integration Management
+
+### External Services
+- **Service Status**:
+  - SendGrid connection test
+  - SimpleLogin status
+  - Third-party API health checks
+  - Webhook delivery logs
+
+- **API Key Management**:
+  - View/regenerate API keys
+  - Test API endpoints
+  - View API documentation
+  - Rate limit overrides
+
+## 11. Development Tools
+
+### Quick Actions
+- **Code Helpers**:
+  - Generate Django models from schema
+  - Create migration files
+  - Run tests and view results
+  - Static files collection
+  - Clear all caches (Django, browser, Redis)
+
+- **Data Seeding**:
+  - One-click demo data population
+  - Reset database to clean state
+  - Load specific fixtures
+  - Create test scenarios
+
+### Environment Info
+- Django version
+- Python version
+- Installed packages list
+- Environment variables viewer
+- Configuration file inspector
+
+## 12. Notifications & Alerts
+
+### System Alerts
+- **Alert Types**:
+  - High error rate warnings
+  - Low disk space alerts
+  - Failed backup notifications
+  - Security breach attempts
+  - Performance degradation alerts
+
+- **Custom Alerts**:
+  - Set custom thresholds
+  - Email/SMS notifications
+  - Slack/Discord webhooks
+  - Alert history and acknowledgment
+
+## 13. UI Design
+
+### Layout
+```
+┌─────────────────────────────────────────────┐
+│  🎛️ ESG Portal - Developer Control Panel   │
+│  [Env: Production ▼] [Maintenance Mode: OFF]│
+└─────────────────────────────────────────────┘
+┌──────────┬──────────────────────────────────┐
+│          │  📊 SYSTEM HEALTH                │
+│ 🎚️ Flags │  ● API: Online  ⚡ 45ms avg     │
+│ ⚙️ Config│  ● DB: Healthy  💾 234/500GB     │
+│ 📊 Stats │  ● Cache: Active 🔥 85% hit      │
+│ 📝 Logs  │                                  │
+│ 💾 DB    │  🎚️ FEATURE FLAGS               │
+│ 👤 Users │  [ ON] User Registration         │
+│ 🏗️ Data  │  [OFF] Beta Analytics Module     │
+│ 📧 Email │  [ ON] Email Notifications       │
+│ 🔐 Sec   │  [ ON] Magic Link Auth           │
+│ 🔗 APIs  │  [OFF] Maintenance Mode          │
+│ 🛠️ Tools │                                  │
+│          │  📝 RECENT ERRORS (3)            │
+│ 🚨 KILL  │  ⚠️ ValueError in meter_service  │
+│  SWITCH  │  [View Details] [Fix]            │
+└──────────┴──────────────────────────────────┘
 ```
 
-**Key changes:**
-1. **Query `CompanyFramework` directly** instead of relying on `company.active_frameworks` 
-2. **Check for `'GREEN_KEY'`** framework ID in the database
-3. **Always include mandatory frameworks** (ESG, DST)
-4. **Only include Green Key** if the company has selected it
+### Color Coding
+- 🟢 Green: Active/Healthy/ON
+- 🔴 Red: Inactive/Error/OFF
+- 🟡 Yellow: Warning/Degraded
+- 🔵 Blue: Info/Neutral
+- ⚫ Gray: Disabled/Not Configured
 
-This way, the filtering happens on the backend when the checklist is fetched, and the frontend doesn't need to do any filtering at all!
+## 14. Quick Implementation Prompt
 
-**Also update your `services.py`** to ensure the framework assignment is working:
+**"Create a developer admin control panel for my Django ESG Portal application. I need to control the app without deploying code changes.**
 
-```python
-@staticmethod
-def assign_voluntary_framework(company, framework_id):
-    """Assign a voluntary framework to a company"""
-    try:
-        framework = Framework.objects.get(framework_id=framework_id, type='voluntary')
-        obj, created = CompanyFramework.objects.get_or_create(
-            company=company,
-            framework=framework,
-            defaults={'is_auto_assigned': False}
-        )
-        
-        print(f"✅ Assigned {framework_id} to {company.name}, created={created}")
-        return True
-    except Framework.DoesNotExist:
-        print(f"❌ Framework {framework_id} not found")
-        return False
-```
+**Must Have Features:**
 
-With this backend fix, your frontend won't need the `filterFrameworks` function at all - the frameworks will already be filtered correctly when the data comes from the API! 🎉
+1. **Feature Flags Dashboard**
+   - Toggle switches for: user registration, email notifications, magic link auth, framework auto-assignment, file uploads, maintenance mode
+   - Environment selector (dev/staging/prod)
+   - Changes take effect immediately
+
+2. **System Monitor**
+   - Live stats: API status, response times, error count, database health, cache status
+   - Memory and CPU usage
+   - Active users count
+   - Request logs (last 100 requests)
+
+3. **Log Viewer**
+   - Filter by level (DEBUG/INFO/ERROR)
+   - Search logs
+   - Real-time tail
+   - Download logs
+
+4. **Database Tools**
+   - Run management commands (populate_initial_data, import_comprehensive_esg_framework)
+   - View recent queries
+   - Clear cache button
+   - Database backup trigger
+
+5. **User Management**
+   - Quick create test users
+   - Generate magic links
+   - Impersonate any user
+   - Force logout users
+   - View active sessions
+
+6. **Email Debugger**
+   - Send test emails
+   - View email queue
+   - Preview templates
+   - Toggle email backend (SendGrid/Console)
+
+7. **Emergency Controls**
+   - 🚨 Red panic buttons for:
+     - Disable all logins
+     - Enable maintenance mode
+     - Read-only mode
+     - Stop all emails
+
+8. **Configuration Editor**
+   - Edit settings: rate limits, session timeout, file size limits, cache TTL
+   - API key management
+   - CORS settings
+
+**Technical Implementation:**
+- React frontend with Tailwind CSS
+- Dark theme with red/green toggle switches
+- Real-time updates (poll every 5 seconds)
+- Django REST API endpoints with `@require_superuser` decorator
+- Store feature flags in database (FeatureFlag model)
+- Use Redis for caching flag states
+- WebSocket for live log streaming (optional)
+
+**Security:**
+- Only accessible by superuser accounts
+- Separate auth from main portal
+- Log all admin actions
+- Confirmation dialogs for destructive actions
+
+**UI Requirements:**
+- Sidebar navigation
+- Dashboard with key metrics at top
+- Large toggle switches (easy to click)
+- Status indicators (green/red dots)
+- Responsive but optimized for desktop
+- Search functionality throughout
+
+Make it production-ready with proper error handling and make it look professional but functional - I need to use this daily for controlling my app."**
+
+---
+
+This is what you actually need - a developer control center to manage your application's behavior, monitor its health, and troubleshoot issues without touching code or redeploying. Want me to build the React component for this?

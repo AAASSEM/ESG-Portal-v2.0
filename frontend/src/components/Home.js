@@ -1,8 +1,22 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
 const Home = () => {
   const navigate = useNavigate();
+
+  // Keyboard shortcut for developer admin panel
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      // Ctrl+Shift+D or Cmd+Shift+D to access developer admin
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'D') {
+        e.preventDefault();
+        navigate('/developer-admin');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [navigate]);
 
   const benefits = [
     {
@@ -44,7 +58,7 @@ const Home = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 relative">
       {/* Header/Navigation */}
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -112,6 +126,8 @@ const Home = () => {
                   Sign In
                 </button>
               </div>
+
+              {/* Developer Admin access via floating button and keyboard shortcut */}
               
               <div className="mt-8 flex items-center space-x-6 text-sm text-gray-600">
                 <div className="flex items-center">
@@ -287,6 +303,17 @@ const Home = () => {
           </div>
         </div>
       </footer>
+
+      {/* Floating Developer Admin Access */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <button
+          onClick={() => navigate('/developer-admin')}
+          className="bg-gray-800 hover:bg-gray-700 text-white w-12 h-12 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center"
+          title="Developer Admin Panel (Ctrl+Shift+D)"
+        >
+          <i className="fas fa-cog text-sm"></i>
+        </button>
+      </div>
     </div>
   );
 };

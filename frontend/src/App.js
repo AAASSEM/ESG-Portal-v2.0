@@ -24,6 +24,7 @@ import ResetPassword from './components/ResetPassword';
 import SetupAccount from './components/SetupAccount';
 import ChangePassword from './components/ChangePassword';
 import EmailVerification from './components/EmailVerification';
+import DeveloperAdminSimple from './components/DeveloperAdminSimple';
 // import DashboardSimple from './components/DashboardSimple'; // Unused
 import './App.css';
 
@@ -176,6 +177,9 @@ function App() {
                 </div>
               </ProtectedRoute>
             } />
+
+            {/* Developer Admin Panel - Full screen without TopNavbar (public route with its own auth) */}
+            <Route path="/developer-admin" element={<DeveloperAdminSimple />} />
           </Routes>
         </div>
       </AuthProvider>

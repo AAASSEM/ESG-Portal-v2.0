@@ -17,7 +17,7 @@
     "dev": "HTTPS=false PORT=3000 react-scripts start",
     "start:http": "HTTPS=false PORT=7701 react-scripts start",
     "start:https": "HTTPS=true PORT=7701 react-scripts start",
-    "build": "react-scripts build",
+    "build": "GENERATE_SOURCEMAP=false react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

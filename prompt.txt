@@ -1,370 +1,169 @@
-# Developer Admin Panel - System Control & Configuration
+I'll help you switch from SendGrid to SMTP for email sending. Here's what you need to do:
 
-## Executive Summary
-Create a **developer-focused admin panel** for you to control the ESG Portal application's features, configurations, and system behavior in real-time without code deployments. This is your control center to toggle features, manage system settings, monitor logs, and troubleshoot issues.
+## 1. Update your `.env` file
 
-## 1. Feature Flag Management
+Replace your current email configuration with this SMTP setup:
 
-### Toggle System Features
-- **Module Controls**:
-  - ✅/❌ Enable/Disable entire modules (Dashboard, Data Collection, Meters, etc.)
-  - ✅/❌ Authentication methods (Magic Link, Password, Email Verification)
-  - ✅/❌ User registration (open/closed/invite-only)
-  - ✅/❌ Framework auto-assignment
-  - ✅/❌ Email notifications (globally or by type)
-  - ✅/❌ File uploads
-  - ✅/❌ Data export functionality
-  - ✅/❌ API access
+```bash
+DEBUG=True
+SECRET_KEY=your-secret-key-change-this-12345678
+ALLOWED_HOSTS=localhost,127.0.0.1
 
-- **Beta Features**:
-  - ✅/❌ New framework types
-  - ✅/❌ Experimental data collection methods
-  - ✅/❌ Advanced analytics
-  - ✅/❌ AI-powered suggestions
+# Email Configuration - SMTP
+USE_REAL_EMAIL=true
+EMAIL_SERVICE=smtp
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=aaaibrahim.1104@gmail.com
+EMAIL_HOST_PASSWORD=ekvt ejuq rfcb ztef
+DEFAULT_FROM_EMAIL=aaaibrahim.1104@gmail.com
 
-### Environment Controls
-- Switch between development/staging/production behaviors
-- Toggle debug mode
-- Enable/disable verbose logging
-- Maintenance mode with custom message
+# Remove or comment out SendGrid config
+# SENDGRID_API_KEY=...
 
-## 2. System Configuration Dashboard
-
-### Real-Time Settings
-- **Email Configuration**:
-  - Switch between SendGrid/SMTP/Console backend
-  - Test email delivery
-  - View email queue status
-  - Toggle email types (verification, password reset, invitations)
-
-- **Database Controls**:
-  - View connection status
-  - Query performance stats
-  - Cache status and clear cache
-  - Database backup trigger
-
-- **API Settings**:
-  - Rate limiting controls (requests per minute/hour)
-  - API key management
-  - CORS configuration
-  - Webhook endpoints
-
-### Performance Tuning
-- Cache TTL adjustments
-- Query timeout settings
-- File upload size limits
-- Session timeout duration
-- Pagination limits
-
-## 3. Application Monitoring
-
-### Live System Stats
-- **Health Indicators**:
-  - Server uptime
-  - Memory usage
-  - CPU utilization
-  - Active database connections
-  - Response time averages
-  - Error rate (last hour/day)
-
-- **Request Monitoring**:
-  - Active requests counter
-  - Slowest endpoints
-  - Most called endpoints
-  - Failed requests log
-  - API usage by endpoint
-
-### Resource Usage
-- Storage space used/available
-- Media files count and size
-- Database size
-- Cache hit/miss ratios
-- Background job queue length
-
-## 4. Log Viewer & Debugger
-
-### Centralized Logging
-- **Log Levels**:
-  - Filter by: DEBUG, INFO, WARNING, ERROR, CRITICAL
-  - Search logs by keyword, user, company, timestamp
-  - Tail logs in real-time
-  - Download logs as files
-
-- **Error Tracking**:
-  - Recent exceptions with stack traces
-  - Grouped errors by type
-  - Error frequency charts
-  - Quick jump to problematic code
-
-### Request Inspector
-- View recent HTTP requests
-- Request/response body inspection
-- Headers and cookies viewer
-- Timing breakdown
-- User session details
-
-## 5. Database Management
-
-### Data Operations
-- **Quick Actions**:
-  - Run Django management commands via UI
-  - Execute safe SQL queries (read-only option)
-  - View table schemas
-  - Check indexes and performance
-  - Database migrations status
-
-- **Data Cleanup**:
-  - Delete orphaned records
-  - Clear expired sessions
-  - Remove old verification codes
-  - Archive old data
-  - Vacuum and optimize
-
-### Backup & Restore
-- Trigger manual backups
-- View backup history
-- Restore from backup (with confirmation)
-- Export specific tables
-- Import test data
-
-## 6. User & Permission Testing
-
-### Quick User Actions
-- **Test Accounts**:
-  - Create test users with any role
-  - Generate magic links for any user
-  - Reset any user's password
-  - Bypass email verification
-  - Impersonate any user (with exit button)
-
-- **Permission Tester**:
-  - Check what any user can access
-  - Test permission inheritance
-  - View effective permissions
-  - Simulate role-based access
-
-## 7. Framework & Data Management
-
-### Content Controls
-- **Quick Bulk Actions**:
-  - Import frameworks from Excel
-  - Export all frameworks
-  - Populate initial data (activities, frameworks, elements)
-  - Reset demo company data
-  - Clone framework configurations
-
-- **Data Generation**:
-  - Generate test data for development
-  - Create dummy companies with full data
-  - Populate sample meter readings
-  - Generate realistic task completion data
-
-## 8. Email Testing & Preview
-
-### Email Debugger
-- **Template Management**:
-  - Preview all email templates
-  - Send test emails to your address
-  - View recently sent emails
-  - Check email delivery status
-  - Review SendGrid statistics
-
-- **Email Queue**:
-  - View pending emails
-  - Retry failed emails
-  - Cancel queued emails
-  - Clear email queue
-
-## 9. Security & Access Control
-
-### Security Dashboard
-- **Active Sessions**:
-  - View all active user sessions
-  - Force logout specific users
-  - Clear all sessions
-  - View session details (IP, device, location)
-
-- **Access Logs**:
-  - Failed login attempts
-  - Suspicious activity detection
-  - API key usage tracking
-  - Admin action audit trail
-
-### Emergency Controls
-- **Kill Switches**:
-  - 🚨 Disable all logins
-  - 🚨 Read-only mode (disable writes)
-  - 🚨 Emergency maintenance mode
-  - 🚨 Disable all email sending
-  - 🚨 Block specific IP addresses
-
-## 10. Integration Management
-
-### External Services
-- **Service Status**:
-  - SendGrid connection test
-  - SimpleLogin status
-  - Third-party API health checks
-  - Webhook delivery logs
-
-- **API Key Management**:
-  - View/regenerate API keys
-  - Test API endpoints
-  - View API documentation
-  - Rate limit overrides
-
-## 11. Development Tools
-
-### Quick Actions
-- **Code Helpers**:
-  - Generate Django models from schema
-  - Create migration files
-  - Run tests and view results
-  - Static files collection
-  - Clear all caches (Django, browser, Redis)
-
-- **Data Seeding**:
-  - One-click demo data population
-  - Reset database to clean state
-  - Load specific fixtures
-  - Create test scenarios
-
-### Environment Info
-- Django version
-- Python version
-- Installed packages list
-- Environment variables viewer
-- Configuration file inspector
-
-## 12. Notifications & Alerts
-
-### System Alerts
-- **Alert Types**:
-  - High error rate warnings
-  - Low disk space alerts
-  - Failed backup notifications
-  - Security breach attempts
-  - Performance degradation alerts
-
-- **Custom Alerts**:
-  - Set custom thresholds
-  - Email/SMS notifications
-  - Slack/Discord webhooks
-  - Alert history and acknowledgment
-
-## 13. UI Design
-
-### Layout
-```
-┌─────────────────────────────────────────────┐
-│  🎛️ ESG Portal - Developer Control Panel   │
-│  [Env: Production ▼] [Maintenance Mode: OFF]│
-└─────────────────────────────────────────────┘
-┌──────────┬──────────────────────────────────┐
-│          │  📊 SYSTEM HEALTH                │
-│ 🎚️ Flags │  ● API: Online  ⚡ 45ms avg     │
-│ ⚙️ Config│  ● DB: Healthy  💾 234/500GB     │
-│ 📊 Stats │  ● Cache: Active 🔥 85% hit      │
-│ 📝 Logs  │                                  │
-│ 💾 DB    │  🎚️ FEATURE FLAGS               │
-│ 👤 Users │  [ ON] User Registration         │
-│ 🏗️ Data  │  [OFF] Beta Analytics Module     │
-│ 📧 Email │  [ ON] Email Notifications       │
-│ 🔐 Sec   │  [ ON] Magic Link Auth           │
-│ 🔗 APIs  │  [OFF] Maintenance Mode          │
-│ 🛠️ Tools │                                  │
-│          │  📝 RECENT ERRORS (3)            │
-│ 🚨 KILL  │  ⚠️ ValueError in meter_service  │
-│  SWITCH  │  [View Details] [Fix]            │
-└──────────┴──────────────────────────────────┘
+FRONTEND_URL=http://localhost:3001
 ```
 
-### Color Coding
-- 🟢 Green: Active/Healthy/ON
-- 🔴 Red: Inactive/Error/OFF
-- 🟡 Yellow: Warning/Degraded
-- 🔵 Blue: Info/Neutral
-- ⚫ Gray: Disabled/Not Configured
+## 2. Update `email_service.py`
 
-## 14. Quick Implementation Prompt
+You need to modify the `send_email_verification` function to prioritize SMTP over SendGrid. Here's the key change:
 
-**"Create a developer admin control panel for my Django ESG Portal application. I need to control the app without deploying code changes.**
+# In send_email_verification function, replace the email sending logic (around line 180-220)
 
-**Must Have Features:**
+# Send email with better error handling
+email_sent = False
+email_error = None
 
-1. **Feature Flags Dashboard**
-   - Toggle switches for: user registration, email notifications, magic link auth, framework auto-assignment, file uploads, maintenance mode
-   - Environment selector (dev/staging/prod)
-   - Changes take effect immediately
+# Use SMTP when EMAIL_SERVICE is set to 'smtp'
+use_smtp = settings.EMAIL_SERVICE == 'smtp'
 
-2. **System Monitor**
-   - Live stats: API status, response times, error count, database health, cache status
-   - Memory and CPU usage
-   - Active users count
-   - Request logs (last 100 requests)
+if use_smtp:
+    # Use Django's SMTP email sending
+    try:
+        import time
+        import sys
+        start_time = time.time()
+        print(f"📧 Attempting SMTP connection to {settings.EMAIL_HOST}...", file=sys.stderr)
 
-3. **Log Viewer**
-   - Filter by level (DEBUG/INFO/ERROR)
-   - Search logs
-   - Real-time tail
-   - Download logs
+        send_result = send_mail(
+            subject=subject,
+            message=plain_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[recipient_email],
+            html_message=html_message,
+            fail_silently=False,
+        )
 
-4. **Database Tools**
-   - Run management commands (populate_initial_data, import_comprehensive_esg_framework)
-   - View recent queries
-   - Clear cache button
-   - Database backup trigger
+        elapsed = time.time() - start_time
+        print(f"✅ Email sent in {elapsed:.2f} seconds", file=sys.stderr)
 
-5. **User Management**
-   - Quick create test users
-   - Generate magic links
-   - Impersonate any user
-   - Force logout users
-   - View active sessions
+        # Check if email was actually sent
+        if send_result == 1:
+            email_sent = True
+            print(f"✅ Email sent successfully to {recipient_email}")
+        else:
+            email_sent = False
+            email_error = f"SMTP returned {send_result} - email may not have been sent"
+            print(f"❌ Email send failed (result={send_result})")
 
-6. **Email Debugger**
-   - Send test emails
-   - View email queue
-   - Preview templates
-   - Toggle email backend (SendGrid/Console)
+    except Exception as e:
+        import traceback
+        import sys
+        email_sent = False
+        email_error = f"{type(e).__name__}: {str(e)}"
+        print(f"❌ Email failed: {type(e).__name__}: {str(e)}", file=sys.stderr)
+        print(f"Full traceback:\n{traceback.format_exc()}", file=sys.stderr)
+else:
+    # Try SendGrid Web API (fallback for backward compatibility)
+    use_web_api = (
+        SENDGRID_API_AVAILABLE and
+        getattr(settings, 'SENDGRID_API_KEY', None) and
+        settings.EMAIL_SERVICE == 'sendgrid'
+    )
 
-7. **Emergency Controls**
-   - 🚨 Red panic buttons for:
-     - Disable all logins
-     - Enable maintenance mode
-     - Read-only mode
-     - Stop all emails
+    if use_web_api:
+        print(f"🌐 Using SendGrid Web API (bypassing SMTP)", file=sys.stderr)
+        email_sent = send_email_via_sendgrid_api(
+            to_email=recipient_email,
+            subject=subject,
+            html_content=html_message,
+            plain_content=plain_message
+        )
+        if not email_sent:
+            email_error = "SendGrid Web API failed"
 
-8. **Configuration Editor**
-   - Edit settings: rate limits, session timeout, file size limits, cache TTL
-   - API key management
-   - CORS settings
 
-**Technical Implementation:**
-- React frontend with Tailwind CSS
-- Dark theme with red/green toggle switches
-- Real-time updates (poll every 5 seconds)
-- Django REST API endpoints with `@require_superuser` decorator
-- Store feature flags in database (FeatureFlag model)
-- Use Redis for caching flag states
-- WebSocket for live log streaming (optional)
+## 3. Update `signals.py`
 
-**Security:**
-- Only accessible by superuser accounts
-- Separate auth from main portal
-- Log all admin actions
-- Confirmation dialogs for destructive actions
+Similarly, update the signals to use SMTP instead of SendGrid:
 
-**UI Requirements:**
-- Sidebar navigation
-- Dashboard with key metrics at top
-- Large toggle switches (easy to click)
-- Status indicators (green/red dots)
-- Responsive but optimized for desktop
-- Search functionality throughout
+# Update the send_email_after_token_creation function
+# Replace all instances of:
+# if settings.USE_REAL_EMAIL and SENDGRID_AVAILABLE:
 
-Make it production-ready with proper error handling and make it look professional but functional - I need to use this daily for controlling my app."**
+# With:
+# Use SMTP instead of SendGrid
+if settings.EMAIL_SERVICE == 'smtp':
+    # Use Django's SMTP email sending
+    send_result = send_mail(
+        subject=subject,
+        message=plain_message,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[instance.user.email],
+        html_message=html_message,
+        fail_silently=False,
+    )
+elif settings.USE_REAL_EMAIL and SENDGRID_AVAILABLE:
+    # Fallback to SendGrid if configured
+    try:
+        sg = sendgrid.SendGridAPIClient(api_key=settings.SENDGRID_API_KEY)
+        message = Mail(
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to_emails=instance.user.email,
+            subject=subject,
+            html_content=html_message,
+            plain_text_content=plain_message
+        )
+        response = sg.send(message)
+        print(f"✅ SendGrid API response: {response.status_code}")
+        send_result = 1 if response.status_code in [200, 201, 202] else 0
+    except Exception as e:
+        print(f"❌ SendGrid API error: {e}")
+        send_result = 0
+else:
+    # Fallback to Django's send_mail for local development
+    send_result = send_mail(
+        subject=subject,
+        message=plain_message,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[instance.user.email],
+        html_message=html_message,
+        fail_silently=False,
+    )
 
----
 
-This is what you actually need - a developer control center to manage your application's behavior, monitor its health, and troubleshoot issues without touching code or redeploying. Want me to build the React component for this?
+## 4. Update Django Settings
+
+Make sure your Django `settings.py` file has these email configurations:
+
+```python
+# Email Configuration
+USE_REAL_EMAIL = os.environ.get('USE_REAL_EMAIL', 'false').lower() == 'true'
+EMAIL_SERVICE = os.environ.get('EMAIL_SERVICE', 'smtp')
+
+if EMAIL_SERVICE == 'smtp':
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+    EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() == 'true'
+    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+else:
+    # Console backend for development
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@esgportal.com')
+EMAIL_SUBJECT_PREFIX = '[ESG Portal] '
+```
+

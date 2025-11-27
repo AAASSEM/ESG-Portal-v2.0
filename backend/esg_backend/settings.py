@@ -214,31 +214,18 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Email Configuration
-# Use environment variable to control email backend
-USE_REAL_EMAIL = os.environ.get('USE_REAL_EMAIL', 'False').lower() == 'true'
-EMAIL_SERVICE = os.environ.get('EMAIL_SERVICE', 'console')  # console, smtp, sendgrid
+USE_REAL_EMAIL = os.environ.get('USE_REAL_EMAIL', 'false').lower() == 'true'
+EMAIL_SERVICE = os.environ.get('EMAIL_SERVICE', 'smtp')
 
-if USE_REAL_EMAIL:
-    if EMAIL_SERVICE == 'sendgrid':
-        # SendGrid API email sending (recommended)
-        EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-        EMAIL_HOST = 'smtp.sendgrid.net'
-        EMAIL_PORT = 587
-        EMAIL_USE_TLS = True
-        EMAIL_HOST_USER = 'apikey'  # This is literally 'apikey' for SendGrid
-        EMAIL_HOST_PASSWORD = os.environ.get('SENDGRID_API_KEY')
-        # Add this line after EMAIL_HOST_PASSWORD
-        SENDGRID_API_KEY = EMAIL_HOST_PASSWORD  # Use the same value
-    else:
-        # SMTP email sending (Gmail, etc.)
-        EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-        EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
-        EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
-        EMAIL_USE_TLS = True
-        EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
-        EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+if EMAIL_SERVICE == 'smtp':
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+    EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() == 'true'
+    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 else:
-    # Development: Print emails to console
+    # Console backend for development
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Debug email configuration

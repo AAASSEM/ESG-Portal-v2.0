@@ -170,32 +170,17 @@ def send_email_verification(user, request=None):
         # Send email with better error handling
         email_sent = False
         email_error = None
-        
-        # Try SendGrid Web API first if available and configured for production
-        use_web_api = (
-            SENDGRID_API_AVAILABLE and
-            getattr(settings, 'SENDGRID_API_KEY', None) and
-            settings.EMAIL_SERVICE == 'sendgrid' and
-            not settings.DEBUG  # Only use API in production
-        )
 
-        if use_web_api:
-            print(f"🌐 Using SendGrid Web API (bypassing SMTP)", file=sys.stderr)
-            email_sent = send_email_via_sendgrid_api(
-                to_email=recipient_email,
-                subject=subject,
-                html_content=html_message,
-                plain_content=plain_message
-            )
-            if not email_sent:
-                email_error = "SendGrid Web API failed"
-        else:
-            # Fallback to Django's SMTP email sending
+        # Use SMTP when EMAIL_SERVICE is set to 'smtp'
+        use_smtp = settings.EMAIL_SERVICE == 'smtp'
+
+        if use_smtp:
+            # Use Django's SMTP email sending
             try:
                 import time
                 import sys
                 start_time = time.time()
-                print(f"📧 Attempting SMTP connection to SendGrid...", file=sys.stderr)
+                print(f"📧 Attempting SMTP connection to {settings.EMAIL_HOST}...", file=sys.stderr)
 
                 send_result = send_mail(
                     subject=subject,
@@ -215,7 +200,7 @@ def send_email_verification(user, request=None):
                     print(f"✅ Email sent successfully to {recipient_email}")
                 else:
                     email_sent = False
-                    email_error = f"SendGrid returned {send_result} - email may not have been sent"
+                    email_error = f"SMTP returned {send_result} - email may not have been sent"
                     print(f"❌ Email send failed (result={send_result})")
 
             except Exception as e:
@@ -225,6 +210,24 @@ def send_email_verification(user, request=None):
                 email_error = f"{type(e).__name__}: {str(e)}"
                 print(f"❌ Email failed: {type(e).__name__}: {str(e)}", file=sys.stderr)
                 print(f"Full traceback:\n{traceback.format_exc()}", file=sys.stderr)
+        else:
+            # Try SendGrid Web API (fallback for backward compatibility)
+            use_web_api = (
+                SENDGRID_API_AVAILABLE and
+                getattr(settings, 'SENDGRID_API_KEY', None) and
+                settings.EMAIL_SERVICE == 'sendgrid'
+            )
+
+            if use_web_api:
+                print(f"🌐 Using SendGrid Web API (bypassing SMTP)", file=sys.stderr)
+                email_sent = send_email_via_sendgrid_api(
+                    to_email=recipient_email,
+                    subject=subject,
+                    html_content=html_message,
+                    plain_content=plain_message
+                )
+                if not email_sent:
+                    email_error = "SendGrid Web API failed"
         
         # Return magic link token instead of verification code for testing
         return {

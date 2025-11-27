@@ -106,7 +106,19 @@ def send_email_after_token_creation(sender, instance, created, **kwargs):
                     html_message = render_to_string('emails/password_reset.html', context)
                     plain_message = render_to_string('emails/password_reset.txt', context)
 
-                    if settings.USE_REAL_EMAIL and SENDGRID_AVAILABLE:
+                    # Use SMTP instead of SendGrid
+                    if settings.EMAIL_SERVICE == 'smtp':
+                        # Use Django's SMTP email sending
+                        send_result = send_mail(
+                            subject=subject,
+                            message=plain_message,
+                            from_email=settings.DEFAULT_FROM_EMAIL,
+                            recipient_list=[instance.user.email],
+                            html_message=html_message,
+                            fail_silently=False,
+                        )
+                    elif settings.USE_REAL_EMAIL and SENDGRID_AVAILABLE:
+                        # Fallback to SendGrid if configured
                         try:
                             sg = sendgrid.SendGridAPIClient(api_key=settings.SENDGRID_API_KEY)
                             message = Mail(
@@ -161,7 +173,19 @@ def send_email_after_token_creation(sender, instance, created, **kwargs):
                     html_message = render_to_string('emails/email_verification_magic.html', context)
                     plain_message = render_to_string('emails/email_verification_magic.txt', context)
 
-                    if settings.USE_REAL_EMAIL and SENDGRID_AVAILABLE:
+                    # Use SMTP instead of SendGrid
+                    if settings.EMAIL_SERVICE == 'smtp':
+                        # Use Django's SMTP email sending
+                        send_result = send_mail(
+                            subject=subject,
+                            message=plain_message,
+                            from_email=settings.DEFAULT_FROM_EMAIL,
+                            recipient_list=[instance.user.email],
+                            html_message=html_message,
+                            fail_silently=False,
+                        )
+                    elif settings.USE_REAL_EMAIL and SENDGRID_AVAILABLE:
+                        # Fallback to SendGrid if configured
                         try:
                             sg = sendgrid.SendGridAPIClient(api_key=settings.SENDGRID_API_KEY)
                             message = Mail(
@@ -231,7 +255,19 @@ def send_email_after_token_creation(sender, instance, created, **kwargs):
                     html_message = render_to_string('emails/invitation.html', context)
                     plain_message = render_to_string('emails/invitation.txt', context)
 
-                    if settings.USE_REAL_EMAIL and SENDGRID_AVAILABLE:
+                    # Use SMTP instead of SendGrid
+                    if settings.EMAIL_SERVICE == 'smtp':
+                        # Use Django's SMTP email sending
+                        send_result = send_mail(
+                            subject=subject,
+                            message=plain_message,
+                            from_email=settings.DEFAULT_FROM_EMAIL,
+                            recipient_list=[instance.user.email],
+                            html_message=html_message,
+                            fail_silently=False,
+                        )
+                    elif settings.USE_REAL_EMAIL and SENDGRID_AVAILABLE:
+                        # Fallback to SendGrid if configured
                         try:
                             sg = sendgrid.SendGridAPIClient(api_key=settings.SENDGRID_API_KEY)
                             message = Mail(

@@ -191,20 +191,48 @@ def system_health(request):
 
     try:
         # System metrics
-        cpu_percent = psutil.cpu_percent(interval=1)
+        cpu_percent = psutil.cpu_percent(interval=0.1)  # Reduced interval for faster response
+
+        # Memory metrics
         memory = psutil.virtual_memory()
-        disk = psutil.disk_usage('/')
+
+        # Disk usage - cross-platform compatible
+        try:
+            # Try to get disk usage for the current working directory
+            import os
+            disk = psutil.disk_usage(os.getcwd())
+            disk_data = {
+                'total': disk.total,
+                'used': disk.used,
+                'free': disk.free,
+                'percent': (disk.used / disk.total) * 100
+            }
+        except Exception as disk_error:
+            # If disk usage fails, return placeholder data
+            disk_data = {
+                'total': 0,
+                'used': 0,
+                'free': 0,
+                'percent': 0,
+                'error': str(disk_error)
+            }
 
         # Database health
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT COUNT(*) FROM auth_user WHERE is_active = 1")
-            active_users = cursor.fetchone()[0]
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT COUNT(*) FROM auth_user WHERE is_active = 1")
+                active_users = cursor.fetchone()[0]
 
-            cursor.execute("SELECT COUNT(*) FROM core_company")
-            total_companies = cursor.fetchone()[0]
+                cursor.execute("SELECT COUNT(*) FROM core_company")
+                total_companies = cursor.fetchone()[0]
 
-            cursor.execute("SELECT COUNT(*) FROM core_companydatasubmission")
-            total_submissions = cursor.fetchone()[0]
+                cursor.execute("SELECT COUNT(*) FROM core_companydatasubmission")
+                total_submissions = cursor.fetchone()[0]
+        except Exception as db_error:
+            # If database queries fail, set defaults
+            active_users = 0
+            total_companies = 0
+            total_submissions = 0
 
         # Cache status
         cache_status = True
@@ -218,6 +246,12 @@ def system_health(request):
         debug_mode = getattr(settings, 'DEBUG', False)
         email_backend = getattr(settings, 'EMAIL_BACKEND', 'Unknown')
 
+        # System uptime
+        try:
+            uptime = time.time() - psutil.boot_time()
+        except:
+            uptime = 0
+
         health_data = {
             'timestamp': datetime.now().isoformat(),
             'system': {
@@ -228,12 +262,7 @@ def system_health(request):
                     'percent': memory.percent,
                     'used': memory.used
                 },
-                'disk': {
-                    'total': disk.total,
-                    'used': disk.used,
-                    'free': disk.free,
-                    'percent': (disk.used / disk.total) * 100
-                }
+                'disk': disk_data
             },
             'application': {
                 'debug_mode': debug_mode,
@@ -244,14 +273,17 @@ def system_health(request):
                 'total_companies': total_companies,
                 'total_submissions': total_submissions
             },
-            'uptime': time.time() - psutil.boot_time()
+            'uptime': uptime
         }
 
         return JsonResponse(health_data)
 
     except Exception as e:
+        # Return more detailed error information
+        import traceback
+        error_details = f'Failed to get system health: {str(e)}\n\n{traceback.format_exc()}'
         return JsonResponse({
-            'error': f'Failed to get system health: {str(e)}'
+            'error': error_details
         }, status=500)
 
 

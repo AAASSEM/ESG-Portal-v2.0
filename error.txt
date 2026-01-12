@@ -1,9 +1,16 @@
-127.0.0.1 - - [12/Jan/2026:18:10:24 +0400] "PUT /api/companies/1/ HTTP/1.1" 200 129 "https://esg-portal.onrender.com/onboard" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0"
-127.0.0.1 - - [12/Jan/2026:18:10:25 +0400] "GET /api/companies/1/frameworks/ HTTP/1.1" 200 387 "https://esg-portal.onrender.com/rame" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0"
-127.0.0.1 - - [12/Jan/2026:18:10:25 +0400] "GET /api/companies/1/ HTTP/1.1" 200 129 "https://esg-portal.onrender.com/rame" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0"
-127.0.0.1 - - [12/Jan/2026:18:10:27 +0400] "GET /api/companies/1/ HTTP/1.1" 200 129 "https://esg-portal.onrender.com/onboard" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0"
-127.0.0.1 - - [12/Jan/2026:18:10:28 +0400] "GET /api/companies/1/activities/ HTTP/1.1" 200 2 "https://esg-portal.onrender.com/onboard" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0"
-127.0.0.1 - - [12/Jan/2026:18:10:39 +0400] "GET /api/admin/feature-flags/ HTTP/1.1" 200 315 "https://esg-portal.onrender.com/developer-admin" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"
-ERROR 2026-01-12 18:10:40,581 log 57 130288930117440 Internal Server Error: /api/admin/system/health/
-127.0.0.1 - - [12/Jan/2026:18:10:40 +0400] "GET /api/admin/system/health/ HTTP/1.1" 500 310 "https://esg-portal.onrender.com/developer-admin" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"
-127.0.0.1 - - [12/Jan/2026:18:10:42 +0400] "GET /api/admin/users/list/ HTTP/1.1" 200 714 "https://esg-portal.onrender.com/developer-admin" "M
+127.0.0.1 - - [12/Jan/2026:18:24:28 +0400] "GET / HTTP/1.1" 200 897 "-" "Go-http-client/2.0"
+127.0.0.1 - - [12/Jan/2026:18:29:06 +0400] "GET /developer-admin HTTP/1.1" 200 897 "https://esg-portal.onrender.com/developer-admin" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"
+127.0.0.1 - - [12/Jan/2026:18:29:07 +0400] "GET /static/js/main.d1decd8a.js HTTP/1.1" 200 0 "https://esg-portal.onrender.com/developer-admin" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"
+127.0.0.1 - - [12/Jan/2026:18:29:08 +0400] "GET /static/css/main.d764aac3.css HTTP/1.1" 200 0 "https://esg-portal.onrender.com/developer-admin" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"
+127.0.0.1 - - [12/Jan/2026:18:29:08 +0400] "GET /api/admin/feature-flags/ HTTP/1.1" 200 315 "https://esg-portal.onrender.com/developer-admin" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"
+127.0.0.1 - - [12/Jan/2026:18:29:09 +0400] "GET /api/admin/system/health/ HTTP/1.1" 200 522 "https://esg-portal.onrender.com/developer-admin" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"
+WARNING 2026-01-12 18:29:09,184 log 56 140054105524032 Unauthorized: /api/auth/user/
+127.0.0.1 - - [12/Jan/2026:18:29:09 +0400] "GET /api/auth/user/ HTTP/1.1" 401 29 "https://esg-portal.onrender.com/developer-admin" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"
+==> Detected service running on port 10000
+==> Docs on specifying a port: https://render.com/docs/web-services#port-binding
+127.0.0.1 - - [12/Jan/2026:18:29:59 +0400] "GET /developer-admin HTTP/1.1" 200 897 "https://esg-portal.onrender.com/developer-admin" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"
+WARNING 2026-01-12 18:30:00,502 log 56 140054105524032 Unauthorized: /api/auth/user/
+127.0.0.1 - - [12/Jan/2026:18:30:00 +0400] "GET /api/auth/user/ HTTP/1.1" 401 29 "https://esg-portal.onrender.com/developer-admin" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"
+127.0.0.1 - - [12/Jan/2026:18:30:00 +0400] "GET /api/admin/feature-flags/ HTTP/1.1" 200 315 "https://esg-portal.onrender.com/developer-admin" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"
+127.0.0.1 - - [12/Jan/2026:18:30:00 +0400] "GET /api/admin/system/health/ HTTP/1.1" 200 522 "https://esg-portal.onrender.com/developer-admin" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"
+127.0.0.1 - - [12/Jan/2026:18:30:03 +0400] "GET /api/admin/users/list/ HTTP/1.1" 200 714 "https://esg-portal.onrender.com/developer-admin" 

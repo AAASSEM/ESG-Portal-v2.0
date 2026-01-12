@@ -9,7 +9,7 @@ const Data = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, selectedCompany } = useAuth();
-  const [selectedYear, setSelectedYear] = useState(2025); // Use 2025 to match backend data
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear()); // Current year (2026)
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1); // Dynamic current month
   const [searchTerm, setSearchTerm] = useState('');
   const [viewFilter, setViewFilter] = useState('All');
@@ -1294,11 +1294,12 @@ const Data = () => {
         <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Year</label>
-            <select 
+            <select
               className="border border-gray-300 rounded-lg px-4 py-2 w-full sm:w-32"
               value={selectedYear}
               onChange={(e) => setSelectedYear(parseInt(e.target.value))}
             >
+              <option value={2026}>2026</option>
               <option value={2025}>2025</option>
               <option value={2024}>2024</option>
               <option value={2023}>2023</option>

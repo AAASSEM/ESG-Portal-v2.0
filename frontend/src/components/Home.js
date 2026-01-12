@@ -127,8 +127,6 @@ const Home = () => {
                 </button>
               </div>
 
-              {/* Developer Admin access via floating button and keyboard shortcut */}
-              
               <div className="mt-8 flex items-center space-x-6 text-sm text-gray-600">
                 <div className="flex items-center">
                   <i className="fas fa-check text-green-500 mr-2"></i>
@@ -303,17 +301,6 @@ const Home = () => {
           </div>
         </div>
       </footer>
-
-      {/* Floating Developer Admin Access */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <button
-          onClick={() => navigate('/developer-admin')}
-          className="bg-gray-800 hover:bg-gray-700 text-white w-12 h-12 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center"
-          title="Developer Admin Panel (Ctrl+Shift+D)"
-        >
-          <i className="fas fa-cog text-sm"></i>
-        </button>
-      </div>
     </div>
   );
 };

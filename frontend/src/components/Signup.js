@@ -215,9 +215,11 @@ const Signup = () => {
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
           <div>
-            <div className="mx-auto h-20 w-20 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center">
-              <i className="fas fa-leaf text-white text-2xl"></i>
-            </div>
+            <Link to="/" className="mx-auto block w-fit">
+              <div className="h-20 w-20 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center hover:scale-110 transition-transform cursor-pointer shadow-lg hover:shadow-xl">
+                <i className="fas fa-leaf text-white text-2xl"></i>
+              </div>
+            </Link>
             <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
               {emailSent ? (verificationStep ? 'Check Your Email' : 'Account Created!') : 'Create your account'}
             </h2>

@@ -219,6 +219,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Email Configuration
 USE_REAL_EMAIL = os.environ.get('USE_REAL_EMAIL', 'false').lower() == 'true'
 EMAIL_SERVICE = os.environ.get('EMAIL_SERVICE', 'smtp')
+SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY', None)
 
 if EMAIL_SERVICE == 'smtp':
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

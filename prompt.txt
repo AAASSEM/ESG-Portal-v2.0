@@ -167,3 +167,21 @@ DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@esgportal.com
 EMAIL_SUBJECT_PREFIX = '[ESG Portal] '
 ```
 
+
+
+
+
+so its work in the local but not in the production . are those Environment Variables correct . and i get this in the console 'refresh.js:27 WebSocket connection to 'ws://localhost:8081/' failed:
+
+main.4c90c69d.js:2 🔄 Making request to: https://esg-portal.onrender.com/api/users/
+
+main.4c90c69d.js:2 🔑 CSRF token: obtained
+
+main.4c90c69d.js:2  POST https://esg-portal.onrender.com/api/users/ 502 (Bad Gateway)
+
+main.4c90c69d.js:2 ✅ Request completed: https://esg-portal.onrender.com/api/users/ Status: 502
+
+main.4c90c69d.js:2 Failed to create user: SyntaxError: Failed to execute 'json' on 'Response': Unexpected end of JSON input     at onSubmit (main.4c90c69d.js:2:487516)
+
+﻿'
+

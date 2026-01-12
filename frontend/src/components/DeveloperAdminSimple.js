@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-
-// API Base URL Configuration
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+import { API_BASE_URL } from '../config';
 
 // User Management Section Component
 const UserManagementSection = () => {
@@ -22,8 +20,13 @@ const UserManagementSection = () => {
       setError(null);
       console.log('Loading users...');
 
-      const response = await fetch(`${API_BASE_URL}/api/admin/users/list/`, {
+      const baseUrl = API_BASE_URL || '';
+      const url = `${baseUrl}/api/admin/users/list/`;
+      console.log(`Fetching URL: ${url}`);
+
+      const response = await fetch(url, {
         method: 'GET',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -53,8 +56,13 @@ const UserManagementSection = () => {
       setActionLoading(true);
       setError(null);
 
-      const response = await fetch(`${API_BASE_URL}/api/admin/users/${userId}/action/`, {
+      const baseUrl = API_BASE_URL || '';
+      const url = `${baseUrl}/api/admin/users/${userId}/action/`;
+      console.log(`Performing user action at: ${url}`);
+
+      const response = await fetch(url, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -360,42 +368,32 @@ const DeveloperAdminSimple = () => {
     try {
       setLoading(true);
       console.log('Loading system health...');
+      console.log('API_BASE_URL:', API_BASE_URL);
 
-      // Try both direct and proxied URLs
-      const urls = [
-        '/api/admin/system/health/',
-        `${API_BASE_URL}/api/admin/system/health/`,
-        `${API_BASE_URL.replace('localhost', '127.0.0.1')}/api/admin/system/health/`
-      ];
+      // Construct URL based on API_BASE_URL
+      const baseUrl = API_BASE_URL || '';
+      const url = `${baseUrl}/api/admin/system/health/`;
+      console.log(`Fetching URL: ${url}`);
 
-      for (const url of urls) {
-        try {
-          console.log(`Trying URL: ${url}`);
-          const response = await fetch(url, {
-            credentials: 'include',
-            headers: {
-              'Content-Type': 'application/json',
-            }
-          });
-
-          console.log(`Response status: ${response.status}`);
-
-          if (response.ok) {
-            const data = await response.json();
-            console.log('System health data loaded:', data);
-            setSystemHealth(data);
-            return;
-          } else {
-            console.log(`Failed with status: ${response.status}`);
-          }
-        } catch (urlError) {
-          console.log(`URL ${url} failed:`, urlError.message);
+      const response = await fetch(url, {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
         }
-      }
+      });
 
-      console.error('All URLs failed for system health');
+      console.log(`Response status: ${response.status}`);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('System health data loaded:', data);
+        setSystemHealth(data);
+      } else {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
     } catch (error) {
       console.error('Failed to load system health:', error);
+      setError('Failed to load system health');
     } finally {
       setLoading(false);
     }
@@ -404,50 +402,44 @@ const DeveloperAdminSimple = () => {
   const loadFeatureFlags = async () => {
     try {
       console.log('Loading feature flags...');
+      console.log('API_BASE_URL:', API_BASE_URL);
 
-      // Try both direct and proxied URLs
-      const urls = [
-        '/api/admin/feature-flags/',
-        `${API_BASE_URL}/api/admin/feature-flags/`,
-        `${API_BASE_URL.replace('localhost', '127.0.0.1')}/api/admin/feature-flags/`
-      ];
+      // Construct URL based on API_BASE_URL
+      const baseUrl = API_BASE_URL || '';
+      const url = `${baseUrl}/api/admin/feature-flags/`;
+      console.log(`Fetching URL: ${url}`);
 
-      for (const url of urls) {
-        try {
-          console.log(`Trying URL: ${url}`);
-          const response = await fetch(url, {
-            credentials: 'include',
-            headers: {
-              'Content-Type': 'application/json',
-            }
-          });
-
-          console.log(`Response status: ${response.status}`);
-
-          if (response.ok) {
-            const data = await response.json();
-            console.log('Feature flags data loaded:', data);
-            setFeatureFlags(data.flags);
-            return;
-          } else {
-            console.log(`Failed with status: ${response.status}`);
-          }
-        } catch (urlError) {
-          console.log(`URL ${url} failed:`, urlError.message);
+      const response = await fetch(url, {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
         }
-      }
+      });
 
-      console.error('All URLs failed for feature flags');
+      console.log(`Response status: ${response.status}`);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Feature flags data loaded:', data);
+        setFeatureFlags(data.flags);
+      } else {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
     } catch (error) {
       console.error('Failed to load feature flags:', error);
+      setError('Failed to load feature flags');
     }
   };
 
   const toggleFeatureFlag = async (flagId, currentValue) => {
     try {
-      // Use direct backend URL to avoid CORS issues
-      const response = await fetch(`${API_BASE_URL}/api/admin/feature-flags/${flagId}/`, {
+      const baseUrl = API_BASE_URL || '';
+      const url = `${baseUrl}/api/admin/feature-flags/${flagId}/`;
+      console.log(`Toggling feature flag at: ${url}`);
+
+      const response = await fetch(url, {
         method: 'PUT',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -495,8 +487,13 @@ const DeveloperAdminSimple = () => {
 
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/api/admin/tools/command/`, {
+      const baseUrl = API_BASE_URL || '';
+      const url = `${baseUrl}/api/admin/tools/command/`;
+      console.log(`Running management command at: ${url}`);
+
+      const response = await fetch(url, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },

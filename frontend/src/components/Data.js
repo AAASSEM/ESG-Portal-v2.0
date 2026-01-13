@@ -362,6 +362,7 @@ const Data = () => {
           meter_type: entry.meter ? entry.meter.type : null,
           meter_location: entry.meter ? entry.meter.location : null,
           frequency: entry.cadence,
+          cadence: entry.cadence, // Add cadence for event-based task detection
           value: entry.submission.value || '',
           unit: entry.element_unit || '',
           status: entry.submission.status || 'missing',
@@ -1807,6 +1808,13 @@ const Data = () => {
                                     <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700">
                                       {entry.frequency}
                                     </span>
+                                    {/* Event-based task indicator */}
+                                    {entry.cadence && entry.cadence.startsWith('on_') && (
+                                      <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-amber-100 text-amber-800">
+                                        <i className="fas fa-bolt mr-1"></i>
+                                        Event Task
+                                      </span>
+                                    )}
                                     {entry.meter_location && (
                                       <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-purple-100 text-purple-800">
                                         {entry.meter_location}

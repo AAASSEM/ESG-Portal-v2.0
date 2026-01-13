@@ -405,15 +405,19 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { user, selectedCompany } = useAuth();
   
-  // Dynamic month name
+  // Dynamic month name and year
   const getCurrentMonthName = () => {
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const currentDate = new Date();
     return monthNames[currentDate.getMonth()];
   };
-  
-  const [selectedTimeRange, setSelectedTimeRange] = useState(`${getCurrentMonthName()} 2025`);
+
+  const getCurrentYear = () => {
+    return new Date().getFullYear();
+  };
+
+  const [selectedTimeRange, setSelectedTimeRange] = useState(`${getCurrentMonthName()} ${getCurrentYear()}`);
 
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -662,8 +666,8 @@ const Dashboard = () => {
         changePercent = 15.2;
         break;
       default:
-        if (selectedTimeRange.includes('2025') && !selectedTimeRange.includes('Quarter')) {
-          // Current month case (e.g., "Sep 2025")
+        if (selectedTimeRange.includes(getCurrentYear().toString()) && !selectedTimeRange.includes('Quarter')) {
+          // Current month case (e.g., "Sep 2025" or "Jan 2026")
           periodLabel = '30d';
           dataPointsCount = dashboardData?.total_data_elements || 0;
           changePercent = 8.5;
@@ -714,7 +718,7 @@ const Dashboard = () => {
         value: Math.round(dashboardData?.data_completeness_percentage || 0),
         unit: '%',
         change: selectedTimeRange === 'Last 7 Days' ? 5.2 :
-                (selectedTimeRange.includes('2025') && !selectedTimeRange.includes('Quarter')) ? 3.1 :
+                (selectedTimeRange.includes(getCurrentYear().toString()) && !selectedTimeRange.includes('Quarter')) ? 3.1 :
                 selectedTimeRange === 'Last Quarter' ? -1.5 : 11.0,
         trend: selectedTimeRange === 'Last Quarter' ? 'down' : 'up',
         color: 'yellow',
@@ -907,17 +911,17 @@ const Dashboard = () => {
               const month2 = monthNames[(currentMonth - 1 + 12) % 12];
               const month3 = monthNames[currentMonth];
               const quarter = Math.ceil((currentMonth + 1) / 3);
-              periodDescription = `Q${quarter} 2025 (${month1}-${month3})`;
+              periodDescription = `Q${quarter} ${getCurrentYear()} (${month1}-${month3})`;
             }
             break;
           case 'Last Year':
-            periodDescription = 'YEAR 2025';
+            periodDescription = `YEAR ${getCurrentYear()}`;
             break;
           default:
-            if (selectedTimeRange.includes('2025') && !selectedTimeRange.includes('Quarter')) {
+            if (selectedTimeRange.includes(getCurrentYear().toString()) && !selectedTimeRange.includes('Quarter')) {
               periodDescription = `${selectedTimeRange.toUpperCase()}`;
             } else {
-              periodDescription = 'AUGUST 2025';
+              periodDescription = `${getCurrentMonthName().toUpperCase()} ${getCurrentYear()}`;
             }
             break;
         }
@@ -1121,7 +1125,7 @@ const Dashboard = () => {
         months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         break;
       default:
-        if (selectedTimeRange.includes('2025') && !selectedTimeRange.includes('Quarter')) {
+        if (selectedTimeRange.includes(getCurrentYear().toString()) && !selectedTimeRange.includes('Quarter')) {
           // Show monthly data instead of weeks
           months = ['This Month'];
         } else {
@@ -1395,7 +1399,7 @@ const Dashboard = () => {
 
       <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-8 gap-4">
         <div className="flex flex-wrap gap-2 sm:gap-4">
-          {['Last 7 Days', `${getCurrentMonthName()} 2025`, 'Last Quarter', 'Last Year'].map((range) => (
+          {['Last 7 Days', `${getCurrentMonthName()} ${getCurrentYear()}`, 'Last Quarter', 'Last Year'].map((range) => (
             <button
               key={range}
               className={`px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm transition-colors ${

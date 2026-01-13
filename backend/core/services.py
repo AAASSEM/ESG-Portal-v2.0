@@ -270,6 +270,7 @@ class DataCollectionService:
         """
         Optimized version using bulk queries to eliminate N+1 problems.
         Target: < 2 seconds instead of 8.7 seconds.
+        Event-based tasks (on_installation, on_purchase, etc.) are included in December.
         """
         try:
             print(f"🚀 DEBUG: Optimized get_data_collection_tasks called for company={company.name}, year={year}, month={month}")
@@ -278,7 +279,13 @@ class DataCollectionService:
             # Determine allowed cadences
             monthly_cadences = ['monthly', 'daily']
             annual_month = 12
-            allowed_cadences = monthly_cadences + ['annual'] if month == annual_month else monthly_cadences
+            event_cadences = ['on_installation', 'on_purchase', 'on_change', 'on_menu_change', 'on_implementation']
+
+            # In December, include both annual and event-based tasks
+            if month == annual_month:
+                allowed_cadences = monthly_cadences + ['annual'] + event_cadences
+            else:
+                allowed_cadences = monthly_cadences
             print(f"🔍 DEBUG: Month={month}, Allowed cadences={allowed_cadences}")
 
             # BULK QUERIES - Get all data at once upfront
@@ -522,7 +529,7 @@ class DataCollectionService:
     
     @staticmethod
     def calculate_annual_task_totals(company, year, user=None):
-        """Calculate correct annual task totals accounting for cadence types"""
+        """Calculate correct annual task totals accounting for cadence types including event-based tasks"""
         from .models import CompanyChecklist, Meter
 
         # Get all checklist items for this company
@@ -531,6 +538,7 @@ class DataCollectionService:
         # Separate by cadence type
         monthly_daily_items = checklist_items.filter(cadence__in=['monthly', 'daily'])
         annual_items = checklist_items.filter(cadence='annual')
+        event_items = checklist_items.filter(cadence__in=['on_installation', 'on_purchase', 'on_change', 'on_menu_change', 'on_implementation'])
 
         total_annual_tasks = 0
 
@@ -564,11 +572,26 @@ class DataCollectionService:
                 # Non-metered: 1 time × 2 (data + evidence)
                 total_annual_tasks += 1 * 2
 
+        # Process event-based items (appear once per year in December - one-time tasks)
+        for item in event_items:
+            if item.element.is_metered:
+                # Count active meters for this element type
+                active_meters = Meter.objects.filter(
+                    company=company,
+                    type=item.element.name,
+                    status='active'
+                )
+                # Each meter × 1 time × 2 (data + evidence)
+                total_annual_tasks += active_meters.count() * 1 * 2
+            else:
+                # Non-metered: 1 time × 2 (data + evidence)
+                total_annual_tasks += 1 * 2
+
         return total_annual_tasks
 
     @staticmethod
     def calculate_monthly_task_totals(company, year, month, user=None):
-        """Calculate correct monthly task totals - annual tasks only in December"""
+        """Calculate correct monthly task totals - annual and event tasks only in December"""
         from .models import CompanyChecklist, Meter
 
         # Get checklist items appropriate for this month - use same logic as get_data_collection_tasks
@@ -578,14 +601,16 @@ class DataCollectionService:
         monthly_cadences = ['monthly', 'daily']
         monthly_items = checklist_items.filter(cadence__in=monthly_cadences)
 
-        # Annual tasks only appear in December (month 12)
+        # Annual and event-based tasks only appear in December (month 12)
         annual_month = 12  # December for annual reporting
         if month == annual_month:
-            allowed_cadences = monthly_cadences + ['annual']
+            allowed_cadences = monthly_cadences + ['annual'] + ['on_installation', 'on_purchase', 'on_change', 'on_menu_change', 'on_implementation']
             annual_items = checklist_items.filter(cadence='annual')
+            event_items = checklist_items.filter(cadence__in=['on_installation', 'on_purchase', 'on_change', 'on_menu_change', 'on_implementation'])
         else:
             allowed_cadences = monthly_cadences
             annual_items = checklist_items.none()  # Empty queryset for non-December months
+            event_items = checklist_items.none()  # Empty queryset for non-December months
 
         total_monthly_tasks = 0
 
@@ -617,6 +642,20 @@ class DataCollectionService:
                 # Non-metered: 1 time × 2 (data + evidence)
                 total_monthly_tasks += 1 * 2
 
+        # Process event-based items (only in December - one-time tasks)
+        for item in event_items:
+            if item.element.is_metered:
+                active_meters = Meter.objects.filter(
+                    company=company,
+                    type=item.element.name,
+                    status='active'
+                )
+                # Each meter × 1 time × 2 (data + evidence)
+                total_monthly_tasks += active_meters.count() * 1 * 2
+            else:
+                # Non-metered: 1 time × 2 (data + evidence)
+                total_monthly_tasks += 1 * 2
+
         return total_monthly_tasks
 
     @staticmethod
@@ -624,6 +663,7 @@ class DataCollectionService:
         """
         SIMPLE OPTIMIZED version that avoids the 12 API calls.
         Target: < 1 second instead of 3-4 seconds.
+        Event-based tasks are included in annual totals (shown in December).
         """
         print(f"🚀 DEBUG: SIMPLE OPTIMIZED annual task totals for {company.name} {year}")
         start_time = time.time()
@@ -640,11 +680,13 @@ class DataCollectionService:
         print(f"🔍 DEBUG: Found {len(checklist_items)} checklist items, {active_meters} active meters")
 
         monthly_cadences = ['monthly', 'daily']
+        event_cadences = ['on_installation', 'on_purchase', 'on_change', 'on_menu_change', 'on_implementation']
         total_tasks = 0
 
         # Count tasks by cadence - this is much faster than individual meter queries
         monthly_items = checklist_items.filter(cadence__in=monthly_cadences)
         annual_items = checklist_items.filter(cadence='annual')
+        event_items = checklist_items.filter(cadence__in=event_cadences)
 
         # For simplicity, estimate based on average meter count per element
         # This is much faster than exact individual lookups
@@ -657,6 +699,12 @@ class DataCollectionService:
             # Annual items appear once per year (December)
             annual_count = annual_items.count()
             total_tasks += annual_count * 1 * 2  # ×1 time × 2 tasks (data + evidence)
+
+        if event_items.exists():
+            # Event-based tasks appear once per year (December) - one-time tasks
+            event_count = event_items.count()
+            total_tasks += event_count * 1 * 2  # ×1 time × 2 tasks (data + evidence)
+            print(f"🔍 DEBUG: Added {event_count} event-based tasks to annual total")
 
         elapsed = (time.time() - start_time) * 1000
         print(f"✅ SIMPLE optimized annual task totals completed in {elapsed:.0f}ms: {total_tasks} total tasks")
